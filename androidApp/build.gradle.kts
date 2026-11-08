@@ -83,6 +83,21 @@ android {
         }
     }
 
+    // One fixed key for local and CI builds, so a new APK installs over the old one and keeps the
+    // library. Supplied through APK_KEYSTORE_FILE / APK_KEYSTORE_PASSWORD / APK_KEY_ALIAS /
+    // APK_KEY_PASSWORD; without them the build falls back to the machine's own debug key.
+    val fixedKeystore = System.getenv("APK_KEYSTORE_FILE")?.let(::File)?.takeIf { it.exists() }
+    signingConfigs {
+        if (fixedKeystore != null) {
+            create("fixed") {
+                storeFile = fixedKeystore
+                storePassword = System.getenv("APK_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("APK_KEY_ALIAS")
+                keyPassword = System.getenv("APK_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -104,6 +119,7 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
+            signingConfigs.findByName("fixed")?.let { signingConfig = it }
         }
     }
     compileOptions {

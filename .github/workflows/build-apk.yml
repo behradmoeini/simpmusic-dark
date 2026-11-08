@@ -1,0 +1,88 @@
+name: Build APK
+
+# Runs on pushes to main and when started by hand (Actions tab > Build APK > Run workflow).
+# Linux only (1x minutes), one run at a time per branch, capped at 90 minutes.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'fastlane/**'
+      - 'asset/**'
+      - 'changelogs/**'
+      - '.claude/**'
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore signing key
+        env:
+          APK_KEYSTORE_BASE64: ${{ secrets.APK_KEYSTORE_BASE64 }}
+        run: |
+          echo "$APK_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/signing.jks"
+          echo "APK_KEYSTORE_FILE=$RUNNER_TEMP/signing.jks" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        env:
+          APK_KEYSTORE_PASSWORD: ${{ secrets.APK_KEYSTORE_PASSWORD }}
+          APK_KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
+          APK_KEY_PASSWORD: ${{ secrets.APK_KEY_PASSWORD }}
+        # The hosted runner has 7 GB of RAM: one Gradle heap, Kotlin compiled inside it.
+        run: >
+          ./gradlew :androidApp:assembleDebug
+          -PisFullBuild=false
+          -Pkotlin.compiler.execution.strategy=in-process
+          "-Dorg.gradle.jvmargs=-Xmx5g -XX:+UseParallelGC"
+          --console=plain
+
+      - name: Collect APKs
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          echo "SHORT_SHA=$SHA" >> "$GITHUB_ENV"
+          mkdir -p out
+          cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk "out/simpmusic-dark-arm64-v8a-$SHA.apk"
+          cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk "out/simpmusic-dark-universal-$SHA.apk"
+          ls -la out
+
+      # Builds of main replace the single "latest" pre-release, so only one set of APKs is kept.
+      - name: Publish to the "latest" release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest out/*.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Latest build ($SHORT_SHA)" \
+            --notes "Debug APK built from $GITHUB_SHA. Most phones want the arm64-v8a file; the universal one runs on any device."
+
+      # Builds started by hand on another branch keep the arm64 APK for three days instead.
+      - name: Upload APK artifact
+        if: github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: simpmusic-dark-${{ env.SHORT_SHA }}
+          path: out/simpmusic-dark-arm64-v8a-*.apk
+          retention-days: 3
