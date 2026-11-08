@@ -115,6 +115,41 @@ private fun ColorScheme.withNeutralLightSurfaces(): ColorScheme =
         inverseOnSurface = Color(0xFFF1F1F1),
     )
 
+/**
+ * The dark streaming-app look: near-black page, surfaces that step up in grey as they rise, white
+ * titles over grey secondary text, and the seed used as the accent exactly as chosen rather than
+ * the softened tone Material derives from it. Black text sits on the accent, which is bright.
+ */
+private fun ColorScheme.withStreamDarkSurfaces(accent: Color): ColorScheme =
+    copy(
+        primary = accent,
+        onPrimary = Color.Black,
+        primaryContainer = accent,
+        onPrimaryContainer = Color.Black,
+        secondary = Color.White,
+        onSecondary = Color.Black,
+        secondaryContainer = streamSurfaceHigh,
+        onSecondaryContainer = Color.White,
+        background = streamBackground,
+        onBackground = Color.White,
+        surface = streamBackground,
+        onSurface = Color.White,
+        surfaceVariant = streamSurfaceHigh,
+        onSurfaceVariant = streamTextSecondary,
+        surfaceTint = Color.Transparent,
+        surfaceBright = streamSurfaceBright,
+        surfaceDim = streamBackground,
+        surfaceContainerLowest = Color(0xFF0A0A0A),
+        surfaceContainerLow = streamSurfaceLow,
+        surfaceContainer = streamSurface,
+        surfaceContainerHigh = streamSurfaceHigh,
+        surfaceContainerHighest = streamSurfaceHighest,
+        outline = streamOutline,
+        outlineVariant = streamSurfaceBright,
+        inverseSurface = Color.White,
+        inverseOnSurface = Color.Black,
+    )
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AppTheme(
@@ -147,7 +182,7 @@ fun AppTheme(
                 seedColor = seedColor,
                 isDark = isDark,
                 style = PaletteStyle.TonalSpot,
-                modifyColorScheme = { cs -> if (isDark) cs else cs.withNeutralLightSurfaces() },
+                modifyColorScheme = { cs -> if (isDark) cs.withStreamDarkSurfaces(seedColor) else cs.withNeutralLightSurfaces() },
             )
     // Immersive screens stay dark even at light theme (see [ForceDarkContent]). Resolve their scheme
     // once here instead of letting every such subtree build a palette of its own.
@@ -159,6 +194,7 @@ fun AppTheme(
                 seedColor = seedColor,
                 isDark = true,
                 style = PaletteStyle.TonalSpot,
+                modifyColorScheme = { cs -> cs.withStreamDarkSurfaces(seedColor) },
             )
         }
     SystemBarAppearanceEffect(isDark)

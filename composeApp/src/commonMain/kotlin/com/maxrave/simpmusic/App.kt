@@ -552,24 +552,22 @@ fun App(
                     ) {
                         // On Android both materials go through the folding bar, which draws the mini
                         // player itself. Desktop keeps the always-open flat bar under its own one.
-                        val useFoldingBar = getPlatform() == Platform.Android || isLiquidGlassEnabled == TRUE
+                        // Flat (default): a full-width mini player card stacked on the full-width tab
+                        // row. Liquid glass keeps the original folding capsule bar.
+                        val useFoldingBar = isLiquidGlassEnabled == TRUE
                         Column {
                             AnimatedVisibility(
-                                isShowMiniPlayer && !useFoldingBar && isLiquidGlassEnabled == DataStoreManager.FALSE,
+                                isShowMiniPlayer && !useFoldingBar,
                                 enter = fadeIn() + slideInHorizontally(),
                                 exit = fadeOut(),
                             ) {
                                 MiniPlayer(
                                     Modifier
-                                        // 56dp card + the 4dp gap below.
-                                        .height(60.dp)
+                                        // 56dp card + the 2dp gap below.
+                                        .height(58.dp)
                                         .fillMaxWidth()
-                                        .padding(
-                                            // The bottom bar's own 16dp, so both edges line up.
-                                            horizontal = 16.dp,
-                                        ).padding(
-                                            bottom = 4.dp,
-                                        ),
+                                        .padding(horizontal = 8.dp)
+                                        .padding(bottom = 2.dp),
                                     backdrop = backdrop,
                                     navController = navController,
                                     onClick = {

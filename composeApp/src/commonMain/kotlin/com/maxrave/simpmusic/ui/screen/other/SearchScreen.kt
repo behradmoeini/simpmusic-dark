@@ -80,6 +80,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import simpmusic.composeapp.generated.resources.search
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -1063,8 +1065,20 @@ fun SearchScreen(
                 windowInsets = WindowInsets(0),
             )
         }
+        // Big page title above a white search field, hidden while the search panel is open.
+        AnimatedVisibility(visible = !isSearchPanelVisible && searchUIType != SearchUIType.SEARCH_RESULTS) {
+            Text(
+                text = stringResource(Res.string.search),
+                style = typo().titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+            )
+        }
+        val searchFieldInk = Color.Black
+        val searchFieldHint = Color(0xFF535353)
         // Search Bar with Animated Placeholder
         SearchBar(
+            colors = SearchBarDefaults.colors(containerColor = Color.White),
             inputField = {
                 SearchBarDefaults.InputField(
                     query = searchText,
@@ -1099,6 +1113,18 @@ fun SearchScreen(
                     expanded = false,
                     onExpandedChange = {},
                     enabled = true,
+                    colors =
+                        SearchBarDefaults.inputFieldColors(
+                            focusedTextColor = searchFieldInk,
+                            unfocusedTextColor = searchFieldInk,
+                            focusedPlaceholderColor = searchFieldHint,
+                            unfocusedPlaceholderColor = searchFieldHint,
+                            focusedLeadingIconColor = searchFieldInk,
+                            unfocusedLeadingIconColor = searchFieldInk,
+                            focusedTrailingIconColor = searchFieldInk,
+                            unfocusedTrailingIconColor = searchFieldInk,
+                            cursorColor = searchFieldInk,
+                        ),
                     placeholder = {
                         // Animated placeholder text
                         AnimatedContent(

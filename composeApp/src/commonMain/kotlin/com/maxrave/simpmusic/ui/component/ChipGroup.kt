@@ -62,9 +62,10 @@ fun Chip(
             // The 1dp uniform rim every small glass control here carries: the default rim lights one
             // side only, which on a chip this small does not show at all.
             modifier = if (glassBackdrop != null) Modifier.liquidGlass(glassBackdrop, highlight = Highlight(width = 1.dp)) else Modifier,
-            // outlineVariant, per M3's Aug 2024 chip update: a softer stroke than outline.
-            // Glass draws its own rim, so the outline goes.
-            borderColor = if (glassBackdrop != null) Color.Transparent else MaterialTheme.colorScheme.outlineVariant,
+            // Filled grey pill with no outline; glass draws its own rim.
+            borderColor = Color.Transparent,
+            containerColor = if (glassBackdrop != null) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
+            labelColor = MaterialTheme.colorScheme.onSurface,
             onClick = onClick,
             compact = compact,
         )
@@ -109,16 +110,20 @@ fun ExpandableChip(
     // instead only greys it out, which reads as faded rather than darker.
     val primaryHct = colorScheme.primary.toHct()
     val foldedFill = Hct.from(primaryHct.hue, primaryHct.chroma, (primaryHct.tone - 20).coerceAtLeast(0.0)).toColor()
-    val fill by animateColorAsState(if (folded) foldedFill else Color.Transparent)
-    // Glass draws its own rim; without it the pill is outlined like an unselected chip until it folds.
-    val outline by animateColorAsState(
-        if (glassBackdrop == null && !folded) colorScheme.outlineVariant else Color.Transparent,
+    // A filled grey pill like the plain chips beside it, darker accent once a pick folds it.
+    val fill by animateColorAsState(
+        when {
+            folded -> foldedFill
+            glassBackdrop == null -> colorScheme.surfaceContainerHigh
+            else -> Color.Transparent
+        },
     )
+    val outline by animateColorAsState(Color.Transparent)
     // Folded, the pill is a selected chip, and a selected chip has no rim (the All chip beside it has
     // none). The rim is drawn over the content, so the solid fill cannot hide it; it fades out instead.
     val rim by animateFloatAsState(if (folded) 0f else 1f)
     val headFill by animateColorAsState(if (active) colorScheme.primary else Color.Transparent)
-    val headLabel by animateColorAsState(if (active) colorScheme.onPrimary else colorScheme.onSurfaceVariant)
+    val headLabel by animateColorAsState(if (active) colorScheme.onPrimary else colorScheme.onSurface)
     ChipFrame(isAnimated = isAnimated && picked != null) {
         Row(
             modifier =

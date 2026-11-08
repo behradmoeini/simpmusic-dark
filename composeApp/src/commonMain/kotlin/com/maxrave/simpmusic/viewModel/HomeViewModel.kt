@@ -7,6 +7,7 @@ import com.maxrave.domain.data.entities.SongEntity
 import com.maxrave.domain.data.model.home.HomeDataCombine
 import com.maxrave.domain.data.model.home.HomeItem
 import com.maxrave.domain.data.model.home.chart.Chart
+import com.maxrave.domain.data.model.home.chart.ChartPodcasts
 import com.maxrave.domain.data.model.mood.Mood
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.manager.DataStoreManager.Values.TRUE
@@ -350,6 +351,29 @@ class HomeViewModel(
                     }
                     loadingChart.value = false
                 }
+        }
+    }
+
+    // Only the US chart carries a podcast shelf. It is fetched on its own for the Podcasts filter so
+    // the Home chart keeps the region the user picked.
+    private val _podcastChart: MutableStateFlow<ChartPodcasts?> = MutableStateFlow(null)
+    val podcastChart: StateFlow<ChartPodcasts?> = _podcastChart
+    val loadingPodcastChart = MutableStateFlow(false)
+
+    fun loadPodcastChart() {
+        if (_podcastChart.value != null || loadingPodcastChart.value) return
+        _chart.value?.podcasts?.let {
+            _podcastChart.value = it
+            return
+        }
+        viewModelScope.launch {
+            loadingPodcastChart.value = true
+            homeRepository.getChartData("US").collect { values ->
+                if (values is Resource.Success) {
+                    _podcastChart.value = values.data?.podcasts
+                }
+                loadingPodcastChart.value = false
+            }
         }
     }
 

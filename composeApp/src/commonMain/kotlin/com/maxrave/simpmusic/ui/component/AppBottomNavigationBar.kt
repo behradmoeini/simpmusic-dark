@@ -1,6 +1,11 @@
 package com.maxrave.simpmusic.ui.component
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
@@ -122,34 +127,96 @@ fun AppBottomNavigationBar(
         }
     }
 
-    // Search rides in its own circular button, so the capsule holds everything else.
-    val barTabs = bottomNavScreens.filter { it != BottomNavScreen.Search }
+    // Full-width tab row in streaming-app order: Home, Search, Your Library, then the optional tabs.
+    val streamTabs =
+        listOfNotNull(
+            BottomNavScreen.Home,
+            BottomNavScreen.Search,
+            BottomNavScreen.Library,
+            BottomNavScreen.MixForYou.takeIf { showMixForYouTab },
+            BottomNavScreen.Analytics.takeIf { showAnalyticsTab },
+        )
+    val pageBackground = MaterialTheme.colorScheme.background
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        // One centred cluster — capsule, gap, FAB — exactly like the glass bar: fill = false keeps
-        // the capsule at its measured width, so the leftover goes around the cluster instead of
-        // wedging itself between the capsule and the search button.
-        horizontalArrangement = Arrangement.Center,
+    Box(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                .padding(horizontal = 16.dp)
-                .padding(top = 4.dp, bottom = 8.dp),
+                // Content fades into black under the tabs instead of meeting a hard bar edge.
+                .background(
+                    Brush.verticalGradient(
+                        0f to pageBackground.copy(alpha = 0.6f),
+                        0.3f to pageBackground.copy(alpha = 0.97f),
+                        1f to pageBackground,
+                    ),
+                ),
     ) {
-        BoxWithConstraints(Modifier.weight(1f, fill = false)) {
-            FlatTabBar(
-                tabs = barTabs,
-                selectedIndex = selectedIndex,
-                availableWidth = maxWidth,
-                onTabSelected = selectTab,
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                    .height(StreamBarHeight)
+                    .padding(top = 6.dp),
+        ) {
+            streamTabs.forEach { screen ->
+                StreamTab(
+                    screen = screen,
+                    selected = selectedIndex == screen.ordinal,
+                    onClick = { selectTab(screen) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
-        Spacer(Modifier.size(12.dp))
-        FlatSearchButton(
-            selected = selectedIndex == BottomNavScreen.Search.ordinal,
-            onClick = { selectTab(BottomNavScreen.Search) },
+    }
+}
+
+private val StreamBarHeight = 64.dp
+
+/** One tab: icon over a small label, white when selected and grey otherwise, with no indicator. */
+@Composable
+private fun StreamTab(
+    screen: BottomNavScreen,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val color by animateColorAsState(
+        if (selected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "streamTabColor",
+    )
+    Column(
+        modifier =
+            modifier
+                .fillMaxHeight()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick,
+                ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        CompositionLocalProvider(LocalContentColor provides color) {
+            Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { screen.icon() }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text =
+                if (screen == BottomNavScreen.Library) {
+                    stringResource(Res.string.your_library)
+                } else {
+                    stringResource(screen.title)
+                },
+            style =
+                typo().bodySmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                ),
+            color = color,
+            maxLines = 1,
         )
     }
 }

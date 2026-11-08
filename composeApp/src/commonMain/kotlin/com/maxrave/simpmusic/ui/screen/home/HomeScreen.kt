@@ -225,6 +225,7 @@ import simpmusic.composeapp.generated.resources.let_s_start_with_a_radio
 import simpmusic.composeapp.generated.resources.log_in_to_YouTube
 import simpmusic.composeapp.generated.resources.log_in_warning
 import simpmusic.composeapp.generated.resources.mood
+import simpmusic.composeapp.generated.resources.podcasts
 import simpmusic.composeapp.generated.resources.notification
 import simpmusic.composeapp.generated.resources.party
 import simpmusic.composeapp.generated.resources.play_all
@@ -400,6 +401,10 @@ fun HomeScreen(
     }
 
     var moodExpanded by rememberSaveable {
+        mutableStateOf(false)
+    }
+    // The Podcasts chip swaps the shelves for saved and top podcast shows.
+    var podcastMode by rememberSaveable {
         mutableStateOf(false)
     }
     // Derived, so scrolling recomposes only when the page reaches or leaves its very top.
@@ -764,6 +769,14 @@ fun HomeScreen(
             },
         ) {
             Crossfade(targetState = loading, label = "Home Shimmer") { loading ->
+                if (podcastMode) {
+                    HomePodcastsView(
+                        viewModel = viewModel,
+                        navController = navController,
+                        topPadding = with(LocalDensity.current) { topAppBarHeightPx.toDp() },
+                    )
+                    return@Crossfade
+                }
                 if (!loading) {
                     if (homeData.isEmpty()) {
                         OfflineErrorState(
@@ -1121,22 +1134,36 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Chip(
-                                    isAnimated = loading,
-                                    isSelected = params == null && !moodExpanded,
+                                    isAnimated = loading && !podcastMode,
+                                    isSelected = params == null && !moodExpanded && !podcastMode,
                                     text = stringResource(Res.string.all),
                                     backdrop = chipBackdrop,
                                 ) {
                                     moodExpanded = false
+                                    podcastMode = false
                                     viewModel.setParams(null)
+                                }
+                                Chip(
+                                    isSelected = podcastMode,
+                                    text = stringResource(Res.string.podcasts),
+                                    backdrop = chipBackdrop,
+                                ) {
+                                    moodExpanded = false
+                                    podcastMode = true
                                 }
                                 ExpandableChip(
                                     text = stringResource(Res.string.mood),
                                     options = homeMoods.map { stringResource(it.first) },
-                                    selectedIndex = homeMoods.indexOfFirst { it.second == params }.takeIf { it >= 0 },
+                                    selectedIndex =
+                                        homeMoods.indexOfFirst { it.second == params }.takeIf { it >= 0 && !podcastMode },
                                     expanded = moodExpanded,
-                                    onExpandedChange = { moodExpanded = it },
+                                    onExpandedChange = {
+                                        moodExpanded = it
+                                        if (it) podcastMode = false
+                                    },
                                     onSelect = { index ->
                                         moodExpanded = false
+                                        podcastMode = false
                                         viewModel.setParams(homeMoods[index].second)
                                     },
                                     isAnimated = loading,

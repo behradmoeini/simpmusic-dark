@@ -26,7 +26,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.maxrave.simpmusic.ui.icon.Add
+import simpmusic.composeapp.generated.resources.downloaded
+import simpmusic.composeapp.generated.resources.playlists
+import simpmusic.composeapp.generated.resources.podcasts
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -445,8 +453,8 @@ fun LibraryScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = stringResource(Res.string.library),
-                    style = typo().titleMedium,
+                    text = stringResource(Res.string.your_library),
+                    style = typo().titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             },
@@ -482,6 +490,13 @@ fun LibraryScreen(
             // which the design canvas puts on Home AND Library.
             actions = {
                 ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+                IconButton(onClick = { showAddSheet = true }) {
+                    Icon(
+                        imageVector = SimpIcons.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
             },
         )
         AnimatedVisibility(visible = selectionState.isActive) {
@@ -514,7 +529,17 @@ fun LibraryScreen(
                     .background(Color.Transparent),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            LibraryChipType.entries.forEach { type ->
+            // Playlists, Podcasts and Downloaded lead the row, as in a streaming app's library.
+            listOf(
+                LibraryChipType.YOUR_LIBRARY,
+                LibraryChipType.LOCAL_PLAYLIST,
+                LibraryChipType.FAVORITE_PODCAST,
+                LibraryChipType.DOWNLOADED_PLAYLIST,
+                LibraryChipType.FAVORITE_PLAYLIST,
+                LibraryChipType.YOUTUBE_MUSIC_PLAYLIST,
+                LibraryChipType.CHART,
+                LibraryChipType.WRAPPED,
+            ).forEach { type ->
                 // Mix for you left this row for a tab of its own.
                 if (type == LibraryChipType.YOUTUBE_MIX_FOR_YOU) {
                     return@forEach
@@ -535,10 +560,10 @@ fun LibraryScreen(
                             LibraryChipType.YOUR_LIBRARY -> stringResource(Res.string.your_library)
                             LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> stringResource(Res.string.your_youtube_playlists)
                             LibraryChipType.YOUTUBE_MIX_FOR_YOU -> stringResource(Res.string.mix_for_you)
-                            LibraryChipType.LOCAL_PLAYLIST -> stringResource(Res.string.your_playlists)
+                            LibraryChipType.LOCAL_PLAYLIST -> stringResource(Res.string.playlists)
                             LibraryChipType.FAVORITE_PLAYLIST -> stringResource(Res.string.favorite_playlists)
-                            LibraryChipType.DOWNLOADED_PLAYLIST -> stringResource(Res.string.downloaded_playlists)
-                            LibraryChipType.FAVORITE_PODCAST -> stringResource(Res.string.favorite_podcasts)
+                            LibraryChipType.DOWNLOADED_PLAYLIST -> stringResource(Res.string.downloaded)
+                            LibraryChipType.FAVORITE_PODCAST -> stringResource(Res.string.podcasts)
                             LibraryChipType.CHART -> stringResource(Res.string.simpmusic_charts)
                             LibraryChipType.WRAPPED -> stringResource(Res.string.wrapped)
                         },
