@@ -23,6 +23,12 @@ import com.maxrave.domain.utils.MusicVideoType
 
 const val LONG_VIDEO_SECONDS = 20 * 60
 
+/**
+ * Spotify-style Home is audio-only: music videos (OMV, UGC) are not mixed into the feed. A card YouTube
+ * gives no type for stays, so a song is never dropped by mistake.
+ */
+fun Content.isMusicVideo(): Boolean = MusicVideoType.isVideoSong(videoType)
+
 fun Content.isYouTubePodcast(): Boolean =
     MusicVideoType.isPodcast(videoType) ||
         MusicVideoType.isPodcast(playEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType) ||
@@ -46,7 +52,7 @@ fun List<HomeItem>.withoutYouTubePodcasts(): List<HomeItem> =
     mapNotNull { item ->
         if (item.moreEndpoint?.pageType == HomeItem.MoreEndpoint.PAGE_TYPE_PODCAST) return@mapNotNull null
         val cards = item.contents.filterNotNull()
-        val kept = cards.filterNot { it.isYouTubePodcast() }
+        val kept = cards.filterNot { it.isYouTubePodcast() || it.isMusicVideo() }
         when {
             kept.size == cards.size -> item
             kept.isEmpty() || kept.size * 2 <= cards.size -> null
