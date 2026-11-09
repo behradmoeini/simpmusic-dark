@@ -19,6 +19,8 @@ private object NoPodcastPlayer : OpenPodcastPlayer {
 
     override fun seekBy(deltaMs: Long) = Unit
 
+    override fun setSpeed(speed: Float) = Unit
+
     override fun stop() = Unit
 
     override fun savedPosition(episodeId: String): Long = 0L

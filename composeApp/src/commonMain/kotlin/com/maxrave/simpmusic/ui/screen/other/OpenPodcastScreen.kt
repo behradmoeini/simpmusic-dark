@@ -105,6 +105,7 @@ fun OpenPodcastScreen(
                     onSeekBy = viewModel.player::seekBy,
                     onSeekTo = viewModel.player::seekTo,
                     onOpenShow = null,
+                    onSetSpeed = viewModel.player::setSpeed,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background),
                 )
             }

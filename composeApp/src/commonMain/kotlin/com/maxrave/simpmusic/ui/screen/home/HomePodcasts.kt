@@ -100,6 +100,7 @@ internal fun HomePodcastsView(
                     onToggle = viewModel.player::togglePlayPause,
                     onSeekBy = viewModel.player::seekBy,
                     onSeekTo = viewModel.player::seekTo,
+                    onSetSpeed = viewModel.player::setSpeed,
                     onOpenShow =
                         playerState.feedUrl?.let { feed ->
                             {

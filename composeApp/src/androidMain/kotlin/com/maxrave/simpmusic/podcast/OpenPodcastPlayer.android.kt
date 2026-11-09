@@ -230,6 +230,12 @@ private class AndroidOpenPodcastPlayer(
 
     override fun seekBy(deltaMs: Long) = withController { it.seekTo((it.currentPosition + deltaMs).coerceAtLeast(0L)) }
 
+    override fun setSpeed(speed: Float) {
+        val clamped = speed.coerceIn(0.5f, 3f)
+        withController { it.setPlaybackSpeed(clamped) }
+        _state.value = _state.value.copy(playbackSpeed = clamped)
+    }
+
     override fun stop() {
         saveCurrentPosition()
         controller?.run {
@@ -280,6 +286,7 @@ private class AndroidOpenPodcastPlayer(
                 isBuffering = c.playbackState == Player.STATE_BUFFERING,
                 positionMs = c.currentPosition.coerceAtLeast(0L),
                 durationMs = duration,
+                playbackSpeed = c.playbackParameters.speed,
             )
     }
 

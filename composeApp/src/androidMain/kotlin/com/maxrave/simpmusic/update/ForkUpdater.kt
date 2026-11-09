@@ -141,7 +141,11 @@ object ForkUpdater {
         )
     }
 
-    /** Downloads the APK into the cache, reusing a finished download of the same commit. */
+    /**
+     * Downloads the APK into the cache. A dropped download keeps its partial file, and the next
+     * attempt for the same commit resumes from where it stopped (HTTP Range) instead of starting
+     * over (issue #2). A server that ignores Range answers 200 and the download restarts.
+     */
     suspend fun download(
         context: Context,
         release: Release,
@@ -154,18 +158,25 @@ object ForkUpdater {
                 onProgress(1f)
                 return@withContext target
             }
-            dir.listFiles()?.forEach { it.delete() }
+            // Partial files of other commits are stale; the one for this commit is kept to resume.
+            dir.listFiles()?.forEach { if (it.name != "${release.commit}.apk.part" && it != target) it.delete() }
             val part = File(dir, "${release.commit}.apk.part")
+            val already = if (part.exists()) part.length() else 0L
             val conn = (URL(release.apkUrl).openConnection() as HttpURLConnection)
             conn.connectTimeout = 15_000
             conn.readTimeout = 30_000
             conn.setRequestProperty("User-Agent", "simpmusic-dark")
+            if (already > 0) conn.setRequestProperty("Range", "bytes=$already-")
             try {
-                if (conn.responseCode != HttpURLConnection.HTTP_OK) error("HTTP ${conn.responseCode}")
-                val total = conn.contentLengthLong.takeIf { it > 0 } ?: release.apkSize
-                var done = 0L
+                val code = conn.responseCode
+                val resumed = code == HttpURLConnection.HTTP_PARTIAL
+                if (code != HttpURLConnection.HTTP_OK && !resumed) error("HTTP $code")
+                // A 200 to a Range request means the server sent the whole file again.
+                val offset = if (resumed) already else 0L
+                val total = if (release.apkSize > 0) release.apkSize else offset + conn.contentLengthLong
+                var done = offset
                 conn.inputStream.use { input ->
-                    part.outputStream().use { output ->
+                    java.io.FileOutputStream(part, resumed).use { output ->
                         val buffer = ByteArray(64 * 1024)
                         while (true) {
                             ensureActive()
@@ -182,7 +193,6 @@ object ForkUpdater {
                 target
             } finally {
                 conn.disconnect()
-                part.delete()
             }
         }
 

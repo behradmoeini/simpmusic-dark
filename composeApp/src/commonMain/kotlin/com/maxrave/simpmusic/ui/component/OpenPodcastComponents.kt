@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,6 +128,7 @@ fun OpenPodcastNowPlayingCard(
     onSeekBy: (Long) -> Unit,
     onSeekTo: (Long) -> Unit,
     onOpenShow: (() -> Unit)?,
+    onSetSpeed: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var dragging by remember { mutableStateOf<Float?>(null) }
@@ -147,6 +149,18 @@ fun OpenPodcastNowPlayingCard(
                 modifier = if (onOpenShow != null) Modifier.clickable(onClick = onOpenShow) else Modifier,
             )
             Spacer(Modifier.width(10.dp))
+            // Cycles 1x → 1.25x → 1.5x → 2x → 1x.
+            val speeds = listOf(1f, 1.25f, 1.5f, 2f)
+            TextButton(onClick = {
+                val current = speeds.indexOf(state.playbackSpeed).takeIf { it >= 0 } ?: 0
+                onSetSpeed(speeds[(current + 1) % speeds.size])
+            }) {
+                Text(
+                    text = "${state.playbackSpeed.let { if (it % 1f == 0f) it.toInt().toString() else it.toString() }}×",
+                    style = typo().labelLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
             Column(
                 Modifier
                     .weight(1f)

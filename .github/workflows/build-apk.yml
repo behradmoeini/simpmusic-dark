@@ -5,13 +5,15 @@ name: Build APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    # Every branch is tested (issue #8); only main publishes the "latest" release.
+    branches: ['**']
     paths-ignore:
       - '**.md'
       - 'fastlane/**'
       - 'asset/**'
       - 'changelogs/**'
       - '.claude/**'
+  pull_request:
 
 concurrency:
   group: build-apk-${{ github.ref }}
@@ -21,7 +23,32 @@ permissions:
   contents: write
 
 jobs:
+  # Unit tests run on every branch and pull request, before anything is built or published.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run desktop unit tests
+        run: >
+          ./gradlew :composeApp:jvmTest
+          -PisFullBuild=false
+          -Pkotlin.compiler.execution.strategy=in-process
+          "-Dorg.gradle.jvmargs=-Xmx4g -XX:+UseParallelGC"
+          --console=plain
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:

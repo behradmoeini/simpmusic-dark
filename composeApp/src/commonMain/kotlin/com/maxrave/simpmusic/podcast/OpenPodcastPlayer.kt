@@ -26,6 +26,9 @@ interface OpenPodcastPlayer {
 
     fun seekBy(deltaMs: Long)
 
+    /** Playback speed, for example 1.25f. Kept on the player, so the next episode keeps it. */
+    fun setSpeed(speed: Float)
+
     fun stop()
 
     /** Where the listener left [episodeId], in ms, or 0. */
@@ -42,6 +45,7 @@ data class OpenPodcastPlayerState(
     val isBuffering: Boolean = false,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
+    val playbackSpeed: Float = 1f,
 ) {
     val isActive: Boolean get() = episodeId != null
 }
