@@ -1,0 +1,40 @@
+name: Spotify playlists (daily)
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install spotapi
+        run: pip install "spotapi==1.2.8"
+
+      - name: Fetch playlists
+        run: python scripts/spotify_playlists.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/spotify_playlists.json
+          if git diff --cached --quiet; then
+            echo "No change"
+          else
+            git commit -m "Update Spotify playlist snapshot"
+            git push origin HEAD:main
+          fi
