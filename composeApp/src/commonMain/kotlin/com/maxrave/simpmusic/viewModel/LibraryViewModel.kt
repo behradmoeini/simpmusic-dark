@@ -27,6 +27,7 @@ import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.LocalResource
 import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.isRadioPlaylistId
+import com.maxrave.logger.Logger
 import com.maxrave.simpmusic.ui.screen.home.analytics.monthFullNameResource
 import com.maxrave.simpmusic.ui.screen.library.LibraryDynamicPlaylistType
 import com.maxrave.simpmusic.chart.PersianTrendingChart
@@ -399,6 +400,7 @@ class LibraryViewModel(
             playlistRepository.getChartPlaylist().collectLatest {
                 // The Persian card comes from YouTube Music, so it shows even when the chart server fails.
                 val persian = persianChart.load()
+                Logger.i("Library", "charts: server=${(it as? Resource.Success<*>)?.data?.let { d -> (d as? List<*>)?.size } ?: "error"}, persian=${persian != null}")
                 val selected = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY).first().toChartCountrySet()
                 when (it) {
                     is Resource.Success ->

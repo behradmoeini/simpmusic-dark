@@ -219,6 +219,7 @@ class HomeViewModel(
                     HomeDataCombine(home, exploreMood, exploreChart, newRelease)
                 }.collect { result ->
                     val home = result.home
+                    Logger.i("Home", "loaded: ${(home.data?.second?.size ?: 0)} shelves, mood=${result.mood is Resource.Success}, chart=${result.chart is Resource.Success}, newRelease=${result.newRelease is Resource.Success}")
                     Logger.d("home size", "${home.data?.second?.size}")
                     val exploreMoodItem = result.mood
                     val chart = result.chart

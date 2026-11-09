@@ -356,6 +356,7 @@ class SettingsViewModel(
     }
 
     fun setLocalTrackingEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setLocalTrackingEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setLocalTrackingEnabled(enabled)
             getLocalTrackingEnabled()
@@ -371,6 +372,7 @@ class SettingsViewModel(
     }
 
     fun setBlogNotificationEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setBlogNotificationEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setBlogNotificationEnabled(enabled)
             getBlogNotificationEnabled()
@@ -386,6 +388,7 @@ class SettingsViewModel(
     }
 
     fun setDownloadQuality(quality: String) {
+        Logger.i("Settings", "setDownloadQuality: quality=${quality}")
         viewModelScope.launch {
             dataStoreManager.setDownloadQuality(quality)
             getDownloadQuality()
@@ -405,6 +408,7 @@ class SettingsViewModel(
     }
 
     fun setVideoDownloadQuality(quality: String) {
+        Logger.i("Settings", "setVideoDownloadQuality: quality=${quality}")
         viewModelScope.launch {
             if (VIDEO_QUALITY.items.contains(quality)) {
                 dataStoreManager.setVideoDownloadQuality(quality)
@@ -422,6 +426,7 @@ class SettingsViewModel(
     }
 
     fun setKeepYouTubePlaylistOffline(keep: Boolean) {
+        Logger.i("Settings", "setKeepYouTubePlaylistOffline: keep=${keep}")
         viewModelScope.launch {
             dataStoreManager.setKeepYouTubePlaylistOffline(keep)
             getKeepYouTubePlaylistOffline()
@@ -437,6 +442,7 @@ class SettingsViewModel(
     }
 
     fun setCombineLocalAndYouTubeLiked(combine: Boolean) {
+        Logger.i("Settings", "setCombineLocalAndYouTubeLiked: combine=${combine}")
         viewModelScope.launch {
             dataStoreManager.setCombineLocalAndYouTubeLiked(combine)
             getCombineLocalAndYouTubeLiked()
@@ -452,6 +458,7 @@ class SettingsViewModel(
     }
 
     fun setCrossfadeEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setCrossfadeEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setCrossfadeEnabled(enabled)
             getCrossfadeEnabled()
@@ -467,6 +474,7 @@ class SettingsViewModel(
     }
 
     fun setCrossfadeDuration(duration: Int) {
+        Logger.i("Settings", "setCrossfadeDuration: duration=${duration}")
         viewModelScope.launch {
             dataStoreManager.setCrossfadeDuration(duration)
             getCrossfadeDuration()
@@ -482,6 +490,7 @@ class SettingsViewModel(
     }
 
     fun setCrossfadeDjMode(enabled: Boolean) {
+        Logger.i("Settings", "setCrossfadeDjMode: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setCrossfadeDjMode(enabled)
             getCrossfadeDjMode()
@@ -497,6 +506,7 @@ class SettingsViewModel(
     }
 
     fun setCrossfadeSkipAlbum(enabled: Boolean) {
+        Logger.i("Settings", "setCrossfadeSkipAlbum: enabled=${enabled}")
         viewModelScope.launch {
             // No re-read afterwards: the collector started in init never completes, so it already
             // picks this up. Calling the getter again would leave a second collector running for
@@ -514,6 +524,7 @@ class SettingsViewModel(
     }
 
     fun setAutoDownloadLikedSongs(enabled: Boolean) {
+        Logger.i("Settings", "setAutoDownloadLikedSongs: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setAutoDownloadLikedSongs(enabled)
             // Switching it on also catches up on everything liked before now. Songs already
@@ -543,6 +554,7 @@ class SettingsViewModel(
     }
 
     fun setSmartDownloadsEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setSmartDownloadsEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setSmartDownloadsEnabled(enabled)
             if (enabled) runSmartDownloadsNow() else songRepository.clearSmartDownloads()
@@ -550,6 +562,7 @@ class SettingsViewModel(
     }
 
     fun setSmartDownloadsCount(count: Int) {
+        Logger.i("Settings", "setSmartDownloadsCount: count=${count}")
         viewModelScope.launch {
             dataStoreManager.setSmartDownloadsCount(count)
             if (dataStoreManager.smartDownloadsEnabled.first() == DataStoreManager.TRUE) runSmartDownloadsNow()
@@ -610,6 +623,7 @@ class SettingsViewModel(
     }
 
     fun setLastfmScrobbleEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setLastfmScrobbleEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setLastfmScrobbleEnabled(enabled)
         }
@@ -636,6 +650,7 @@ class SettingsViewModel(
     }
 
     fun setDiscordRichPresenceEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setDiscordRichPresenceEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setRichPresenceEnabled(enabled)
             delay(100)
@@ -652,6 +667,7 @@ class SettingsViewModel(
     }
 
     fun setExplicitContentEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setExplicitContentEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setExplicitContentEnabled(enabled)
             getExplicitContentEnabled()
@@ -667,6 +683,7 @@ class SettingsViewModel(
     }
 
     fun setEnableLiquidGlass(enableLiquidGlass: Boolean) {
+        Logger.i("Settings", "setEnableLiquidGlass: enableLiquidGlass=${enableLiquidGlass}")
         viewModelScope.launch {
             dataStoreManager.setEnableLiquidGlass(enableLiquidGlass)
             getEnableLiquidGlass()
@@ -682,6 +699,7 @@ class SettingsViewModel(
     }
 
     fun setUpdateChannel(channel: String) {
+        Logger.i("Settings", "setUpdateChannel: channel=${channel}")
         viewModelScope.launch {
             dataStoreManager.setUpdateChannel(channel)
             getUpdateChannel()
@@ -697,6 +715,7 @@ class SettingsViewModel(
     }
 
     fun setBackupDownloaded(backupDownloaded: Boolean) {
+        Logger.i("Settings", "setBackupDownloaded: backupDownloaded=${backupDownloaded}")
         viewModelScope.launch {
             dataStoreManager.setBackupDownloaded(backupDownloaded)
             getBackupDownloaded()
@@ -713,6 +732,7 @@ class SettingsViewModel(
     }
 
     fun setAutoBackupEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setAutoBackupEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setAutoBackupEnabled(enabled)
             getAutoBackupEnabled()
@@ -728,6 +748,7 @@ class SettingsViewModel(
     }
 
     fun setAutoBackupFrequency(frequency: String) {
+        Logger.i("Settings", "setAutoBackupFrequency: frequency=${frequency}")
         viewModelScope.launch {
             dataStoreManager.setAutoBackupFrequency(frequency)
             getAutoBackupFrequency()
@@ -743,6 +764,7 @@ class SettingsViewModel(
     }
 
     fun setAutoBackupMaxFiles(max: Int) {
+        Logger.i("Settings", "setAutoBackupMaxFiles: max=${max}")
         viewModelScope.launch {
             dataStoreManager.setAutoBackupMaxFiles(max)
             getAutoBackupMaxFiles()
@@ -790,6 +812,7 @@ class SettingsViewModel(
     }
 
     fun setCustomModelId(modelId: String) {
+        Logger.i("Settings", "setCustomModelId: modelId=${modelId}")
         viewModelScope.launch {
             dataStoreManager.setCustomModelId(modelId)
             getCustomModelId()
@@ -805,6 +828,7 @@ class SettingsViewModel(
     }
 
     fun setCustomOpenAIBaseUrl(baseUrl: String) {
+        Logger.i("Settings", "setCustomOpenAIBaseUrl: baseUrl=${baseUrl}")
         viewModelScope.launch {
             dataStoreManager.setCustomOpenAIBaseUrl(baseUrl)
             getCustomOpenAIBaseUrl()
@@ -835,6 +859,7 @@ class SettingsViewModel(
     }
 
     fun setAIProvider(provider: String) {
+        Logger.i("Settings", "setAIProvider: provider=${provider}")
         viewModelScope.launch {
             dataStoreManager.setAIProvider(provider)
             getAIProvider()
@@ -850,6 +875,7 @@ class SettingsViewModel(
     }
 
     fun setAITranslation(useAITranslation: Boolean) {
+        Logger.i("Settings", "setAITranslation: useAITranslation=${useAITranslation}")
         viewModelScope.launch {
             dataStoreManager.setUseAITranslation(useAITranslation)
             getAITranslation()
@@ -889,6 +915,7 @@ class SettingsViewModel(
     }
 
     fun setAutoCheckUpdate(autoCheckUpdate: Boolean) {
+        Logger.i("Settings", "setAutoCheckUpdate: autoCheckUpdate=${autoCheckUpdate}")
         viewModelScope.launch {
             dataStoreManager.setAutoCheckForUpdates(autoCheckUpdate)
             getAutoCheckUpdate()
@@ -1058,6 +1085,7 @@ class SettingsViewModel(
     }
 
     fun setTranslationLanguage(language: String) {
+        Logger.i("Settings", "setTranslationLanguage: language=${language}")
         viewModelScope.launch {
             dataStoreManager.setTranslationLanguage(language)
             getTranslationLanguage()
@@ -1076,6 +1104,7 @@ class SettingsViewModel(
     // collects forever, so calling it again on every write leaves another collector running for the
     // life of the ViewModel. The one started in init already publishes this value.
     fun setLyricsOffsetMs(offsetMs: Int) {
+        Logger.i("Settings", "setLyricsOffsetMs: offsetMs=${offsetMs}")
         viewModelScope.launch {
             dataStoreManager.setLyricsOffsetMs(offsetMs)
         }
@@ -1090,6 +1119,7 @@ class SettingsViewModel(
     }
 
     fun setUseTranslation(useTranslation: Boolean) {
+        Logger.i("Settings", "setUseTranslation: useTranslation=${useTranslation}")
         viewModelScope.launch {
             dataStoreManager.setEnableTranslateLyric(useTranslation)
             getUseTranslation()
@@ -1105,6 +1135,7 @@ class SettingsViewModel(
     }
 
     fun setLyricsProvider(provider: String) {
+        Logger.i("Settings", "setLyricsProvider: provider=${provider}")
         viewModelScope.launch {
             dataStoreManager.setLyricsProvider(provider)
             getLyricsProvider()
@@ -1187,6 +1218,7 @@ class SettingsViewModel(
     }
 
     fun setSponsorBlockEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setSponsorBlockEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setSponsorBlockEnabled(enabled)
             getSponsorBlockEnabled()
@@ -1202,6 +1234,7 @@ class SettingsViewModel(
     }
 
     fun setPlayVideoInsteadOfAudio(playVideoInsteadOfAudio: Boolean) {
+        Logger.i("Settings", "setPlayVideoInsteadOfAudio: playVideoInsteadOfAudio=${playVideoInsteadOfAudio}")
         viewModelScope.launch {
             dataStoreManager.setWatchVideoInsteadOfPlayingAudio(playVideoInsteadOfAudio)
             getPlayVideoInsteadOfAudio()
@@ -1222,6 +1255,7 @@ class SettingsViewModel(
      * stack a second collector on each toggle.
      */
     fun setRadioAudioOnly(audioOnly: Boolean) {
+        Logger.i("Settings", "setRadioAudioOnly: audioOnly=${audioOnly}")
         viewModelScope.launch {
             dataStoreManager.setRadioAudioOnly(audioOnly)
         }
@@ -1240,12 +1274,14 @@ class SettingsViewModel(
     fun getLibraryChartCountries(): Flow<String?> = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY)
 
     fun setLibraryChartCountries(countries: Set<String>) {
+        Logger.i("Settings", "setLibraryChartCountries: countries=${countries}")
         viewModelScope.launch {
             dataStoreManager.putString(LIBRARY_CHART_COUNTRIES_KEY, countries.joinToString(","))
         }
     }
 
     fun setSponsorBlockCategories(list: ArrayList<String>) {
+        Logger.i("Settings", "setSponsorBlockCategories: list=${list}")
         log("setSponsorBlockCategories: $list", LogLevel.WARN)
         viewModelScope.launch {
             runBlocking(Dispatchers.IO) {
@@ -1435,6 +1471,7 @@ class SettingsViewModel(
     }
 
     fun setNormalizeVolume(normalizeVolume: Boolean) {
+        Logger.i("Settings", "setNormalizeVolume: normalizeVolume=${normalizeVolume}")
         viewModelScope.launch {
             dataStoreManager.setNormalizeVolume(normalizeVolume)
             getNormalizeVolume()
@@ -1450,6 +1487,7 @@ class SettingsViewModel(
     }
 
     fun setSendBackToGoogle(sendBackToGoogle: Boolean) {
+        Logger.i("Settings", "setSendBackToGoogle: sendBackToGoogle=${sendBackToGoogle}")
         viewModelScope.launch {
             dataStoreManager.setSendBackToGoogle(sendBackToGoogle)
             getSendBackToGoogle()
@@ -1465,6 +1503,7 @@ class SettingsViewModel(
     }
 
     fun setSkipSilent(skip: Boolean) {
+        Logger.i("Settings", "setSkipSilent: skip=${skip}")
         viewModelScope.launch {
             dataStoreManager.setSkipSilent(skip)
             getSkipSilent()
@@ -1480,6 +1519,7 @@ class SettingsViewModel(
     }
 
     fun setSavedPlaybackState(savedPlaybackState: Boolean) {
+        Logger.i("Settings", "setSavedPlaybackState: savedPlaybackState=${savedPlaybackState}")
         viewModelScope.launch {
             dataStoreManager.setSaveStateOfPlayback(savedPlaybackState)
             getSavedPlaybackState()
@@ -1495,6 +1535,7 @@ class SettingsViewModel(
     }
 
     fun setPlayerCacheLimit(size: Int) {
+        Logger.i("Settings", "setPlayerCacheLimit: size=${size}")
         viewModelScope.launch {
             dataStoreManager.setMaxSongCacheSize(size)
             getPlayerCacheLimit()
@@ -1659,6 +1700,7 @@ class SettingsViewModel(
     }
 
     fun setUsedAccount(acc: GoogleAccountEntity?) {
+        Logger.i("Settings", "setUsedAccount: acc=${acc}")
         viewModelScope.launch {
             if (acc != null) {
                 googleAccounts.value.data?.forEach {
@@ -1753,6 +1795,7 @@ class SettingsViewModel(
     }
 
     fun setSpotifyLogIn(loggedIn: Boolean) {
+        Logger.i("Settings", "setSpotifyLogIn: loggedIn=${loggedIn}")
         viewModelScope.launch {
             _spotifyLogIn.emit(loggedIn)
             if (!loggedIn) {
@@ -1776,6 +1819,7 @@ class SettingsViewModel(
     val equalizerEnabled: StateFlow<Boolean> = _equalizerEnabled
 
     fun setEqualizerEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setEqualizerEnabled: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setEqualizerEnabled(enabled)
         }
@@ -1785,6 +1829,7 @@ class SettingsViewModel(
     val equalizerType: StateFlow<String> = _equalizerType
 
     fun setEqualizerType(type: String) {
+        Logger.i("Settings", "setEqualizerType: type=${type}")
         viewModelScope.launch {
             dataStoreManager.setEqualizerType(type)
         }
@@ -1852,6 +1897,7 @@ class SettingsViewModel(
      * succession could reinstate the first band's old gain.
      */
     fun setEqualizerBands(bandsDb: List<Float>) {
+        Logger.i("Settings", "setEqualizerBands: bandsDb=${bandsDb}")
         viewModelScope.launch {
             dataStoreManager.setEqualizerBands(bandsDb)
         }
@@ -1876,6 +1922,7 @@ class SettingsViewModel(
     }
 
     fun setEqualizerPreamp(preampDb: Float) {
+        Logger.i("Settings", "setEqualizerPreamp: preampDb=${preampDb}")
         viewModelScope.launch {
             dataStoreManager.setEqualizerPreamp(preampDb)
         }
@@ -1941,30 +1988,37 @@ class SettingsViewModel(
     }
 
     fun setDelayEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setDelayEnabled: enabled=${enabled}")
         viewModelScope.launch { dataStoreManager.setDelayEnabled(enabled) }
     }
 
     fun setDelayTimeMs(timeMs: Int) {
+        Logger.i("Settings", "setDelayTimeMs: timeMs=${timeMs}")
         viewModelScope.launch { dataStoreManager.setDelayTimeMs(timeMs) }
     }
 
     fun setDelayFeedback(feedback: Float) {
+        Logger.i("Settings", "setDelayFeedback: feedback=${feedback}")
         viewModelScope.launch { dataStoreManager.setDelayFeedback(feedback) }
     }
 
     fun setDelayMix(mix: Float) {
+        Logger.i("Settings", "setDelayMix: mix=${mix}")
         viewModelScope.launch { dataStoreManager.setDelayMix(mix) }
     }
 
     fun setReverbEnabled(enabled: Boolean) {
+        Logger.i("Settings", "setReverbEnabled: enabled=${enabled}")
         viewModelScope.launch { dataStoreManager.setReverbEnabled(enabled) }
     }
 
     fun setReverbPreset(preset: ReverbPreset) {
+        Logger.i("Settings", "setReverbPreset: preset=${preset}")
         viewModelScope.launch { dataStoreManager.setReverbPreset(preset) }
     }
 
     fun setReverbMix(mix: Float) {
+        Logger.i("Settings", "setReverbMix: mix=${mix}")
         viewModelScope.launch { dataStoreManager.setReverbMix(mix) }
     }
 
@@ -2001,6 +2055,7 @@ class SettingsViewModel(
     }
 
     fun setSyncFollowToYouTube(enabled: Boolean) {
+        Logger.i("Settings", "setSyncFollowToYouTube: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setSyncFollowToYouTube(enabled)
             // Turning it on is a statement about the whole library: artists followed before the
@@ -2038,6 +2093,7 @@ class SettingsViewModel(
     }
 
     fun setSpotifyLyrics(loggedIn: Boolean) {
+        Logger.i("Settings", "setSpotifyLyrics: loggedIn=${loggedIn}")
         viewModelScope.launch {
             dataStoreManager.setSpotifyLyrics(loggedIn)
             getSpotifyLyrics()
@@ -2057,6 +2113,7 @@ class SettingsViewModel(
     }
 
     fun setSpotifyCanvas(loggedIn: Boolean) {
+        Logger.i("Settings", "setSpotifyCanvas: loggedIn=${loggedIn}")
         viewModelScope.launch {
             dataStoreManager.setSpotifyCanvas(loggedIn)
             getSpotifyCanvas()
@@ -2072,6 +2129,7 @@ class SettingsViewModel(
     }
 
     fun setAMAnimatedArtwork(enabled: Boolean) {
+        Logger.i("Settings", "setAMAnimatedArtwork: enabled=${enabled}")
         viewModelScope.launch {
             dataStoreManager.setAMAnimatedArtwork(enabled)
             getAMAnimatedArtwork()
@@ -2089,6 +2147,7 @@ class SettingsViewModel(
 
     // Lưu giá trị killServiceOnExit vào DataStore
     fun setKillServiceOnExit(kill: Boolean) {
+        Logger.i("Settings", "setKillServiceOnExit: kill=${kill}")
         viewModelScope.launch {
             dataStoreManager.setKillServiceOnExit(kill)
             getKillServiceOnExit()
@@ -2104,6 +2163,7 @@ class SettingsViewModel(
     }
 
     fun setYoutubeSubtitleLanguage(language: String) {
+        Logger.i("Settings", "setYoutubeSubtitleLanguage: language=${language}")
         viewModelScope.launch {
             dataStoreManager.setYoutubeSubtitleLanguage(language)
             getYoutubeSubtitleLanguage()
@@ -2121,6 +2181,7 @@ class SettingsViewModel(
     // Does not re-call the getter, for the same reason as setLyricsOffsetMs: the collector started
     // in init already publishes every write.
     fun setPreferredAudioLanguage(language: String) {
+        Logger.i("Settings", "setPreferredAudioLanguage: language=${language}")
         viewModelScope.launch {
             dataStoreManager.setPreferredAudioLanguage(language)
         }
@@ -2135,6 +2196,7 @@ class SettingsViewModel(
     }
 
     fun setHelpBuildLyricsDatabase(help: Boolean) {
+        Logger.i("Settings", "setHelpBuildLyricsDatabase: help=${help}")
         viewModelScope.launch {
             dataStoreManager.setHelpBuildLyricsDatabase(help)
             getHelpBuildLyricsDatabase()

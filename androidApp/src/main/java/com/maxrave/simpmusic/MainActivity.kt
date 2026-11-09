@@ -127,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             startMusicService()
         }
         Logger.d("MainActivity", "onCreate: ")
+        Logger.i("Startup", "activity created, version ${BuildConfig.VERSION_NAME}, build ${BuildConfig.FORK_UPDATE_COMMIT.take(7).ifEmpty { "local" }}")
         val data = (intent?.data ?: intent?.getStringExtra(Intent.EXTRA_TEXT)?.toUri())?.toKmpUriOrNull()
         if (data != null) {
             viewModel.setIntent(
