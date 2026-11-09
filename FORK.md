@@ -72,8 +72,8 @@ makes it install over the old app.
 - **The repo must be public.** A phone has no GitHub login; a private repo answers 404 and the
   check silently does nothing.
 - Local builds (`build-apk.ps1`) and branch builds carry no commit and are never forced.
-- Offline, the app opens normally unless an earlier launch already saw a newer build: that is
-  remembered and still blocks until the update is installed.
+- Offline (GitHub unreachable), the app opens normally. A newer build seen earlier is remembered,
+  and the update is asked for again on the next launch that reaches GitHub.
 - While CI is publishing, the release is briefly deleted; a check in that window does nothing.
 - Code: `composeApp/src/androidMain/.../update/ForkUpdater.kt` (check, download, install) and
   `expect/ForkUpdate.android.kt` (the screen), hooked into `App.kt` right after the unofficial-build

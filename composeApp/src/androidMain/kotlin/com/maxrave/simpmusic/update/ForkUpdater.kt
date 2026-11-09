@@ -67,12 +67,14 @@ object ForkUpdater {
 
     /**
      * Asks GitHub for the `latest` release. Returns the release when it was built from another
-     * commit than this APK, null when this APK is current. A failed request (offline, rate limit,
-     * a build in progress that has deleted the release) returns whatever was already pending.
+     * commit than this APK, null when this APK is current or GitHub cannot be reached right now.
+     *
+     * An unreachable GitHub does not lock the app: the pending update stays saved, so the next
+     * launch that reaches GitHub asks for it again. Blocking here left offline users with no way
+     * to play their downloads (issue #1).
      */
     suspend fun check(context: Context): Release? {
-        val latest = fetchLatest()
-        if (latest == null) return pending(context)
+        val latest = fetchLatest() ?: return null
         return if (latest.commit == currentCommit) {
             clearPending(context)
             null

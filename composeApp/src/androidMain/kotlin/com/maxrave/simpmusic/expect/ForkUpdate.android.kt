@@ -80,6 +80,7 @@ actual fun ForkUpdateScreenIfRequired(): Boolean {
 
     // Every return to the app asks GitHub again.
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
+        // Null when GitHub is unreachable: the app opens, the update is asked for next time online.
         scope.launch { release = ForkUpdater.check(context) }
         // Back from the "install unknown apps" screen with the permission granted: carry on.
         if (step == UpdateStep.NEEDS_PERMISSION && ForkUpdater.canInstall(context)) startUpdate()
