@@ -80,6 +80,9 @@ makes it install over the old app.
 - **CI**: every push to `main` runs `.github/workflows/build-apk.yml` and replaces the `latest`
   pre-release with fresh APKs (`arm64-v8a` for most phones, `universal` for anything). It can also be
   started by hand from the Actions tab.
+  Permanent download links (always the newest build):
+  `https://github.com/behradmoeini/simpmusic-dark/releases/download/latest/simpmusic-dark-arm64-v8a.apk`
+  and `.../simpmusic-dark-universal.apk`.
 - **Local (Windows)**: `.\build-apk.ps1`. Needs JDK 21 at `C:\Users\bmoeini\AndroidTools\jdk-21`
   and the Android SDK; output lands in `androidApp/build/outputs/apk/debug/`.
 

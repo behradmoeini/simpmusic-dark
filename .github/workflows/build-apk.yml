@@ -66,6 +66,10 @@ jobs:
           mkdir -p out
           cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk "out/simpmusic-dark-arm64-v8a-$SHA.apk"
           cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk "out/simpmusic-dark-universal-$SHA.apk"
+          # Fixed-name copies: one link that always serves the newest build,
+          # https://github.com/<owner>/<repo>/releases/download/latest/simpmusic-dark-arm64-v8a.apk
+          cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk out/simpmusic-dark-arm64-v8a.apk
+          cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk out/simpmusic-dark-universal.apk
           ls -la out
 
       # Builds of main replace the single "latest" pre-release, so only one set of APKs is kept.
