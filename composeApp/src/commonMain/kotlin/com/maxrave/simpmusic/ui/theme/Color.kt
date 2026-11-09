@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
  * Brand seed color. The whole Material 3 ColorScheme is generated from this
  * color at runtime — see [AppTheme].
  */
-val seed = Color(0xFF2EE6A6)
+val seed = Color(0xFF1DB954)
 
 // ===== Dark streaming-app palette =====
 // Near-black layers that step up in grey as surfaces rise, white titles and grey secondary text.
