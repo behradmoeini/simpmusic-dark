@@ -68,6 +68,7 @@ val viewModelModule =
         viewModel { LoginSyncSenderViewModel(get()) }
         viewModel { CommentsViewModel(get(), get()) }
         viewModel { OpenPodcastViewModel(get()) }
+        single { com.maxrave.simpmusic.chart.PersianTrendingChart(get()) }
         viewModel {
             NowPlayingBottomSheetViewModel(
                 get(),

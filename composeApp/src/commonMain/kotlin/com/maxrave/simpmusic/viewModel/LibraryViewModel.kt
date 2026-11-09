@@ -29,6 +29,7 @@ import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.isRadioPlaylistId
 import com.maxrave.simpmusic.ui.screen.home.analytics.monthFullNameResource
 import com.maxrave.simpmusic.ui.screen.library.LibraryDynamicPlaylistType
+import com.maxrave.simpmusic.chart.PersianTrendingChart
 import com.maxrave.simpmusic.utils.LIBRARY_CHART_COUNTRIES_KEY
 import com.maxrave.simpmusic.utils.filterByCountries
 import com.maxrave.simpmusic.utils.toChartCountrySet
@@ -37,6 +38,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.core.component.inject
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -388,16 +390,26 @@ class LibraryViewModel(
         }
     }
 
+    private val persianChart: PersianTrendingChart by inject()
+
     fun getChartPlaylists() {
         _chartPlaylists.value = LocalResource.Loading()
         viewModelScope.launch {
             playlistRepository.getChartPlaylist().collectLatest {
+                // The Persian card comes from YouTube Music, so it shows even when the chart server fails.
+                val persian = persianChart.load()
+                val selected = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY).first().toChartCountrySet()
                 when (it) {
-                    is Resource.Success -> {
-                        val selected = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY).first().toChartCountrySet()
-                        _chartPlaylists.value = LocalResource.Success((it.data ?: emptyList()).filterByCountries(selected))
-                    }
-                    is Resource.Error -> _chartPlaylists.value = LocalResource.Error(it.message ?: "Unknown error")
+                    is Resource.Success ->
+                        _chartPlaylists.value =
+                            LocalResource.Success(((it.data ?: emptyList()) + listOfNotNull(persian)).filterByCountries(selected))
+                    is Resource.Error ->
+                        _chartPlaylists.value =
+                            if (persian != null) {
+                                LocalResource.Success(listOf(persian).filterByCountries(selected))
+                            } else {
+                                LocalResource.Error(it.message ?: "Unknown error")
+                            }
                 }
             }
         }
