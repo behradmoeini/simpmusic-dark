@@ -14,6 +14,7 @@ import com.maxrave.domain.utils.isRadioQueueId
 import com.maxrave.logger.LogLevel
 import com.maxrave.logger.Logger
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -134,6 +135,28 @@ abstract class BaseViewModel :
                 type = type,
                 index = index,
             )
+            if (type == Config.SONG_CLICK) (anyTrack as? Track)?.let { ensureRadioContinues(it.videoId) }
+        }
+    }
+
+    /**
+     * Fork fix for "a song played alone, with no next": the related fetch is skipped while the queue is
+     * still initializing, and its failure is only logged at debug level. So if the radio still holds just
+     * the song a few seconds later, ask for the related songs again, up to three times, and log the outcome.
+     */
+    protected fun ensureRadioContinues(videoId: String) {
+        viewModelScope.launch {
+            for (attempt in 1..3) {
+                delay(4_000L * attempt)
+                val queue = mediaPlayerHandler.queueData.value?.data ?: return@launch
+                val sameSong = queue.firstPlayedTrack?.videoId == videoId
+                val stillSingle = queue.listTracks.size <= 1
+                val isRadio = queue.playlistId?.isRadioQueueId() == true
+                if (!sameSong || !stillSingle || !isRadio) return@launch
+                Logger.w("Radio", "No next track for $videoId (try $attempt), asking for related songs again")
+                mediaPlayerHandler.getRelated(videoId)
+            }
+            Logger.w("Radio", "No next track for the song, even after three tries")
         }
     }
 

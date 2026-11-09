@@ -992,6 +992,7 @@ class SharedViewModel(
             when (type) {
                 SONG_CLICK -> {
                     mediaPlayerHandler.getRelated(track.videoId)
+                    ensureRadioContinues(track.videoId)
                 }
 
                 VIDEO_CLICK -> {
