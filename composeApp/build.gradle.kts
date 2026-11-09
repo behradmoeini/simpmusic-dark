@@ -92,6 +92,8 @@ kotlin {
 
             api(projects.media3)
             api(projects.media3Ui)
+            // Fork: the RSS podcast player builds its own ExoPlayer (media3 keeps it implementation-only).
+            implementation(libs.media3.exoplayer)
 
             // Google Cast (gated: real SDK for full builds, no-op stub for FOSS builds)
             if (isFullBuild) {

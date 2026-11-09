@@ -255,6 +255,15 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </service>
+        <!-- Fork: RSS podcast episodes, played apart from the YouTube music service. -->
+        <service
+            android:name="com.maxrave.simpmusic.podcast.OpenPodcastPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
         <service
             android:name="com.maxrave.media3.service.download.MusicDownloadService"
             android:exported="true"

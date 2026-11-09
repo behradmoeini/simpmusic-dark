@@ -12,6 +12,7 @@ import com.maxrave.simpmusic.ui.navigation.destination.list.ArtistDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.BrowseDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.LocalPlaylistDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.MoreAlbumsDestination
+import com.maxrave.simpmusic.ui.navigation.destination.list.OpenPodcastDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.PlaylistDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.PodcastDestination
 import com.maxrave.simpmusic.ui.screen.library.LocalPlaylistScreen
@@ -19,6 +20,7 @@ import com.maxrave.simpmusic.ui.screen.other.AlbumScreen
 import com.maxrave.simpmusic.ui.screen.other.ArtistScreen
 import com.maxrave.simpmusic.ui.screen.other.BrowseScreen
 import com.maxrave.simpmusic.ui.screen.other.MoreAlbumsScreen
+import com.maxrave.simpmusic.ui.screen.other.OpenPodcastScreen
 import com.maxrave.simpmusic.ui.screen.other.PlaylistScreen
 import com.maxrave.simpmusic.ui.screen.other.PodcastScreen
 import com.maxrave.simpmusic.ui.theme.ForceDarkContent
@@ -90,6 +92,18 @@ fun NavGraphBuilder.listScreenGraph(
         ForceDarkContent {
             PodcastScreen(
                 podcastId = data.podcastId,
+                navController = navController,
+            )
+        }
+    }
+    composable<OpenPodcastDestination> { entry ->
+        val data = entry.toRoute<OpenPodcastDestination>()
+        ForceDarkContent {
+            OpenPodcastScreen(
+                feedUrl = data.feedUrl,
+                title = data.title,
+                author = data.author,
+                imageUrl = data.imageUrl,
                 navController = navController,
             )
         }

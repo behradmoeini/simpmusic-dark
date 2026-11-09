@@ -21,6 +21,7 @@ import com.maxrave.simpmusic.viewModel.MoodViewModel
 import com.maxrave.simpmusic.viewModel.MoreAlbumsViewModel
 import com.maxrave.simpmusic.viewModel.NotificationViewModel
 import com.maxrave.simpmusic.viewModel.NowPlayingBottomSheetViewModel
+import com.maxrave.simpmusic.viewModel.OpenPodcastViewModel
 import com.maxrave.simpmusic.viewModel.PlaylistViewModel
 import com.maxrave.simpmusic.viewModel.PodcastViewModel
 import com.maxrave.simpmusic.viewModel.SearchViewModel
@@ -66,6 +67,7 @@ val viewModelModule =
         viewModel { LoginSyncHostViewModel(get()) }
         viewModel { LoginSyncSenderViewModel(get()) }
         viewModel { CommentsViewModel(get(), get()) }
+        viewModel { OpenPodcastViewModel(get()) }
         viewModel {
             NowPlayingBottomSheetViewModel(
                 get(),

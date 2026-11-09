@@ -771,7 +771,6 @@ fun HomeScreen(
             Crossfade(targetState = loading, label = "Home Shimmer") { loading ->
                 if (podcastMode) {
                     HomePodcastsView(
-                        viewModel = viewModel,
                         navController = navController,
                         topPadding = with(LocalDensity.current) { topAppBarHeightPx.toDp() },
                     )
@@ -925,6 +924,10 @@ fun HomeScreen(
                                             navController = navController,
                                             data = item,
                                         )
+                                    }
+                                    // Fork: the "Same vibe, new artists" mix sits under the first shelf.
+                                    if (index == 0) {
+                                        DiscoverMixShelf(viewModel)
                                     }
                                 }
                             }

@@ -1073,4 +1073,19 @@
     <string name="fork_update_downloading">Downloading the update</string>
     <string name="fork_update_install_permission">Allow SimpMusic to install apps on the next screen, then come back and tap Update.</string>
     <string name="fork_update_failed">Download failed. Check your connection and try again.</string>
+    <string name="open_podcasts_search_hint">Search podcasts</string>
+    <string name="open_podcasts_your_shows">Your shows</string>
+    <string name="open_podcasts_no_shows">Follow a show and it appears here.</string>
+    <string name="open_podcasts_trending">Trending podcasts</string>
+    <string name="open_podcasts_no_results">No shows found.</string>
+    <string name="open_podcasts_error">Couldn't load podcasts. Check your connection.</string>
+    <string name="open_podcasts_source">Podcasts come from fyyd.de and each show's own RSS feed, not from YouTube.</string>
+    <string name="open_podcasts_following">Following</string>
+    <string name="open_podcasts_episodes">Episodes</string>
+    <string name="open_podcasts_no_episodes">This feed has no audio episodes.</string>
+    <string name="open_podcasts_android_only">Podcast playback is available on Android only.</string>
+    <string name="discover_mix_title">Same vibe, new artists</string>
+    <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
+    <string name="discover_mix_play">Play mix</string>
+    <string name="discover_mix_refresh">New mix</string>
 </resources>

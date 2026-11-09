@@ -1,19 +1,26 @@
 package com.maxrave.simpmusic.viewModel
 
 import androidx.lifecycle.viewModelScope
+import com.maxrave.common.Config
+import com.maxrave.domain.data.model.browse.album.Track
+import com.maxrave.domain.mediaservice.handler.PlaylistType
+import com.maxrave.domain.mediaservice.handler.QueueData
+import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
+import org.koin.core.component.get
+import simpmusic.composeapp.generated.resources.discover_mix_title
 import com.maxrave.common.SELECTED_LANGUAGE
 import com.maxrave.common.SUPPORTED_LANGUAGE
 import com.maxrave.domain.data.entities.SongEntity
 import com.maxrave.domain.data.model.home.HomeDataCombine
 import com.maxrave.domain.data.model.home.HomeItem
 import com.maxrave.domain.data.model.home.chart.Chart
-import com.maxrave.domain.data.model.home.chart.ChartPodcasts
 import com.maxrave.domain.data.model.mood.Mood
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.manager.DataStoreManager.Values.TRUE
 import com.maxrave.domain.repository.HomeRepository
 import com.maxrave.domain.utils.Resource
 import com.maxrave.logger.Logger
+import com.maxrave.simpmusic.utils.withoutYouTubePodcasts
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -219,7 +226,7 @@ class HomeViewModel(
                     when (home) {
                         is Resource.Success -> {
                             _continuation.value = home.data?.first
-                            _homeItemList.value = home.data?.second ?: listOf()
+                            _homeItemList.value = (home.data?.second ?: listOf()).withoutYouTubePodcasts()
                             _homeBackground.value = home.data?.third
                         }
 
@@ -235,7 +242,8 @@ class HomeViewModel(
                     }
                     when (chart) {
                         is Resource.Success -> {
-                            _chart.value = chart.data
+                            // Fork: no YouTube podcast shows in the chart either.
+                            _chart.value = chart.data?.copy(podcasts = null)
                         }
 
                         else -> {
@@ -310,7 +318,7 @@ class HomeViewModel(
                         when (home) {
                             is Resource.Success -> {
                                 _continuation.value = home.data?.first
-                                val newItems = home.data?.second ?: listOf()
+                                val newItems = (home.data?.second ?: listOf()).withoutYouTubePodcasts()
                                 _homeItemList.update { it + newItems }
                                 if (home.data?.first.isNullOrEmpty()) {
                                     _homeListState.value = ListState.PAGINATION_EXHAUST
@@ -342,7 +350,7 @@ class HomeViewModel(
                     dataStoreManager.setChartKey(region)
                     when (values) {
                         is Resource.Success -> {
-                            _chart.value = values.data
+                            _chart.value = values.data?.copy(podcasts = null)
                         }
 
                         else -> {
@@ -354,26 +362,46 @@ class HomeViewModel(
         }
     }
 
-    // Only the US chart carries a podcast shelf. It is fetched on its own for the Podcasts filter so
-    // the Home chart keeps the region the user picked.
-    private val _podcastChart: MutableStateFlow<ChartPodcasts?> = MutableStateFlow(null)
-    val podcastChart: StateFlow<ChartPodcasts?> = _podcastChart
-    val loadingPodcastChart = MutableStateFlow(false)
+    // Fork: "Same vibe, new artists" — see recommendation/DiscoverMix.kt.
+    private val discoverMixLoader by lazy { DiscoverMixLoader(get(), get(), get(), dataStoreManager) }
+    private val _discoverMix = MutableStateFlow<List<Track>>(emptyList())
+    val discoverMix: StateFlow<List<Track>> = _discoverMix
+    val discoverMixLoading = MutableStateFlow(false)
+    private var discoverMixJob: Job? = null
 
-    fun loadPodcastChart() {
-        if (_podcastChart.value != null || loadingPodcastChart.value) return
-        _chart.value?.podcasts?.let {
-            _podcastChart.value = it
-            return
-        }
-        viewModelScope.launch {
-            loadingPodcastChart.value = true
-            homeRepository.getChartData("US").collect { values ->
-                if (values is Resource.Success) {
-                    _podcastChart.value = values.data?.podcasts
+    fun loadDiscoverMix(newVariant: Boolean = false) {
+        if (!newVariant && (_discoverMix.value.isNotEmpty() || discoverMixJob?.isActive == true)) return
+        discoverMixJob?.cancel()
+        discoverMixJob =
+            viewModelScope.launch {
+                discoverMixLoading.value = true
+                try {
+                    _discoverMix.value = discoverMixLoader.load(newVariant)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Logger.w("DiscoverMix", "Mix failed: ${e.message}")
+                } finally {
+                    discoverMixLoading.value = false
                 }
-                loadingPodcastChart.value = false
             }
+    }
+
+    fun playDiscoverMix(index: Int = 0) {
+        val tracks = _discoverMix.value
+        val first = tracks.getOrNull(index) ?: return
+        viewModelScope.launch {
+            setQueueData(
+                QueueData.Data(
+                    listTracks = ArrayList(tracks),
+                    firstPlayedTrack = first,
+                    playlistId = null,
+                    playlistName = getString(Res.string.discover_mix_title),
+                    playlistType = PlaylistType.RADIO,
+                    continuation = null,
+                ),
+            )
+            loadMediaItem(first, Config.PLAYLIST_CLICK, index)
         }
     }
 
