@@ -905,6 +905,16 @@ class SettingsViewModel(
         _alertData.value = alertData
     }
 
+    /** Developer test: runs the Spotify playlist steps and shows each result in a dialog. */
+    fun runSpotifyPlaylistTest() {
+        val close = "OK" to { _: SettingAlertState -> setAlertData(null) }
+        setAlertData(SettingAlertState(title = "Spotify test", message = "Running…", confirm = close, dismiss = "Close"))
+        viewModelScope.launch {
+            val report = com.maxrave.simpmusic.spotify.SpotifyPlaylistProbe.run()
+            setAlertData(SettingAlertState(title = "Spotify test", message = report, confirm = close, dismiss = "Close"))
+        }
+    }
+
     fun setBasicAlertData(alertData: SettingBasicAlertState?) {
         _basicAlertData.value = alertData
     }

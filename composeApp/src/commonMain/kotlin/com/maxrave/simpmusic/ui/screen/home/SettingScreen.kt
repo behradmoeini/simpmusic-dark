@@ -2861,6 +2861,11 @@ fun SettingScreen(
                         navController.navigate(AppLogDestination)
                     },
                 )
+                SettingItem(
+                    title = "Spotify playlist test",
+                    subtitle = "Reads your Spotify playlists the way the app would, and shows each step",
+                    onClick = { viewModel.runSpotifyPlaylistTest() },
+                )
             }
         }
         item(key = "end") {
