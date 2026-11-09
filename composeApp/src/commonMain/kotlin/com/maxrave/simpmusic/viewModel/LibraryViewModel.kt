@@ -398,23 +398,19 @@ class LibraryViewModel(
         _chartPlaylists.value = LocalResource.Loading()
         viewModelScope.launch {
             playlistRepository.getChartPlaylist().collectLatest {
-                // The Persian card comes from YouTube Music, so it shows even when the chart server fails.
+                // The Persian card comes from the Spotify snapshot, so it shows even when the chart server fails.
                 val persian = persianChart.load()
-                Logger.i("Library", "charts: server=${(it as? Resource.Success<*>)?.data?.let { d -> (d as? List<*>)?.size } ?: "error"}, persian=${persian != null}")
+                Logger.i("Library", "charts: server=${(it as? Resource.Success<*>)?.data?.let { d -> (d as? List<*>)?.size } ?: "error"}, persian=true")
                 val selected = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY).first().toChartCountrySet()
                 when (it) {
                     is Resource.Success ->
                         _chartPlaylists.value =
                             LocalResource.Success(
-                                ((it.data ?: emptyList()) + listOfNotNull(persian)).filterByCountries(selected).withFlags(),
+                                ((it.data ?: emptyList()) + listOf(persian)).filterByCountries(selected).withFlags(),
                             )
                     is Resource.Error ->
                         _chartPlaylists.value =
-                            if (persian != null) {
-                                LocalResource.Success(listOf(persian).filterByCountries(selected).withFlags())
-                            } else {
-                                LocalResource.Error(it.message ?: "Unknown error")
-                            }
+                            LocalResource.Success(listOf(persian).filterByCountries(selected).withFlags())
                 }
             }
         }

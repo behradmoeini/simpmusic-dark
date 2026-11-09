@@ -48,6 +48,8 @@ import com.maxrave.domain.data.entities.PlaylistEntity
 import com.maxrave.domain.data.entities.PodcastsEntity
 import com.maxrave.domain.data.model.searchResult.playlists.PlaylistsResult
 import com.maxrave.domain.data.type.ChartItem
+import com.maxrave.simpmusic.chart.PERSIAN_CHART_ID
+import com.maxrave.simpmusic.ui.navigation.destination.list.SpotifyChartDestination
 import com.maxrave.domain.data.type.MonthlyRecapItem
 import com.maxrave.domain.data.type.PlaylistType
 import com.maxrave.domain.utils.LocalResource
@@ -232,12 +234,16 @@ internal inline fun <reified T> GridLibraryPlaylist(
                             onClick = {
                                 when (item) {
                                     is ChartItem -> {
-                                        navController.navigate(
-                                            PlaylistDestination(
-                                                playlistId = item.ytPlaylistId,
-                                                isYourYouTubePlaylist = false,
-                                            ),
-                                        )
+                                        if (item.ytPlaylistId == PERSIAN_CHART_ID) {
+                                            navController.navigate(SpotifyChartDestination)
+                                        } else {
+                                            navController.navigate(
+                                                PlaylistDestination(
+                                                    playlistId = item.ytPlaylistId,
+                                                    isYourYouTubePlaylist = false,
+                                                ),
+                                            )
+                                        }
                                     }
 
                                     is LocalPlaylistEntity -> {

@@ -15,6 +15,8 @@ import com.maxrave.simpmusic.ui.navigation.destination.list.MoreAlbumsDestinatio
 import com.maxrave.simpmusic.ui.navigation.destination.list.OpenPodcastDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.PlaylistDestination
 import com.maxrave.simpmusic.ui.navigation.destination.list.PodcastDestination
+import com.maxrave.simpmusic.ui.navigation.destination.list.SpotifyChartDestination
+import com.maxrave.simpmusic.ui.screen.other.SpotifyChartScreen
 import com.maxrave.simpmusic.ui.screen.library.LocalPlaylistScreen
 import com.maxrave.simpmusic.ui.screen.other.AlbumScreen
 import com.maxrave.simpmusic.ui.screen.other.ArtistScreen
@@ -66,6 +68,9 @@ fun NavGraphBuilder.listScreenGraph(
             type = data.type,
             id = data.id,
         )
+    }
+    composable<SpotifyChartDestination> {
+        SpotifyChartScreen(innerPadding = innerPadding)
     }
     composable<BrowseDestination> { entry ->
         val data = entry.toRoute<BrowseDestination>()
