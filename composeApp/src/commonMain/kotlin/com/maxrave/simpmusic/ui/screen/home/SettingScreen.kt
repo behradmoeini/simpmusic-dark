@@ -174,7 +174,11 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.maxrave.simpmusic.utils.chartCountryNames
+import com.maxrave.simpmusic.utils.toChartCountrySet
 import simpmusic.composeapp.generated.resources.Res
+import simpmusic.composeapp.generated.resources.library_chart_countries
+import simpmusic.composeapp.generated.resources.library_chart_countries_all
 import simpmusic.composeapp.generated.resources.base_url
 import simpmusic.composeapp.generated.resources.configured
 import simpmusic.composeapp.generated.resources.custom_base_url
@@ -956,6 +960,35 @@ fun SettingScreen(
         }
         item(key = "content") {
             SettingGroup(title = stringResource(Res.string.content)) {
+                val chartCountriesStored by viewModel.getLibraryChartCountries().collectAsStateWithLifecycle(null)
+                val chartCountrySelected = chartCountriesStored.toChartCountrySet()
+                SettingItem(
+                    title = stringResource(Res.string.library_chart_countries),
+                    subtitle =
+                        if (chartCountrySelected.isEmpty()) {
+                            stringResource(Res.string.library_chart_countries_all)
+                        } else {
+                            chartCountrySelected.joinToString(", ")
+                        },
+                    onClick = {
+                        viewModel.setAlertData(
+                            SettingAlertState(
+                                title = runBlocking { getString(Res.string.library_chart_countries) },
+                                multipleSelect =
+                                    SettingAlertState.SelectData(
+                                        listSelect = chartCountryNames().map { (it in chartCountrySelected) to it },
+                                    ),
+                                confirm =
+                                    runBlocking { getString(Res.string.save) } to { state ->
+                                        viewModel.setLibraryChartCountries(
+                                            state.multipleSelect?.getListSelected().orEmpty().toSet(),
+                                        )
+                                    },
+                                dismiss = runBlocking { getString(Res.string.cancel) },
+                            ),
+                        )
+                    },
+                )
                 SettingItem(
                     title = stringResource(Res.string.youtube_account),
                     subtitle = stringResource(Res.string.manage_your_youtube_accounts),

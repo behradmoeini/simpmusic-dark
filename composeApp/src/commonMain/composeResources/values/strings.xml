@@ -1088,4 +1088,6 @@
     <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
     <string name="discover_mix_play">Play mix</string>
     <string name="discover_mix_refresh">New mix</string>
+    <string name="library_chart_countries">Library charts</string>
+    <string name="library_chart_countries_all">All countries</string>
 </resources>

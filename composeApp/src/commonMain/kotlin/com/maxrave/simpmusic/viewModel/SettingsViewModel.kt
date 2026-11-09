@@ -27,12 +27,14 @@ import com.maxrave.domain.utils.LocalResource
 import com.maxrave.logger.LogLevel
 import com.maxrave.logger.Logger
 import com.maxrave.simpmusic.expect.isOnUnmeteredNetwork
+import com.maxrave.simpmusic.utils.LIBRARY_CHART_COUNTRIES_KEY
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -1221,6 +1223,15 @@ class SettingsViewModel(
                 log("getSponsorBlockCategories: $it", LogLevel.WARN)
                 _sponsorBlockCategories.emit(it)
             }
+        }
+    }
+
+    /** The chart countries shown in Your library, comma-separated; null until first read. */
+    fun getLibraryChartCountries(): Flow<String?> = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY)
+
+    fun setLibraryChartCountries(countries: Set<String>) {
+        viewModelScope.launch {
+            dataStoreManager.putString(LIBRARY_CHART_COUNTRIES_KEY, countries.joinToString(","))
         }
     }
 

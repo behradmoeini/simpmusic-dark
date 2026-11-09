@@ -29,6 +29,9 @@ import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.isRadioPlaylistId
 import com.maxrave.simpmusic.ui.screen.home.analytics.monthFullNameResource
 import com.maxrave.simpmusic.ui.screen.library.LibraryDynamicPlaylistType
+import com.maxrave.simpmusic.utils.LIBRARY_CHART_COUNTRIES_KEY
+import com.maxrave.simpmusic.utils.filterByCountries
+import com.maxrave.simpmusic.utils.toChartCountrySet
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -390,7 +393,10 @@ class LibraryViewModel(
         viewModelScope.launch {
             playlistRepository.getChartPlaylist().collectLatest {
                 when (it) {
-                    is Resource.Success -> _chartPlaylists.value = LocalResource.Success(it.data ?: emptyList())
+                    is Resource.Success -> {
+                        val selected = dataStoreManager.getString(LIBRARY_CHART_COUNTRIES_KEY).first().toChartCountrySet()
+                        _chartPlaylists.value = LocalResource.Success((it.data ?: emptyList()).filterByCountries(selected))
+                    }
                     is Resource.Error -> _chartPlaylists.value = LocalResource.Error(it.message ?: "Unknown error")
                 }
             }

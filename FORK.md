@@ -59,6 +59,19 @@ the I/O), built from this device's listening history, so it needs **local tracki
 
 The mix is fixed for the day and cached; the refresh button builds the next variant.
 
+## Library charts: countries and Persian
+
+Your library shows the SimpMusic chart playlists (one "Trending Weekly" per country, from the chart
+server). Two changes on top:
+
+- **Settings → Content → Library charts** picks which countries show. Empty means all. The choice is
+  stored in DataStore key `library_chart_countries` and filtered client-side
+  (`utils/LibraryCharts.kt`).
+- **Trending Weekly - Persian** is built on the phone: `PlaylistRepositoryImpl.persianTrendingChart()`
+  runs YouTube Music's playlist search for "Persian trending songs" and uses the top result. It still
+  shows when the chart server is down. It is not verified against live results from the build
+  environment, which can only reach GitHub.
+
 ## Forced updates
 
 Every time the app comes to the foreground it asks GitHub for the `latest` release
