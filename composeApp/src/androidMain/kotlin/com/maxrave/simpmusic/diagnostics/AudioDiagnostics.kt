@@ -43,7 +43,7 @@ object AudioDiagnostics {
                 override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>?) {
                     val summary =
                         configs.orEmpty().joinToString(" | ") { c: AudioPlaybackConfiguration ->
-                            "state=${c.playerState} usage=${c.audioAttributes.usage} volume=${c.volume}"
+                            "usage=${c.audioAttributes.usage} ${c.toString()}"
                         }
                     if (summary != lastPlayback) {
                         lastPlayback = summary
