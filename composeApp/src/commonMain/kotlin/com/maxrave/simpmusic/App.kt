@@ -67,6 +67,7 @@ import com.maxrave.domain.data.player.GenericMediaItem
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.manager.DataStoreManager.Values.TRUE
 import com.maxrave.logger.Logger
+import com.maxrave.simpmusic.expect.ForkUpdateScreenIfRequired
 import com.maxrave.simpmusic.expect.Orientation
 import com.maxrave.simpmusic.expect.currentOrientation
 import com.maxrave.simpmusic.expect.openUrl
@@ -513,6 +514,8 @@ fun App(
             UnofficialBuildScreen()
             return@AppTheme
         }
+        // Fork: a build behind the "latest" release is replaced by the update screen until it updates.
+        if (ForkUpdateScreenIfRequired()) return@AppTheme
         // Read inside AppTheme so MaterialTheme reflects the resolved scheme.
         val isLightScheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
 

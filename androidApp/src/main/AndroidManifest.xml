@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- Song recognition in Search: a few seconds of microphone audio, fingerprinted for Shazam. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Fork: forced updates install the new APK from the "latest" release (ForkUpdater). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <uses-feature
         android:name="android.hardware.type.automotive"

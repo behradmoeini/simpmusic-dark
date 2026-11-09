@@ -1110,6 +1110,8 @@ if (getPlatform() == Platform.Android) {
   - The pass runs in the sheet's composition: closing the sheet cancels it and stops the recording within one buffer, and a rotation starts listening again. `RECORD_AUDIO` is asked from the sheet (Open settings after a permanent denial, the Login Sync camera flow; `openAppSettings()` is now `internal` for it), and the manifest pairs it with `uses-feature android.hardware.microphone required="false"`, since the permission alone implies a required microphone.
   - **Quick Settings tile (2026-10-31)**: `RecognitionTileService` (androidApp `service/`) is a shortcut into the app, not a background recognizer. It opens `MainActivity` at `simpmusic://recognize`; the router calls `requestSongRecognition(true)` and navigates to Search with `launchSingleTop` (a Search already on top takes the request; a second copy would race the one leaving for it), and `SearchScreen` opens the sheet and clears the request, the `libraryTabRequest` pattern. `isAppLinkAvailable` keeps `recognize` Android-only. From Android 14 the tile must call `startActivityAndCollapse(PendingIntent)`, because the `Intent` overload throws `UnsupportedOperationException`; lint (`StartActivityAndCollapseDeprecated`) flags the pre-14 branch whatever the version guard, hence its `@Suppress`. The label and icon are Android resources (`widget_strings.xml`, `rounded_graphic_eq_24.xml`, path copied from `GraphicEq.kt`), since the tile editor reads them before any code runs. Metrolist's tile records in the background instead, through a transparent activity and a microphone foreground service: such a service may start only while an activity is visible, and tiles are not exempt. The owner chose the shortcut.
 
+- **Fork: forced updates from this fork's `latest` release (2026-11-09)**: on every foreground the Android app compares `BuildConfig.FORK_UPDATE_COMMIT` (CI sets it on `main` builds only) with the `target_commitish` of `behradmoeini/simpmusic-dark`'s `latest` release and, when they differ, `App.kt` draws `ForkUpdateScreenIfRequired()` instead of the app until the new APK is installed (`update/ForkUpdater.kt`, `REQUEST_INSTALL_PACKAGES`, the existing `${applicationId}.FileProvider`). A seen update is kept in SharedPreferences (`fork_update`) so going offline does not skip it. Needs the repo to be public. Upstream's launch-time update check is no longer called from `MainActivity`. Details in `FORK.md`.
+
 ## 🔄 CLAUDE.md Auto-Update Rule (MANDATORY)
 
 After completing any of the following types of changes, the AI agent **MUST** update this CLAUDE.md file:
@@ -1134,6 +1136,6 @@ After completing any of the following types of changes, the AI agent **MUST** up
 
 *This document helps AI Agents quickly understand the SimpMusic project. Update regularly when there are major changes to architecture or structure.*
 
-**Last updated**: 2026-10-31
+**Last updated**: 2026-11-09
 **Project version**: Check latest release on GitHub
 **Maintained by**: maxrave-dev and contributors

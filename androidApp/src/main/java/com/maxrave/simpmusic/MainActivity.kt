@@ -39,6 +39,7 @@ import com.maxrave.media3.di.setServiceActivitySession
 import com.maxrave.simpmusic.di.viewModelModule
 import com.maxrave.simpmusic.service.rss.RssFeedNotifyWork
 import com.maxrave.simpmusic.service.test.notification.NotifyWork
+import com.maxrave.simpmusic.update.ForkUpdater
 import com.maxrave.simpmusic.utils.ComposeResUtils
 import com.maxrave.simpmusic.utils.VersionManager
 import com.maxrave.simpmusic.viewModel.SharedViewModel
@@ -117,7 +118,9 @@ class MainActivity : AppCompatActivity() {
         unloadKoinModules(viewModelModule)
         loadKoinModules(viewModelModule)
         VersionManager.initialize()
-        checkForUpdate()
+        // Fork: updates come from this fork's own "latest" release (ForkUpdater), checked by App on
+        // every return to the foreground. Upstream's check would offer upstream's APK instead.
+        ForkUpdater.currentCommit = BuildConfig.FORK_UPDATE_COMMIT
         if (viewModel.recreateActivity.value || viewModel.isServiceRunning) {
             viewModel.activityRecreateDone()
         } else {
@@ -305,12 +308,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.isServiceRunning = true
         shouldUnbind = true
         Logger.d("Service", "Service started")
-    }
-
-    private fun checkForUpdate() {
-        if (viewModel.shouldCheckForUpdate()) {
-            viewModel.checkForUpdate()
-        }
     }
 
     private fun putString(

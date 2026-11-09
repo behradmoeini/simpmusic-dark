@@ -1066,4 +1066,11 @@
     <string name="recognize_mic_needed">Microphone access needed</string>
     <string name="recognize_mic_hint">SimpMusic listens for a few seconds to find the song playing near you</string>
     <string name="recognize_allow_mic">Allow microphone</string>
+    <string name="fork_update_title">Update required</string>
+    <string name="fork_update_message">A new build of SimpMusic Dark is out. Install it to keep using the app.</string>
+    <string name="fork_update_build">New build %1$s</string>
+    <string name="fork_update_button">Update</string>
+    <string name="fork_update_downloading">Downloading the update</string>
+    <string name="fork_update_install_permission">Allow SimpMusic to install apps on the next screen, then come back and tap Update.</string>
+    <string name="fork_update_failed">Download failed. Check your connection and try again.</string>
 </resources>

@@ -30,6 +30,9 @@ android {
         versionName =
             libs.versions.version.name
                 .get()
+        // Commit this APK was built from. Only CI builds of main set it; local and branch builds
+        // leave it empty and never get the forced update (ForkUpdater in composeApp androidMain).
+        buildConfigField("String", "FORK_UPDATE_COMMIT", "\"${System.getenv("FORK_UPDATE_COMMIT").orEmpty()}\"")
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
 

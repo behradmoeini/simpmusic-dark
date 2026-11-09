@@ -48,6 +48,9 @@ jobs:
           APK_KEYSTORE_PASSWORD: ${{ secrets.APK_KEYSTORE_PASSWORD }}
           APK_KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
           APK_KEY_PASSWORD: ${{ secrets.APK_KEY_PASSWORD }}
+          # Baked into the APK: the app forces an update when the "latest" release targets another
+          # commit. Only main builds carry it, so branch builds are never forced back to main.
+          FORK_UPDATE_COMMIT: ${{ github.ref == 'refs/heads/main' && github.sha || '' }}
         # The hosted runner has 7 GB of RAM: one Gradle heap, Kotlin compiled inside it.
         run: >
           ./gradlew :androidApp:assembleDebug

@@ -18,6 +18,26 @@ dark streaming-app look and a Podcasts view on Home. The YouTube Music code is u
 Files touched are under `composeApp/src/commonMain/kotlin/com/maxrave/simpmusic/` (theme, `ui/component`,
 `ui/screen`, `viewModel/HomeViewModel.kt`), plus `androidApp/build.gradle.kts` for signing.
 
+## Forced updates
+
+Every time the app comes to the foreground it asks GitHub for the `latest` release
+(`api.github.com/repos/behradmoeini/simpmusic-dark/releases/tags/latest`). CI bakes the commit it
+built from into the APK (`BuildConfig.FORK_UPDATE_COMMIT`, from the `FORK_UPDATE_COMMIT` env var,
+set only for builds of `main`). When the release targets another commit, the whole app is replaced
+by an "Update required" screen: Update downloads the arm64-v8a APK (universal on other devices),
+asks once for "install unknown apps", and hands it to the system installer. The same signing key
+makes it install over the old app.
+
+- **The repo must be public.** A phone has no GitHub login; a private repo answers 404 and the
+  check silently does nothing.
+- Local builds (`build-apk.ps1`) and branch builds carry no commit and are never forced.
+- Offline, the app opens normally unless an earlier launch already saw a newer build: that is
+  remembered and still blocks until the update is installed.
+- While CI is publishing, the release is briefly deleted; a check in that window does nothing.
+- Code: `composeApp/src/androidMain/.../update/ForkUpdater.kt` (check, download, install) and
+  `expect/ForkUpdate.android.kt` (the screen), hooked into `App.kt` right after the unofficial-build
+  check. Upstream's own update check is no longer started from `MainActivity`.
+
 ## Building
 
 - **CI**: every push to `main` runs `.github/workflows/build-apk.yml` and replaces the `latest`
