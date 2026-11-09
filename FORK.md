@@ -23,7 +23,11 @@ Files touched are under `composeApp/src/commonMain/kotlin/com/maxrave/simpmusic/
 
 YouTube Music's podcasts are gone from Home: every card YouTube marks as a podcast (an episode's
 `MUSIC_VIDEO_TYPE_PODCAST_*`, an `MPSP…` show or `MPED…` episode page) is filtered out, shelves
-left empty are dropped, and the chart's podcast shelf is hidden (`utils/YouTubePodcastFilter.kt`).
+left mostly empty (half or more removed) are dropped, and the chart's podcast shelf is hidden
+(`utils/YouTubePodcastFilter.kt`). Two catches go by shape, since YouTube does not label them:
+episode rows sent as multi-row list items, and any video (not a song) of 20 minutes or more, which
+is how video podcasts and interview clips arrive. The second also hides long DJ sets and concerts
+from Home.
 
 The Podcasts chip lists shows from [fyyd](https://fyyd.de) (open directory, keyless API: search and
 the "hot" list) and reads episodes straight from the show's RSS feed, skipping video enclosures.
