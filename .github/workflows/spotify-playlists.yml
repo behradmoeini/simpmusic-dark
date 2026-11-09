@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install spotapi
-        run: pip install "spotapi==1.2.8" pymongo redis
+        run: pip install "spotapi[websocket,redis,pymongo]==1.2.8"
 
       - name: Fetch playlists
         run: python scripts/spotify_playlists.py
