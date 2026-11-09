@@ -34,4 +34,18 @@ class LibraryChartsTest {
         assertEquals(setOf("Vietnam", "Persian"), " Vietnam, ,Persian ".toChartCountrySet())
         assertEquals(emptySet(), (null as String?).toChartCountrySet())
     }
+
+    @Test
+    fun flagsFollowTheCountry() {
+        assertEquals("🇻🇳", chartFlag("Trending Weekly - Vietnam"))
+        assertEquals("🇺🇸", chartFlag("Trending Weekly - United States"))
+        assertEquals("🌍", chartFlag("Trending Weekly - Global"))
+        assertEquals("🇮🇷", chartFlag("Trending Weekly - Persian"))
+        assertEquals("", chartFlag("Some other chart"))
+    }
+
+    @Test
+    fun withFlagsPrefixesTheName() {
+        assertEquals(listOf("🇻🇳 Trending Weekly - Vietnam"), listOf(ChartItem("Trending Weekly - Vietnam", "PL2")).withFlags().map { it.name })
+    }
 }

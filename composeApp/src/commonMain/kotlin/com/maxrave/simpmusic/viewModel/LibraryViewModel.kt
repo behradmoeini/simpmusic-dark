@@ -32,6 +32,7 @@ import com.maxrave.simpmusic.ui.screen.library.LibraryDynamicPlaylistType
 import com.maxrave.simpmusic.chart.PersianTrendingChart
 import com.maxrave.simpmusic.utils.LIBRARY_CHART_COUNTRIES_KEY
 import com.maxrave.simpmusic.utils.filterByCountries
+import com.maxrave.simpmusic.utils.withFlags
 import com.maxrave.simpmusic.utils.toChartCountrySet
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -402,11 +403,13 @@ class LibraryViewModel(
                 when (it) {
                     is Resource.Success ->
                         _chartPlaylists.value =
-                            LocalResource.Success(((it.data ?: emptyList()) + listOfNotNull(persian)).filterByCountries(selected))
+                            LocalResource.Success(
+                                ((it.data ?: emptyList()) + listOfNotNull(persian)).filterByCountries(selected).withFlags(),
+                            )
                     is Resource.Error ->
                         _chartPlaylists.value =
                             if (persian != null) {
-                                LocalResource.Success(listOf(persian).filterByCountries(selected))
+                                LocalResource.Success(listOf(persian).filterByCountries(selected).withFlags())
                             } else {
                                 LocalResource.Error(it.message ?: "Unknown error")
                             }
