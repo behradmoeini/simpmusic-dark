@@ -27,6 +27,7 @@ import com.maxrave.simpmusic.utils.NetworkFirstInterceptor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import multiplatform.network.cmptoast.AppContext
 import okhttp3.OkHttpClient
@@ -50,6 +51,7 @@ class SimpMusicApplication :
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val dataStoreManager: DataStoreManager by inject()
+    private val mediaPlayerHandler: com.maxrave.domain.mediaservice.handler.MediaPlayerHandler by inject()
     private lateinit var autoBackupScheduler: AutoBackupScheduler
 
     override fun onCreate() {
@@ -71,6 +73,12 @@ class SimpMusicApplication :
             )
             loadKoinModules(viewModelModule)
         }
+        // Audio log for "playing but silent" bugs (kept seven days in logs/audio-*.log).
+        com.maxrave.simpmusic.diagnostics.AudioDiagnostics.start(
+            this,
+            applicationScope,
+            mediaPlayerHandler.controlState.map { it.isPlaying },
+        )
         // provide custom configuration
         val workConfig =
             Configuration
