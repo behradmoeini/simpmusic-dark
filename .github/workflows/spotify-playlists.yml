@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install spotapi
-        run: pip install "spotapi==1.2.8"
+        run: pip install "spotapi==1.2.8" pymongo
 
       - name: Fetch playlists
         run: python scripts/spotify_playlists.py
