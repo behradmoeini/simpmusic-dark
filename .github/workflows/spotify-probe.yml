@@ -1,0 +1,14 @@
+name: Spotify probe
+
+# Manual only: checks whether the Spotify web token route can read a public user's playlists.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run probe
+        run: python3 scripts/spotify-probe.py
