@@ -17,10 +17,11 @@ fun String?.toChartCountrySet(): Set<String> =
 
 /**
  * The flag for a chart name: the country's ISO code as regional-indicator letters, a globe for the
- * worldwide chart, and Iran's flag for Persian. Empty when the name matches no known country.
+ * worldwide chart, and the Lion and Sun for Persian. Empty when the name matches no known country.
  */
 fun chartFlag(chartName: String): String {
-    if (chartName.contains(PERSIAN_CHART, ignoreCase = true)) return flagOf("IR")
+    // Iran has no emoji for the Lion and Sun, so the lion and the sun stand in for it.
+    if (chartName.contains(PERSIAN_CHART, ignoreCase = true)) return "🦁☀️"
     val index = CHART_SUPPORTED_COUNTRY.itemsData.indexOfFirst { chartName.contains(it, ignoreCase = true) }
     if (index < 0) return ""
     val code = CHART_SUPPORTED_COUNTRY.items[index]
