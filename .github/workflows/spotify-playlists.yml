@@ -1,6 +1,11 @@
 name: Spotify playlists (daily)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/spotify-playlists.yml"
+      - "scripts/spotify_playlists.py"
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
