@@ -47,12 +47,23 @@ private fun Content.isLongTalkVideo(): Boolean =
         !MusicVideoType.isAudio(videoType) &&
         (durationSeconds ?: 0) >= LONG_VIDEO_SECONDS
 
+/**
+ * A plain YouTube playlist card (no song, no duration, often hours long). Albums (OLAK / MPRE),
+ * artists (UC), the app's own radios and mixes (RD) are kept, so only playlists that are not songs go.
+ */
+fun Content.isYouTubePlaylistCard(): Boolean {
+    if (!videoId.isNullOrEmpty()) return false
+    if (browseId?.startsWith("UC") == true || browseId?.startsWith("MPRE") == true) return false
+    val id = playlistId ?: return false
+    return !(id.startsWith("OLAK") || id.startsWith("RD") || id.startsWith("VLOLAK") || id.startsWith("VLRD"))
+}
+
 /** Drops podcast cards, and any shelf left mostly empty or whose "More" opens a podcast page. */
 fun List<HomeItem>.withoutYouTubePodcasts(): List<HomeItem> =
     mapNotNull { item ->
         if (item.moreEndpoint?.pageType == HomeItem.MoreEndpoint.PAGE_TYPE_PODCAST) return@mapNotNull null
         val cards = item.contents.filterNotNull()
-        val kept = cards.filterNot { it.isYouTubePodcast() || it.isMusicVideo() }
+        val kept = cards.filterNot { it.isYouTubePodcast() || it.isMusicVideo() || it.isYouTubePlaylistCard() }
         when {
             kept.size == cards.size -> item
             kept.isEmpty() || kept.size * 2 <= cards.size -> null
