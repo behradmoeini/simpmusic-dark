@@ -40,7 +40,7 @@ class LibraryChartsTest {
         assertEquals("🇻🇳", chartFlag("Trending Weekly - Vietnam"))
         assertEquals("🇺🇸", chartFlag("Trending Weekly - United States"))
         assertEquals("🌍", chartFlag("Trending Weekly - Global"))
-        assertEquals("🇮🇷", chartFlag("Trending Weekly - Persian"))
+        assertEquals("🦁☀️", chartFlag("Trending Weekly - Persian"))
         assertEquals("", chartFlag("Some other chart"))
     }
 
