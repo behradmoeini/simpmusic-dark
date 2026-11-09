@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.maxrave.common.Config
+
+import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.repository.SearchRepository
 import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.toTrack
@@ -87,7 +89,7 @@ fun SpotifyChartScreen(
                         rank = index + 1,
                         track = track,
                         onClick = {
-                            scope.launch { playTrack(track, searchRepository, sharedViewModel) }
+                            scope.launch { playFrom(index, tracks, searchRepository, sharedViewModel) }
                         },
                     )
                 }
@@ -95,16 +97,39 @@ fun SpotifyChartScreen(
     }
 }
 
-/** YouTube Music only plays by video id, so each Spotify track is matched by its title and artists. */
-private suspend fun playTrack(
-    track: SpotifySnapshotTrack,
+/**
+ * Plays the chart from the tapped track to the end, in the chart's own order. The tapped track starts
+ * at once; the rest are matched in order and added as one batch, so the queue keeps the chart's order.
+ * A track with no YouTube Music match is skipped.
+ */
+private suspend fun playFrom(
+    startIndex: Int,
+    tracks: List<SpotifySnapshotTrack>,
     searchRepository: SearchRepository,
     sharedViewModel: SharedViewModel,
 ) {
+    var started = false
+    val rest = arrayListOf<Track>()
+    for (i in startIndex until tracks.size) {
+        val match = matchOnYouTube(tracks[i], searchRepository) ?: continue
+        if (!started) {
+            sharedViewModel.loadMediaItemFromTrack(match, Config.SONG_CLICK)
+            started = true
+        } else {
+            rest += match
+        }
+    }
+    if (rest.isNotEmpty()) sharedViewModel.addListToQueue(rest)
+}
+
+/** YouTube Music only plays by video id, so each Spotify track is matched by its title and artists. */
+private suspend fun matchOnYouTube(
+    track: SpotifySnapshotTrack,
+    searchRepository: SearchRepository,
+): Track? {
     val query = (listOf(track.title) + track.artists).joinToString(" ")
     val result = searchRepository.getSearchDataSong(query).first()
-    val match = (result as? Resource.Success)?.data?.firstOrNull() ?: return
-    sharedViewModel.loadMediaItemFromTrack(match.toTrack(), Config.SONG_CLICK)
+    return (result as? Resource.Success)?.data?.firstOrNull()?.toTrack()
 }
 
 @Composable
