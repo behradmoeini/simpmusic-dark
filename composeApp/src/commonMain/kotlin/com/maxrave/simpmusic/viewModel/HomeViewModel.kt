@@ -9,6 +9,7 @@ import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
 import com.maxrave.simpmusic.recommendation.SimilarTracksLoader
 import org.koin.core.component.get
 import simpmusic.composeapp.generated.resources.discover_mix_title
+import simpmusic.composeapp.generated.resources.similar_mix_title
 import com.maxrave.common.SELECTED_LANGUAGE
 import com.maxrave.common.SUPPORTED_LANGUAGE
 import com.maxrave.domain.data.entities.SongEntity
