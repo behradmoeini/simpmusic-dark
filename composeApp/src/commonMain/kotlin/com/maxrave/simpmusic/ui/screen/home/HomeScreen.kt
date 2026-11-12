@@ -928,6 +928,7 @@ fun HomeScreen(
                                     // Fork: the "Same vibe, new artists" mix sits under the first shelf.
                                     if (index == 0) {
                                         DiscoverMixShelf(viewModel)
+                                        SimilarShelf(viewModel)
                                     }
                                 }
                             }

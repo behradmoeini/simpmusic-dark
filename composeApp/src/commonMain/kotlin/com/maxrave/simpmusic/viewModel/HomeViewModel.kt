@@ -6,6 +6,7 @@ import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
 import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
+import com.maxrave.simpmusic.recommendation.SimilarTracksLoader
 import org.koin.core.component.get
 import simpmusic.composeapp.generated.resources.discover_mix_title
 import com.maxrave.common.SELECTED_LANGUAGE
@@ -398,6 +399,51 @@ class HomeViewModel(
                     firstPlayedTrack = first,
                     playlistId = null,
                     playlistName = getString(Res.string.discover_mix_title),
+                    playlistType = PlaylistType.RADIO,
+                    continuation = null,
+                ),
+            )
+            loadMediaItem(first, Config.PLAYLIST_CLICK, index)
+        }
+    }
+
+    // Fork: "Like what you play" — Last.fm similar tracks, see recommendation/SimilarTracksLoader.kt.
+    private val similarLoader by lazy { SimilarTracksLoader(get(), get(), get()) }
+    private val _similar = MutableStateFlow<List<Track>>(emptyList())
+    val similar: StateFlow<List<Track>> = _similar
+    val similarLoading = MutableStateFlow(false)
+    private var similarJob: Job? = null
+    private var similarVariant = 0
+
+    fun loadSimilar(newVariant: Boolean = false) {
+        if (!newVariant && (_similar.value.isNotEmpty() || similarJob?.isActive == true)) return
+        if (newVariant) similarVariant++
+        similarJob?.cancel()
+        similarJob =
+            viewModelScope.launch {
+                similarLoading.value = true
+                try {
+                    _similar.value = similarLoader.load(similarVariant)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Logger.w("SimilarTracks", "Similar failed: ${e.message}")
+                } finally {
+                    similarLoading.value = false
+                }
+            }
+    }
+
+    fun playSimilar(index: Int = 0) {
+        val tracks = _similar.value
+        val first = tracks.getOrNull(index) ?: return
+        viewModelScope.launch {
+            setQueueData(
+                QueueData.Data(
+                    listTracks = ArrayList(tracks),
+                    firstPlayedTrack = first,
+                    playlistId = null,
+                    playlistName = getString(Res.string.similar_mix_title),
                     playlistType = PlaylistType.RADIO,
                     continuation = null,
                 ),

@@ -1084,6 +1084,9 @@
     <string name="open_podcasts_episodes">Episodes</string>
     <string name="open_podcasts_no_episodes">This feed has no audio episodes.</string>
     <string name="open_podcasts_android_only">Podcast playback is available on Android only.</string>
+    <string name="similar_mix_title">Like what you play</string>
+    <string name="similar_mix_subtitle">New songs close to what you have been playing, from Last.fm</string>
+    <string name="similar_mix_play">Play</string>
     <string name="discover_mix_title">Same vibe, new artists</string>
     <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
     <string name="discover_mix_play">Play mix</string>

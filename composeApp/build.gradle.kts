@@ -843,6 +843,9 @@ buildkonfig {
                 .toInt()
         buildConfigField(STRING, "versionName", versionName)
         buildConfigField(INT, "versionCode", "$versionCode")
+        // Last.fm public API key for "Like what you play". Set from the LASTFM_API_KEY repository secret in CI;
+        // empty means the shelf stays hidden.
+        buildConfigField(STRING, "similarApiKey", System.getenv("LASTFM_API_KEY") ?: "")
 
         if (isFullBuild) {
             try {
