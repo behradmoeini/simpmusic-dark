@@ -68,16 +68,70 @@ object OpenPodcastDirectory {
     private const val MAX_EPISODES = 300
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** Shows whose title matches [query]. */
+    private const val APPLE_SEARCH = "https://itunes.apple.com/search"
+    private const val APPLE_LOOKUP = "https://itunes.apple.com/lookup"
+    private const val APPLE_CHART = "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/50/podcasts.json"
+
+    /**
+     * Shows whose title matches [query]. Apple's podcast catalogue comes first (it has most shows,
+     * Persian ones included); fyyd's directory fills in what Apple does not list.
+     */
     suspend fun search(query: String): List<OpenPodcastShow> {
         val q = URLEncoder.encode(query.trim(), "UTF-8")
-        return fyydShows("$FYYD/search/podcast?title=$q&count=30")
+        val apple = runCatching { appleSearch(q) }.getOrElse { emptyList() }
+        val fyyd = runCatching { fyydShows("$FYYD/search/podcast?title=$q&count=30") }.getOrElse { emptyList() }
+        return (apple + fyyd).distinctBy { it.feedUrl }
     }
 
-    /** fyyd's "hot" list: shows getting the most attention right now. */
+    /** Apple's top podcasts, with their feeds looked up. Falls back to fyyd's hot list if Apple fails. */
     suspend fun trending(language: String? = null): List<OpenPodcastShow> {
+        val apple = runCatching { appleTrending() }.getOrElse { emptyList() }
+        if (apple.isNotEmpty()) return apple
         val lang = language?.takeIf { it.isNotBlank() }?.let { "&language=$it" }.orEmpty()
         return fyydShows("$FYYD/feature/podcast/hot?count=40$lang")
+    }
+
+    private suspend fun appleSearch(encodedQuery: String): List<OpenPodcastShow> {
+        val body = String(get("$APPLE_SEARCH?media=podcast&limit=30&term=$encodedQuery"), Charsets.UTF_8)
+        return appleShows(body)
+    }
+
+    private suspend fun appleTrending(): List<OpenPodcastShow> {
+        val chart = String(get(APPLE_CHART), Charsets.UTF_8)
+        val ids =
+            (json.parseToJsonElement(chart).jsonObject["feed"] as? JsonObject)
+                ?.get("results")?.let { it as? JsonArray }
+                ?.mapNotNull { (it as? JsonObject)?.str("id") }
+                .orEmpty()
+        if (ids.isEmpty()) return emptyList()
+        val body = String(get("$APPLE_LOOKUP?id=${ids.take(50).joinToString(",")}"), Charsets.UTF_8)
+        // Lookup answers in no particular order, so the chart's order is restored by collection id.
+        val byId = appleShowsById(body)
+        return ids.mapNotNull { byId[it] }
+    }
+
+    /** Shows from an iTunes Search or Lookup answer; each carries the RSS feed Apple lists for it. */
+    private fun appleShows(body: String): List<OpenPodcastShow> = appleShowsById(body).values.toList()
+
+    private fun appleShowsById(body: String): Map<String, OpenPodcastShow> {
+        val results = json.parseToJsonElement(body).jsonObject["results"] as? JsonArray ?: return emptyMap()
+        val out = LinkedHashMap<String, OpenPodcastShow>()
+        for (element in results) {
+            val o = element as? JsonObject ?: continue
+            val feed = o.str("feedUrl")?.takeIf { it.startsWith("http") } ?: continue
+            val id = o.str("collectionId") ?: o.str("trackId") ?: continue
+            val title = o.str("collectionName") ?: o.str("trackName") ?: continue
+            out.putIfAbsent(
+                id,
+                OpenPodcastShow(
+                    feedUrl = feed,
+                    title = title,
+                    author = o.str("artistName").orEmpty(),
+                    imageUrl = o.str("artworkUrl600") ?: o.str("artworkUrl100"),
+                ),
+            )
+        }
+        return out
     }
 
     private suspend fun fyydShows(url: String): List<OpenPodcastShow> {
