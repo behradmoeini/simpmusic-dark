@@ -14,10 +14,13 @@ jobs:
     steps:
       - name: Apple iTunes podcast search
         run: |
-          curl -sS -w "\nHTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&term=Losers+Locker+Room&limit=5" | head -c 2500
+          curl -sS -w "\nHTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&term=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86+%D8%A8%D8%A7%D8%B2%D9%86%D8%AF%D9%87+%D9%87%D8%A7&limit=5" | head -c 2500
       - name: fyyd search
         run: |
-          curl -sS -w "\nHTTP %{http_code}\n" "https://api.fyyd.de/0.2/search/podcast?title=Losers+Locker+Room&count=5" | head -c 2500
-      - name: Apple top podcasts chart
+          curl -sS -w "\nHTTP %{http_code}\n" "https://api.fyyd.de/0.2/search/podcast?title=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86&count=5" | head -c 2500
+      - name: Apple top podcasts chart (retry)
+        run: |
+          for i in 1 2 3; do curl -sS --max-time 40 -o /tmp/top.json -w "HTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" && break; sleep 5; done; head -c 1200 /tmp/top.json
+      - name: Unused
         run: |
           curl -sS -w "\nHTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" | head -c 2500
