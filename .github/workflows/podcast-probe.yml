@@ -1,0 +1,23 @@
+name: Podcast source probe
+
+on:
+  push:
+    branches: [podcast-probe]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Apple iTunes podcast search
+        run: |
+          curl -sS -w "\nHTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&term=Losers+Locker+Room&limit=5" | head -c 2500
+      - name: fyyd search
+        run: |
+          curl -sS -w "\nHTTP %{http_code}\n" "https://api.fyyd.de/0.2/search/podcast?title=Losers+Locker+Room&count=5" | head -c 2500
+      - name: Apple top podcasts chart
+        run: |
+          curl -sS -w "\nHTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" | head -c 2500
