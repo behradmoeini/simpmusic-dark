@@ -21,6 +21,3 @@ jobs:
       - name: Apple top podcasts chart (retry)
         run: |
           for i in 1 2 3; do curl -sS --max-time 40 -o /tmp/top.json -w "HTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" && break; sleep 5; done; head -c 1200 /tmp/top.json
-      - name: Unused
-        run: |
-          curl -sS -w "\nHTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" | head -c 2500
