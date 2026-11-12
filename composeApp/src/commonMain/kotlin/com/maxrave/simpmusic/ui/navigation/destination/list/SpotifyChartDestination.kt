@@ -2,6 +2,8 @@ package com.maxrave.simpmusic.ui.navigation.destination.list
 
 import kotlinx.serialization.Serializable
 
-/** The Persian chart: tracks from the Spotify snapshot, each played through a YouTube Music match. */
+/** One Spotify playlist from the daily snapshot, played in its own order. */
 @Serializable
-object SpotifyChartDestination
+data class SpotifyChartDestination(
+    val playlistId: String,
+)

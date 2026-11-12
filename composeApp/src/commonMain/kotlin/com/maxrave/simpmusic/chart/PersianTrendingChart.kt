@@ -2,12 +2,18 @@ package com.maxrave.simpmusic.chart
 
 import com.maxrave.domain.data.type.ChartItem
 
-/** Name shown in Your library. */
-const val PERSIAN_CHART_NAME = "Trending Weekly - Persian"
+/** Prefix on a chart item's id that marks a Spotify playlist from the snapshot. */
+const val SPOTIFY_CHART_PREFIX = "spotify:"
 
-/** Marks the Persian card. Its tracks come from the Spotify snapshot, not a YouTube playlist. */
-const val PERSIAN_CHART_ID = "spotify-persian"
-
+/**
+ * One library card per Spotify playlist in the daily snapshot, named as the playlist is named on
+ * Spotify. Each card opens the playlist in its own order.
+ */
 class PersianTrendingChart {
-    fun load(): ChartItem = ChartItem(name = PERSIAN_CHART_NAME, ytPlaylistId = PERSIAN_CHART_ID)
+    suspend fun loadItems(): List<ChartItem> =
+        loadSpotifySnapshot()
+            ?.playlists
+            ?.filter { it.tracks.isNotEmpty() }
+            ?.map { ChartItem(name = it.name, ytPlaylistId = SPOTIFY_CHART_PREFIX + it.id) }
+            .orEmpty()
 }

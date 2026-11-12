@@ -38,7 +38,6 @@ import com.maxrave.domain.utils.toTrack
 import com.maxrave.simpmusic.chart.SpotifySnapshot
 import com.maxrave.simpmusic.chart.SpotifySnapshotTrack
 import com.maxrave.simpmusic.chart.loadSpotifySnapshot
-import com.maxrave.simpmusic.chart.mergedTracks
 import com.maxrave.simpmusic.ui.theme.typo
 import com.maxrave.simpmusic.viewModel.SharedViewModel
 import kotlinx.coroutines.flow.first
@@ -48,6 +47,7 @@ import org.koin.compose.koinInject
 @Composable
 fun SpotifyChartScreen(
     innerPadding: PaddingValues,
+    playlistId: String,
     sharedViewModel: SharedViewModel = koinInject(),
     searchRepository: SearchRepository = koinInject(),
 ) {
@@ -62,7 +62,8 @@ fun SpotifyChartScreen(
         loading = false
     }
 
-    val tracks = snapshot?.mergedTracks().orEmpty()
+    // The playlist's own order, as Spotify lists it.
+    val tracks = snapshot?.playlists?.firstOrNull { it.id == playlistId }?.tracks.orEmpty()
 
     when {
         loading ->

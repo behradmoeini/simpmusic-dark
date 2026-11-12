@@ -69,8 +69,9 @@ fun NavGraphBuilder.listScreenGraph(
             id = data.id,
         )
     }
-    composable<SpotifyChartDestination> {
-        SpotifyChartScreen(innerPadding = innerPadding)
+    composable<SpotifyChartDestination> { entry ->
+        val data = entry.toRoute<SpotifyChartDestination>()
+        SpotifyChartScreen(innerPadding = innerPadding, playlistId = data.playlistId)
     }
     composable<BrowseDestination> { entry ->
         val data = entry.toRoute<BrowseDestination>()
