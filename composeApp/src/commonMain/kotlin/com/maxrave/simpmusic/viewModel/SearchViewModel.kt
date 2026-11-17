@@ -49,6 +49,8 @@ data class SearchScreenState(
     val searchPlaylistsResult: List<PlaylistsResult> = emptyList(),
     val searchFeaturedPlaylistsResult: List<PlaylistsResult> = emptyList(),
     val searchPodcastsResult: List<PlaylistsResult> = emptyList(),
+    /** Podcasts from the open directory (Apple, fyyd): the Podcasts chip shows these. */
+    val searchOpenPodcasts: List<com.maxrave.simpmusic.podcast.OpenPodcastShow> = emptyList(),
     val suggestQueries: List<String> = emptyList(),
     val suggestYTItems: List<SearchResultType> = emptyList(),
 )
@@ -413,24 +415,16 @@ class SearchViewModel(
     fun searchPodcast(query: String) {
         _searchScreenUIState.value = SearchScreenUIState.Loading
         viewModelScope.launch {
-            searchRepository.getSearchDataPodcast(query).collect { values ->
-                when (values) {
-                    is Resource.Success -> {
-                        values.data?.let { podcastList ->
-                            _searchScreenState.update { state ->
-                                state.copy(
-                                    searchType = SearchType.PODCASTS,
-                                    searchPodcastsResult = podcastList,
-                                )
-                            }
-                        }
-                        _searchScreenUIState.value = SearchScreenUIState.Success
-                    }
-
-                    is Resource.Error -> {
-                        _searchScreenUIState.value = SearchScreenUIState.Error
-                    }
+            try {
+                val shows = com.maxrave.simpmusic.podcast.OpenPodcastDirectory.search(query)
+                _searchScreenState.update { state ->
+                    state.copy(searchType = SearchType.PODCASTS, searchOpenPodcasts = shows)
                 }
+                _searchScreenUIState.value = SearchScreenUIState.Success
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _searchScreenUIState.value = SearchScreenUIState.Error
             }
         }
     }

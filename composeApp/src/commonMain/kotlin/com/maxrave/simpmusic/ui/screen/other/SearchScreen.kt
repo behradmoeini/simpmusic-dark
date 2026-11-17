@@ -806,6 +806,34 @@ fun SearchScreen(
                                                     SearchType.PODCASTS -> searchScreenState.searchPodcastsResult
                                                 }
 
+                                            if (searchScreenState.searchType == SearchType.PODCASTS) {
+                                                LazyColumn(
+                                                    contentPadding =
+                                                        PaddingValues(
+                                                            start = 4.dp,
+                                                            end = 4.dp,
+                                                            top = searchBarHeight,
+                                                            bottom = 10.dp,
+                                                        ),
+                                                    state = resultsState,
+                                                ) {
+                                                    items(searchScreenState.searchOpenPodcasts, key = { it.feedUrl }) { show ->
+                                                        com.maxrave.simpmusic.ui.component.OpenPodcastShowRow(
+                                                            show = show,
+                                                            onClick = {
+                                                                navController.navigate(
+                                                                    com.maxrave.simpmusic.ui.navigation.destination.list.OpenPodcastDestination(
+                                                                        feedUrl = show.feedUrl,
+                                                                        title = show.title,
+                                                                        author = show.author,
+                                                                        imageUrl = show.imageUrl,
+                                                                    ),
+                                                                )
+                                                            },
+                                                        )
+                                                    }
+                                                }
+                                            } else {
                                             Crossfade(targetState = currentResults.isNotEmpty()) {
                                                 if (it) {
                                                     LazyColumn(
@@ -962,6 +990,7 @@ fun SearchScreen(
                                                         )
                                                     }
                                                 }
+                                            }
                                             }
                                         }
                                     }
