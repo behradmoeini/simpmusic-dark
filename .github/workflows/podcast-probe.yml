@@ -12,12 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Apple iTunes podcast search
+      - name: Apple search exactly as the app sends it
         run: |
-          curl -sS -w "\nHTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&term=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86+%D8%A8%D8%A7%D8%B2%D9%86%D8%AF%D9%87+%D9%87%D8%A7&limit=5" | head -c 2500
-      - name: fyyd search
+          curl -sS --max-time 30 -o s.json -w "HTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&limit=30&term=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86+%D8%A8%D8%A7%D8%B2%D9%86%D8%AF%D9%87+%D9%87%D8%A7"
+          python3 -c "import json;d=json.load(open('s.json'));r=d.get('results',[]);print('results',len(r));[print(x.get('collectionName'),'|',x.get('feedUrl')) for x in r[:5]]"
+      - name: Apple chart then lookup, as the app does
         run: |
-          curl -sS -w "\nHTTP %{http_code}\n" "https://api.fyyd.de/0.2/search/podcast?title=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86&count=5" | head -c 2500
-      - name: Apple top podcasts chart (retry)
-        run: |
-          for i in 1 2 3; do curl -sS --max-time 40 -o /tmp/top.json -w "HTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/10/podcasts.json" && break; sleep 5; done; head -c 1200 /tmp/top.json
+          curl -sS --max-time 40 -o c.json -w "chart HTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/50/podcasts.json"
+          python3 -c "
+import json,urllib.parse,subprocess
+d=json.load(open('c.json'));ids=[x['id'] for x in d['feed']['results']]
+print('chart ids',len(ids))
+q='https://itunes.apple.com/lookup?id='+','.join(ids[:50])
+out=subprocess.run(['curl','-sS','--max-time','30','-w','\nHTTP %{http_code}','-o','-',q],capture_output=True,text=True).stdout
+body,_,code=out.rpartition('\nHTTP ')
+print('lookup',code)
+r=json.loads(body).get('results',[])
+print('lookup results',len(r),'with feed',sum(1 for x in r if x.get('feedUrl')))
+"
