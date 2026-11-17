@@ -848,12 +848,7 @@ fun SearchScreen(
                                                     ) {
                                                         // Open podcasts whose title answers the query best go above the rest, in All.
                                                         if (searchScreenState.searchType == SearchType.ALL) {
-                                                            val topShows =
-                                                                searchScreenState.searchOpenPodcasts
-                                                                    .map { it to com.maxrave.simpmusic.utils.searchRelevance(query, it.title) }
-                                                                    .filter { it.second >= 2 }
-                                                                    .sortedByDescending { it.second }
-                                                                    .map { it.first }
+                                                            val topShows = searchScreenState.searchTopOpenPodcasts
                                                             items(topShows, key = { "podcast:" + it.feedUrl }) { show ->
                                                                 com.maxrave.simpmusic.ui.component.OpenPodcastShowRow(
                                                                     show = show,

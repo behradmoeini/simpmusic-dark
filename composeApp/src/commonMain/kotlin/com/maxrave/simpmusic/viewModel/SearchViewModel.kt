@@ -18,6 +18,7 @@ import com.maxrave.domain.utils.toQueryList
 import com.maxrave.logger.LogLevel
 import com.maxrave.logger.Logger
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
+import com.maxrave.simpmusic.utils.relevanceTitle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +52,8 @@ data class SearchScreenState(
     val searchPodcastsResult: List<PlaylistsResult> = emptyList(),
     /** Podcasts from the open directory (Apple, fyyd): the Podcasts chip shows these. */
     val searchOpenPodcasts: List<com.maxrave.simpmusic.podcast.OpenPodcastShow> = emptyList(),
+    /** The open podcasts that answer the query well enough to head All, best first. */
+    val searchTopOpenPodcasts: List<com.maxrave.simpmusic.podcast.OpenPodcastShow> = emptyList(),
     val suggestQueries: List<String> = emptyList(),
     val suggestYTItems: List<SearchResultType> = emptyList(),
 )
@@ -226,7 +229,13 @@ class SearchViewModel(
             // Open podcast directory (Apple, fyyd): ranked with the rest by how closely the title matches.
             launch {
                 val shows = runCatching { com.maxrave.simpmusic.podcast.OpenPodcastDirectory.search(query) }.getOrDefault(emptyList())
-                _searchScreenState.update { state -> state.copy(searchOpenPodcasts = shows) }
+                val top =
+                    shows
+                        .map { it to com.maxrave.simpmusic.utils.searchRelevance(query, it.title) }
+                        .filter { it.second >= 2 }
+                        .sortedByDescending { it.second }
+                        .map { it.first }
+                _searchScreenState.update { state -> state.copy(searchOpenPodcasts = shows, searchTopOpenPodcasts = top) }
             }
 
             val job1 =
