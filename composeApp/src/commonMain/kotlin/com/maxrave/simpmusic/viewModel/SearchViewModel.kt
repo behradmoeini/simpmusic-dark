@@ -215,13 +215,19 @@ class SearchViewModel(
         _searchScreenUIState.value = SearchScreenUIState.Loading
         viewModelScope.launch {
             var song = ArrayList<SongsResult>()
-            val video = ArrayList<VideosResult>()
+            var video = ArrayList<VideosResult>()
             var album = ArrayList<AlbumsResult>()
             var artist = ArrayList<ArtistsResult>()
             var playlist = ArrayList<PlaylistsResult>()
             var featuredPlaylist = ArrayList<PlaylistsResult>()
             var podcast = ArrayList<PlaylistsResult>()
             val temp: ArrayList<SearchResultType> = ArrayList()
+
+            // Open podcast directory (Apple, fyyd): ranked with the rest by how closely the title matches.
+            launch {
+                val shows = runCatching { com.maxrave.simpmusic.podcast.OpenPodcastDirectory.search(query) }.getOrDefault(emptyList())
+                _searchScreenState.update { state -> state.copy(searchOpenPodcasts = shows) }
+            }
 
             val job1 =
                 launch {
@@ -317,10 +323,22 @@ class SearchViewModel(
                     temp.addAll(podcast)
                 }
 
+                // Most relevant first: each title is scored against the query, ties keep their order.
+                fun <T : SearchResultType> List<T>.byRelevance(): List<T> =
+                    sortedByDescending { com.maxrave.simpmusic.utils.searchRelevance(query, it.relevanceTitle()) }
+                val rankedAll = temp.byRelevance()
+                song = ArrayList(song.byRelevance())
+                artist = ArrayList(artist.byRelevance())
+                album = ArrayList(album.byRelevance())
+                playlist = ArrayList(playlist.byRelevance())
+                featuredPlaylist = ArrayList(featuredPlaylist.byRelevance())
+                podcast = ArrayList(podcast.byRelevance())
+                video = ArrayList(video.byRelevance())
+
                 _searchScreenState.update { state ->
                     state.copy(
                         searchType = SearchType.ALL,
-                        searchAllResult = temp,
+                        searchAllResult = rankedAll,
                         searchSongsResult = song,
                         searchArtistsResult = artist,
                         searchAlbumsResult = album,
