@@ -10,29 +10,29 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Apple search exactly as the app sends it
+      - name: Search for the two shows
         run: |
-          curl -sS --max-time 30 -o s.json -w "HTTP %{http_code}\n" "https://itunes.apple.com/search?media=podcast&limit=30&term=%D8%B1%D8%AE%D8%AA%DA%A9%D9%86+%D8%A8%D8%A7%D8%B2%D9%86%D8%AF%D9%87+%D9%87%D8%A7"
           python3 - <<'PY'
-          import json
-          r = json.load(open('s.json')).get('results', [])
-          print('results', len(r))
-          for x in r[:5]:
-              print(x.get('collectionName'), '|', x.get('feedUrl'))
+          import urllib.parse, subprocess
+          for term in ['رختکن بازنده ها', 'عقاید دو دلقک']:
+              url = 'https://itunes.apple.com/search?media=podcast&limit=30&term=' + urllib.parse.quote(term)
+              out = subprocess.run(['curl', '-sS', '--max-time', '30', '-w', '\nHTTP %{http_code}', '-o', '-', url], capture_output=True, text=True).stdout
+              body, _, code = out.rpartition('\nHTTP ')
+              import json
+              r = json.loads(body).get('results', []) if body.strip() else []
+              print(term, code, 'results', len(r))
+              for x in r[:4]:
+                  print('   ', x.get('collectionName'), '|', 'feed' if x.get('feedUrl') else 'NO FEED')
           PY
-      - name: Apple chart then lookup, as the app does
+      - name: Chart endpoints, three tries each
         run: |
-          curl -sS --max-time 40 -o c.json -w "chart HTTP %{http_code}\n" "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/50/podcasts.json"
-          python3 - <<'PY'
-          import json, subprocess
-          ids = [x['id'] for x in json.load(open('c.json'))['feed']['results']]
-          print('chart ids', len(ids))
-          q = 'https://itunes.apple.com/lookup?id=' + ','.join(ids[:50])
-          out = subprocess.run(['curl', '-sS', '--max-time', '30', '-w', '\nHTTP %{http_code}', '-o', '-', q], capture_output=True, text=True).stdout
-          body, _, code = out.rpartition('\nHTTP ')
-          print('lookup', code)
-          r = json.loads(body).get('results', [])
-          print('lookup results', len(r), 'with feed', sum(1 for x in r if x.get('feedUrl')))
-          PY
+          for u in "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/50/podcasts.json" "https://itunes.apple.com/us/rss/toppodcasts/limit=50/json"; do
+            for i in 1 2 3; do
+              code=$(curl -sS --max-time 40 -o /dev/null -w "%{http_code}" "$u" || echo ERR)
+              echo "$u try $i: $code"
+              [ "$code" = "200" ] && break
+              sleep 3
+            done
+          done
