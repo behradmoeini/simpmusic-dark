@@ -70,7 +70,7 @@ jobs:
           echo "$APK_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/signing.jks"
           echo "APK_KEYSTORE_FILE=$RUNNER_TEMP/signing.jks" >> "$GITHUB_ENV"
 
-      - name: Build debug APK
+      - name: Build release APK
         env:
           APK_KEYSTORE_PASSWORD: ${{ secrets.APK_KEYSTORE_PASSWORD }}
           APK_KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
@@ -81,7 +81,7 @@ jobs:
           LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
         # The hosted runner has 7 GB of RAM: one Gradle heap, Kotlin compiled inside it.
         run: >
-          ./gradlew :androidApp:assembleDebug
+          ./gradlew :androidApp:assembleRelease
           -PisFullBuild=false
           -Pkotlin.compiler.execution.strategy=in-process
           "-Dorg.gradle.jvmargs=-Xmx5g -XX:+UseParallelGC"
@@ -101,12 +101,12 @@ jobs:
           SHA=$(git rev-parse --short HEAD)
           echo "SHORT_SHA=$SHA" >> "$GITHUB_ENV"
           mkdir -p out
-          cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk "out/simpmusic-dark-arm64-v8a-$SHA.apk"
-          cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk "out/simpmusic-dark-universal-$SHA.apk"
+          cp androidApp/build/outputs/apk/release/androidApp-arm64-v8a-release.apk "out/simpmusic-dark-arm64-v8a-$SHA.apk"
+          cp androidApp/build/outputs/apk/release/androidApp-universal-release.apk "out/simpmusic-dark-universal-$SHA.apk"
           # Fixed-name copies: one link that always serves the newest build,
           # https://github.com/<owner>/<repo>/releases/download/latest/simpmusic-dark-arm64-v8a.apk
-          cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk out/simpmusic-dark-arm64-v8a.apk
-          cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk out/simpmusic-dark-universal.apk
+          cp androidApp/build/outputs/apk/release/androidApp-arm64-v8a-release.apk out/simpmusic-dark-arm64-v8a.apk
+          cp androidApp/build/outputs/apk/release/androidApp-universal-release.apk out/simpmusic-dark-universal.apk
           cp mcpServer/build/distributions/simpmusic-mcp*.zip out/simpmusic-mcp.zip
           ls -la out
 
@@ -121,7 +121,7 @@ jobs:
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Latest build ($SHORT_SHA)" \
-            --notes "Debug APK built from $GITHUB_SHA. Most phones want the arm64-v8a file; the universal one runs on any device. simpmusic-mcp.zip is the MCP server that plays music from a chat client (see mcpServer/README.md)."
+            --notes "APK built from $GITHUB_SHA. Most phones want the arm64-v8a file; the universal one runs on any device. simpmusic-mcp.zip is the MCP server that plays music from a chat client (see mcpServer/README.md)."
 
       # Builds started by hand on another branch keep the arm64 APK for three days instead.
       - name: Upload APK artifact

@@ -258,7 +258,8 @@ class MainActivity : AppCompatActivity() {
         }
         viewModel.getLocation()
 
-        if (!BuildConfig.DEBUG) viewModel.checkOfficialBuild(packageName, signingCertSha256())
+        // Fork: no official-build check. It compares the signing key with upstream's F-Droid key,
+        // which this fork's own key never matches, so a release build would lock itself out.
         setContent {
             App(viewModel)
         }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -106,7 +107,10 @@ fun AmbientThemeGlow(
  */
 @Composable
 fun rememberNowPlayingGlowTint(thumbnailUrl: String?): Color? {
-    val networkLoader = rememberNetworkLoader(HttpClient(CIO))
+    // One client for the screen's life, closed with it: built inline, a new one leaked on every recomposition.
+    val paletteHttpClient = remember { HttpClient(CIO) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { paletteHttpClient.close() } }
+    val networkLoader = rememberNetworkLoader(paletteHttpClient)
     val dominantColorState =
         rememberDominantColorState(
             defaultColor = Color.Unspecified,

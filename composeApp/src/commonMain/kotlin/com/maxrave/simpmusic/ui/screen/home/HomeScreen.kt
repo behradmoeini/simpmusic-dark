@@ -353,7 +353,10 @@ fun HomeScreen(
     // leaving the tint as it was.
     val headerImage by viewModel.homeBackground.collectAsStateWithLifecycle()
     var headerImageFailed by remember(headerImage) { mutableStateOf(false) }
-    val networkLoader = rememberNetworkLoader(HttpClient(CIO))
+    // One client for the screen's life, closed with it: built inline, a new one leaked on every recomposition.
+    val paletteHttpClient = remember { HttpClient(CIO) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { paletteHttpClient.close() } }
+    val networkLoader = rememberNetworkLoader(paletteHttpClient)
     val dominantColorState =
         rememberDominantColorState(
             defaultColor = backgroundColor,

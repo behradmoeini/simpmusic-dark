@@ -109,7 +109,10 @@ fun MixForYouScreen(
         }
     var topHeaderColor by remember { mutableStateOf(backgroundColor) }
     val animatedColor by animateColorAsState(topHeaderColor, tween(500))
-    val networkLoader = rememberNetworkLoader(HttpClient(CIO))
+    // One client for the screen's life, closed with it: built inline, a new one leaked on every recomposition.
+    val paletteHttpClient = remember { HttpClient(CIO) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { paletteHttpClient.close() } }
+    val networkLoader = rememberNetworkLoader(paletteHttpClient)
     val dominantColorState =
         rememberDominantColorState(
             defaultColor = backgroundColor,

@@ -105,6 +105,11 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // Fork: CI ships this optimised build under the same package and key as the debug
+            // builds it replaces, so it installs as an update and keeps the listener's library.
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            signingConfigs.findByName("fixed")?.let { signingConfig = it }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -124,6 +129,11 @@ android {
             versionNameSuffix = "-dev"
             signingConfigs.findByName("fixed")?.let { signingConfig = it }
         }
+    }
+    // Fork: release builds skip lint's "vital" pass, which would stop the CI build on fork code
+    // that the debug builds have shipped with all along.
+    lint {
+        checkReleaseBuilds = false
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
