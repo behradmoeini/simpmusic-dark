@@ -365,7 +365,10 @@ class NowPlayingBottomSheetViewModel(
                 }
 
                 is NowPlayingBottomSheetUIEvent.Share -> {
-                    val url = "https://music.youtube.com/watch?v=${songUIState.videoId}"
+                    // Fork: a podcast episode is shared as its audio file, not as a YouTube link.
+                    val url =
+                        com.maxrave.domain.data.player.DirectAudio.urlOf(songUIState.videoId)
+                            ?: "https://music.youtube.com/watch?v=${songUIState.videoId}"
                     shareUrl(
                         title = getString(Res.string.share_url),
                         url,

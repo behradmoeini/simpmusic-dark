@@ -13,6 +13,7 @@ import com.maxrave.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -130,10 +131,13 @@ private class MusicQueuePodcastPlayer(
             handler.loadMediaItem(track, PODCAST_CLICK, 0)
             if (start > 0) {
                 // Seek once the player has the episode: it ignores a seek before it is ready.
+                // The state flow can still hold the previous track's progress, so readiness is read
+                // off the player itself: a known duration means the episode is loaded.
                 val ready =
                     withTimeoutOrNull(20_000L) {
                         handler.nowPlaying.first { it?.mediaId == id }
-                        handler.simpleMediaState.first { it is SimpleMediaState.Ready || it is SimpleMediaState.Progress }
+                        while (handler.player.duration <= 0L) delay(200)
+                        true
                     }
                 if (ready != null && handler.nowPlaying.value?.mediaId == id) handler.player.seekTo(start)
             }

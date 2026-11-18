@@ -911,11 +911,11 @@ fun InfoPlayerBottomSheet(
                         buildAnnotatedString {
                             withLink(
                                 LinkAnnotation.Url(
-                                    "https://music.youtube.com/watch?v=${songEntity?.videoId}",
+                                    songLink(songEntity?.videoId),
                                     TextLinkStyles(style = SpanStyle(textDecoration = TextDecoration.Underline)),
                                 ),
                             ) {
-                                append("https://music.youtube.com/watch?v=${songEntity?.videoId}")
+                                append(songLink(songEntity?.videoId))
                             }
                         },
                     modifier =
@@ -3490,3 +3490,6 @@ sealed class DevLogInType {
             is Discord -> getString(Res.string.your_discord_token)
         }
 }
+/** Fork: a podcast episode links to its audio file; anything else to YouTube Music. */
+private fun songLink(videoId: String?): String =
+    com.maxrave.domain.data.player.DirectAudio.urlOf(videoId) ?: "https://music.youtube.com/watch?v=$videoId"
