@@ -13,7 +13,6 @@ import simpmusic.composeapp.generated.resources.similar_mix_title
 import com.maxrave.common.SELECTED_LANGUAGE
 import com.maxrave.common.SUPPORTED_LANGUAGE
 import com.maxrave.domain.data.entities.SongEntity
-import com.maxrave.domain.data.model.home.HomeDataCombine
 import com.maxrave.domain.data.model.home.HomeItem
 import com.maxrave.domain.data.model.home.chart.Chart
 import com.maxrave.domain.data.model.mood.Mood
@@ -31,9 +30,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -203,99 +202,145 @@ class HomeViewModel(
             }
         regionCode = runBlocking { dataStoreManager.location.first() }
         homeJob?.cancel()
+        continuationJob?.cancel()
         homeJob =
             viewModelScope.launch {
-                combine(
-                    homeRepository.getHomeData(
-                        params,
-                        getString(Res.string.view_count),
-                        getString(Res.string.song),
-                    ),
-                    homeRepository.getMoodAndMomentsData(),
-                    homeRepository.getChartData(dataStoreManager.chartKey.first()),
-                    homeRepository.getNewRelease(
-                        getString(Res.string.new_release),
-                        getString(Res.string.music_video),
-                    ),
-                ) { home, exploreMood, exploreChart, newRelease ->
-                    HomeDataCombine(home, exploreMood, exploreChart, newRelease)
-                }.collect { result ->
-                    val home = result.home
-                    Logger.i("Home", "loaded: ${(home.data?.second?.size ?: 0)} shelves, mood=${result.mood is Resource.Success}, chart=${result.chart is Resource.Success}, newRelease=${result.newRelease is Resource.Success}")
-                    Logger.d("home size", "${home.data?.second?.size}")
-                    val exploreMoodItem = result.mood
-                    val chart = result.chart
-                    val newRelease = result.newRelease
-                    when (home) {
-                        is Resource.Success -> {
-                            _continuation.value = home.data?.first
-                            _homeItemList.value = (home.data?.second ?: listOf()).withoutYouTubePodcasts()
-                            _homeBackground.value = home.data?.third
+                // Fork: every part of Home is fetched on its own and retried until it answers, and
+                // none of them can overwrite another. These four used to sit in one combine(), so
+                // the mood list's second emission (cached copy, then network) re-ran the whole
+                // block: the list fell back to page one with page one's continuation, every shelf
+                // already appended vanished, and the page never loaded more.
+                launch {
+                    val chartKey = dataStoreManager.chartKey.first()
+                    val chart = retryHome("chart") { homeRepository.getChartData(chartKey) }
+                    // Fork: no YouTube podcast shows in the chart either.
+                    _chart.value = chart.data?.copy(podcasts = null)
+                    regionCodeChart.value = chartKey
+                }
+                launch {
+                    val newRelease =
+                        retryHome("new releases") {
+                            homeRepository.getNewRelease(getString(Res.string.new_release), getString(Res.string.music_video))
                         }
+                    _newRelease.value = newRelease.data ?: arrayListOf()
+                }
+                launch {
+                    // Cached copy first, then the network copy: each one replaces the last, and
+                    // only the mood grid listens to it.
+                    // The repository emits no error over a cached copy, so a run that ends with
+                    // anything is enough; one that ends with nothing is tried again.
+                    var attempt = 0
+                    while (true) {
+                        var gotAny = false
+                        homeRepository.getMoodAndMomentsData().collect { mood ->
+                            if (mood is Resource.Success) {
+                                _exploreMoodItem.value = mood.data
+                                gotAny = true
+                            }
+                        }
+                        if (gotAny) break
+                        attempt++
+                        delay(retryDelayMs(attempt))
+                    }
+                }
 
-                        else -> {
+                val home =
+                    retryHome(
+                        "first page",
+                        onStillFailing = { failure ->
+                            // Show the error state now; the request keeps going behind it.
                             _continuation.value = null
                             _homeItemList.value = listOf()
-                        }
+                            _homeListState.value = ListState.PAGINATION_EXHAUST
+                            loading.value = false
+                            showSnackBarErrorState.emit(failure.message ?: "Unknown error")
+                        },
+                    ) {
+                        homeRepository.getHomeData(params, getString(Res.string.view_count), getString(Res.string.song))
                     }
-                    if (continuation.value.isNullOrEmpty()) {
-                        _homeListState.value = ListState.PAGINATION_EXHAUST
-                    } else {
-                        _homeListState.value = ListState.IDLE
+                Logger.i("Home", "loaded: ${(home.data?.second?.size ?: 0)} shelves")
+                _continuation.value = home.data?.first
+                _homeItemList.value = (home.data?.second ?: listOf()).withoutYouTubePodcasts()
+                _homeBackground.value = home.data?.third
+                _homeListState.value = if (continuation.value.isNullOrEmpty()) ListState.PAGINATION_EXHAUST else ListState.IDLE
+                dataStoreManager.cookie.first().let {
+                    if (it != "") {
+                        _accountInfo.emit(
+                            Pair(
+                                dataStoreManager.getString("AccountName").first(),
+                                dataStoreManager.getString("AccountThumbUrl").first(),
+                            ),
+                        )
                     }
-                    when (chart) {
-                        is Resource.Success -> {
-                            // Fork: no YouTube podcast shows in the chart either.
-                            _chart.value = chart.data?.copy(podcasts = null)
-                        }
-
-                        else -> {
-                            _chart.value = null
-                        }
-                    }
-                    when (newRelease) {
-                        is Resource.Success -> {
-                            _newRelease.value = newRelease.data ?: arrayListOf()
-                        }
-
-                        else -> {
-                            _newRelease.value = arrayListOf()
-                        }
-                    }
-                    when (exploreMoodItem) {
-                        is Resource.Success -> {
-                            _exploreMoodItem.value = exploreMoodItem.data
-                        }
-
-                        else -> {
-                            _exploreMoodItem.value = null
-                        }
-                    }
-                    regionCodeChart.value = dataStoreManager.chartKey.first()
-                    Logger.d("HomeViewModel", "getHomeItemList: $result")
-                    dataStoreManager.cookie.first().let {
-                        if (it != "") {
-                            _accountInfo.emit(
-                                Pair(
-                                    dataStoreManager.getString("AccountName").first(),
-                                    dataStoreManager.getString("AccountThumbUrl").first(),
-                                ),
-                            )
-                        }
-                    }
-                    when {
-                        home is Resource.Error -> home.message
-                        exploreMoodItem is Resource.Error -> exploreMoodItem.message
-                        chart is Resource.Error -> chart.message
-                        else -> null
-                    }?.let {
-                        showSnackBarErrorState.emit(it)
-                        Logger.w("Error", "getHomeItemList: ${home.message}")
-                        Logger.w("Error", "getHomeItemList: ${exploreMoodItem.message}")
-                        Logger.w("Error", "getHomeItemList: ${chart.message}")
-                    }
-                    loading.value = false
                 }
+                loading.value = false
+                // The rest of Home is fetched now, page after page, instead of waiting for the
+                // list to be scrolled to its end.
+                loadRemainingHomePages()
+            }
+    }
+
+    /**
+     * Fork: one Home request, asked again with a growing wait (up to a minute) until it answers.
+     * A flow that ends without emitting (an exception swallowed in the repository) counts as a
+     * failure too. After [HOME_ATTEMPTS] failures [onStillFailing] runs once, so the screen can
+     * show the error, and the request keeps being retried behind it. A refresh or leaving the
+     * screen cancels it.
+     */
+    private suspend fun <T> retryHome(
+        what: String,
+        onStillFailing: suspend (Resource<T>) -> Unit = {},
+        request: suspend () -> kotlinx.coroutines.flow.Flow<Resource<T>>,
+    ): Resource.Success<T> {
+        var attempt = 0
+        var result: Resource<T>?
+        do {
+            if (attempt > 0) delay(retryDelayMs(attempt))
+            result =
+                try {
+                    request().lastOrNull()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Resource.Error<T>(e.message ?: e::class.simpleName.orEmpty())
+                }
+            if (result !is Resource.Success) {
+                val failure: Resource<T> = result ?: Resource.Error<T>("No answer")
+                attempt++
+                Logger.w("Home", "$what failed (try $attempt): ${failure.message}")
+                if (attempt == HOME_ATTEMPTS) onStillFailing(failure)
+            }
+        } while (result !is Resource.Success)
+        @Suppress("UNCHECKED_CAST")
+        return result as Resource.Success<T>
+    }
+
+    private fun retryDelayMs(attempt: Int): Long = (1_000L shl (attempt - 1).coerceIn(0, 6)).coerceAtMost(MAX_RETRY_DELAY_MS)
+
+    private var continuationJob: Job? = null
+
+    /** Fetches every remaining Home page, retrying each, until YouTube says there is no more. */
+    private fun loadRemainingHomePages() {
+        if (continuationJob?.isActive == true) return
+        continuationJob =
+            viewModelScope.launch {
+                var pages = 0
+                while (pages < MAX_HOME_PAGES) {
+                    val token = continuation.value
+                    if (token.isNullOrEmpty()) {
+                        _homeListState.value = ListState.PAGINATION_EXHAUST
+                        return@launch
+                    }
+                    _homeListState.value = ListState.PAGINATING
+                    val page =
+                        retryHome("page ${pages + 2}") {
+                            homeRepository.getHomeDataContinue(token, getString(Res.string.view_count), getString(Res.string.song))
+                        }
+                    _homeItemList.update { it + (page.data?.second ?: listOf()).withoutYouTubePodcasts() }
+                    _continuation.value = page.data?.first
+                    pages++
+                }
+                _homeListState.value = ListState.PAGINATION_EXHAUST
             }
     }
 
@@ -305,41 +350,11 @@ class HomeViewModel(
     }
 
     fun getContinueHomeItem(continuation: String?) {
-        viewModelScope.launch {
-            if (continuation.isNullOrEmpty()) {
-                _homeListState.value = ListState.PAGINATION_EXHAUST
-                return@launch
-            } else {
-                log("Get more home item with continuation: $continuation")
-                _homeListState.value = ListState.PAGINATING
-                homeRepository
-                    .getHomeDataContinue(
-                        continuation,
-                        getString(Res.string.view_count),
-                        getString(Res.string.song),
-                    ).collect { home ->
-                        when (home) {
-                            is Resource.Success -> {
-                                _continuation.value = home.data?.first
-                                val newItems = (home.data?.second ?: listOf()).withoutYouTubePodcasts()
-                                _homeItemList.update { it + newItems }
-                                if (home.data?.first.isNullOrEmpty()) {
-                                    _homeListState.value = ListState.PAGINATION_EXHAUST
-                                } else {
-                                    _homeListState.value = ListState.IDLE
-                                }
-                            }
-
-                            is Resource.Error -> {
-                                _continuation.value = null
-                                Logger.w(tag, "getContinueHomeItem: ${home.message}")
-                                showSnackBarErrorState.emit(home.message ?: "Unknown error")
-                                _homeListState.value = ListState.PAGINATION_EXHAUST
-                            }
-                        }
-                    }
-            }
+        if (continuation.isNullOrEmpty()) {
+            _homeListState.value = ListState.PAGINATION_EXHAUST
+            return
         }
+        loadRemainingHomePages()
     }
 
     fun exploreChart(region: String) {
@@ -463,6 +478,12 @@ class HomeViewModel(
     }
 
     companion object {
+        // Fork: tries before Home reports a failure (it keeps retrying after that), the longest
+        // wait between two tries, and a ceiling on the pages fetched in one go.
+        private const val HOME_ATTEMPTS = 4
+        private const val MAX_RETRY_DELAY_MS = 60_000L
+        private const val MAX_HOME_PAGES = 20
+
         // Home params
         const val HOME_PARAMS_RELAX = "ggM8SgQIBxADSgQIBRABSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"
         const val HOME_PARAMS_SLEEP = "ggM8SgQIBxABSgQIBRADSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"
