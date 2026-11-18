@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
 import com.maxrave.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +14,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /**
  * A separate audio log for playback bugs such as "playing, but silent". It records what the system
@@ -24,15 +25,19 @@ import java.util.Locale
 object AudioDiagnostics {
     private const val KEEP_DAYS = 7L
     private const val TAG = "Audio"
-    private val lock = Any()
     private var folder: File? = null
+
+    // Disk writes and the system callbacks both run off the main thread: the callback fires on every
+    // change to any app's audio, and an append per change has no place on the UI thread.
+    private val writer = Executors.newSingleThreadExecutor { r -> Thread(r, "AudioDiagnostics").apply { isDaemon = true } }
+    private val callbackThread by lazy { HandlerThread("AudioDiagnosticsCallback").apply { start() } }
     private var lastPlayback = ""
 
     fun start(context: Context, scope: CoroutineScope, isPlaying: Flow<Boolean>) {
         if (folder != null) return
         val dir = File(context.filesDir, "logs").apply { mkdirs() }
         folder = dir
-        prune(dir)
+        writer.execute { prune(dir) }
         write("start pid=${android.os.Process.myPid()} sdk=${android.os.Build.VERSION.SDK_INT}")
 
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -52,7 +57,7 @@ object AudioDiagnostics {
                     }
                 }
             },
-            Handler(Looper.getMainLooper()),
+            Handler(callbackThread.looper),
         )
 
         scope.launch {
@@ -73,7 +78,7 @@ object AudioDiagnostics {
         val dir = folder ?: return
         val stamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
         val day = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
-        synchronized(lock) {
+        writer.execute {
             runCatching { File(dir, "audio-$day.log").appendText("$stamp $line\n") }
         }
     }
