@@ -6,6 +6,7 @@ import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
 import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
+import com.maxrave.simpmusic.chart.toIranChart
 import com.maxrave.simpmusic.recommendation.SimilarTracksLoader
 import org.koin.core.component.get
 import simpmusic.composeapp.generated.resources.discover_mix_title
@@ -68,6 +69,10 @@ class HomeViewModel(
 
     private val _chart: MutableStateFlow<Chart?> = MutableStateFlow(null)
     val chart: StateFlow<Chart?> = _chart
+
+    // Fork: Iran has no YouTube chart; it is built from the daily Spotify snapshot instead.
+    private val _iranChart: MutableStateFlow<com.maxrave.simpmusic.chart.IranChart?> = MutableStateFlow(null)
+    val iranChart: StateFlow<com.maxrave.simpmusic.chart.IranChart?> = _iranChart
     private val _newRelease: MutableStateFlow<List<HomeItem>> = MutableStateFlow(arrayListOf())
     val newRelease: StateFlow<List<HomeItem>> = _newRelease
     var regionCodeChart: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -212,6 +217,11 @@ class HomeViewModel(
                 // already appended vanished, and the page never loaded more.
                 launch {
                     val chartKey = dataStoreManager.chartKey.first()
+                    if (chartKey == com.maxrave.simpmusic.chart.IRAN_CHART_KEY) {
+                        loadIranChart()
+                        regionCodeChart.value = chartKey
+                        return@launch
+                    }
                     val chart = retryHome("chart") { homeRepository.getChartData(chartKey) }
                     // Fork: no YouTube podcast shows in the chart either.
                     _chart.value = chart.data?.copy(podcasts = null)
@@ -358,8 +368,20 @@ class HomeViewModel(
     }
 
     fun exploreChart(region: String) {
+        if (region == com.maxrave.simpmusic.chart.IRAN_CHART_KEY) {
+            viewModelScope.launch {
+                loadingChart.value = true
+                regionCodeChart.value = region
+                dataStoreManager.setChartKey(region)
+                _chart.value = null
+                loadIranChart()
+                loadingChart.value = false
+            }
+            return
+        }
         viewModelScope.launch {
             loadingChart.value = true
+            _iranChart.value = null
             homeRepository
                 .getChartData(
                     region,
@@ -377,6 +399,19 @@ class HomeViewModel(
                     }
                     loadingChart.value = false
                 }
+        }
+    }
+
+    /** Reads the Spotify snapshot into the Iran chart, retrying a failed read a few times. */
+    private suspend fun loadIranChart() {
+        repeat(HOME_ATTEMPTS) { attempt ->
+            val chart = com.maxrave.simpmusic.chart.loadSpotifySnapshot()?.toIranChart()
+            if (chart != null) {
+                _iranChart.value = chart
+                return
+            }
+            Logger.w("Home", "Iran chart failed (try ${attempt + 1})")
+            delay(retryDelayMs(attempt + 1))
         }
     }
 

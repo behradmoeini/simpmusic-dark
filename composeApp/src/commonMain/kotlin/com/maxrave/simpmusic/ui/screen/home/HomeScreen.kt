@@ -105,6 +105,8 @@ import com.eygraber.uri.Uri
 import com.kmpalette.loader.rememberNetworkLoader
 import com.kmpalette.rememberDominantColorState
 import com.maxrave.common.CHART_SUPPORTED_COUNTRY
+import com.maxrave.simpmusic.chart.IRAN_CHART_KEY
+import com.maxrave.simpmusic.chart.IRAN_CHART_NAME
 import com.maxrave.common.Config
 import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.data.model.home.HomeItem
@@ -302,6 +304,7 @@ fun HomeScreen(
     val chartLoading by viewModel.loadingChart.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val regionChart by viewModel.regionCodeChart.collectAsStateWithLifecycle()
+    val iranChart by viewModel.iranChart.collectAsStateWithLifecycle()
     val reloadDestination by sharedViewModel.reloadDestination.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -993,21 +996,33 @@ fun HomeScreen(
                                     Spacer(modifier = Modifier.height(5.dp))
                                     Crossfade(targetState = regionChart) {
                                         if (it != null) {
+                                            // Fork: Iran sits right after Global. YouTube has no
+                                            // Iran chart, so it is built from Spotify's Persian ones.
+                                            val countryNames =
+                                                CHART_SUPPORTED_COUNTRY.itemsData.toMutableList().apply {
+                                                    add(2.coerceAtMost(size), IRAN_CHART_NAME)
+                                                }
                                             DropdownButton(
-                                                items = CHART_SUPPORTED_COUNTRY.itemsData.toList(),
+                                                items = countryNames,
                                                 defaultSelected =
-                                                    CHART_SUPPORTED_COUNTRY.itemsData.getOrNull(
-                                                        CHART_SUPPORTED_COUNTRY.items.indexOf(it),
+                                                    if (it == IRAN_CHART_KEY) {
+                                                        IRAN_CHART_NAME
+                                                    } else {
+                                                        CHART_SUPPORTED_COUNTRY.itemsData.getOrNull(
+                                                            CHART_SUPPORTED_COUNTRY.items.indexOf(it),
+                                                        )
+                                                            ?: CHART_SUPPORTED_COUNTRY.itemsData[1]
+                                                    },
+                                            ) { picked ->
+                                                if (picked == IRAN_CHART_NAME) {
+                                                    viewModel.exploreChart(IRAN_CHART_KEY)
+                                                } else {
+                                                    viewModel.exploreChart(
+                                                        CHART_SUPPORTED_COUNTRY.items[
+                                                            CHART_SUPPORTED_COUNTRY.itemsData.indexOf(picked),
+                                                        ],
                                                     )
-                                                        ?: CHART_SUPPORTED_COUNTRY.itemsData[1],
-                                            ) {
-                                                viewModel.exploreChart(
-                                                    CHART_SUPPORTED_COUNTRY.items[
-                                                        CHART_SUPPORTED_COUNTRY.itemsData.indexOf(
-                                                            it,
-                                                        ),
-                                                    ],
-                                                )
+                                                }
                                             }
                                         }
                                     }
@@ -1017,11 +1032,20 @@ fun HomeScreen(
                                         label = "Chart",
                                     ) { loading ->
                                         if (!loading) {
-                                            chart?.let {
-                                                ChartData(
-                                                    chart = it,
-                                                    navController = navController,
-                                                )
+                                            if (regionChart == IRAN_CHART_KEY) {
+                                                iranChart?.let {
+                                                    IranChartData(
+                                                        chart = it,
+                                                        navController = navController,
+                                                    )
+                                                }
+                                            } else {
+                                                chart?.let {
+                                                    ChartData(
+                                                        chart = it,
+                                                        navController = navController,
+                                                    )
+                                                }
                                             }
                                         } else {
                                             CenterLoadingBox(

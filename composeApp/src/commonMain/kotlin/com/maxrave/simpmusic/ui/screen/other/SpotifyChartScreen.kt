@@ -90,7 +90,7 @@ fun SpotifyChartScreen(
                         rank = index + 1,
                         track = track,
                         onClick = {
-                            scope.launch { playFrom(index, tracks, searchRepository, sharedViewModel) }
+                            scope.launch { playSpotifyTracksFrom(index, tracks, searchRepository, sharedViewModel) }
                         },
                     )
                 }
@@ -103,7 +103,7 @@ fun SpotifyChartScreen(
  * at once; the rest are matched in order and added as one batch, so the queue keeps the chart's order.
  * A track with no YouTube Music match is skipped.
  */
-private suspend fun playFrom(
+internal suspend fun playSpotifyTracksFrom(
     startIndex: Int,
     tracks: List<SpotifySnapshotTrack>,
     searchRepository: SearchRepository,
@@ -124,7 +124,7 @@ private suspend fun playFrom(
 }
 
 /** YouTube Music only plays by video id, so each Spotify track is matched by its title and artists. */
-private suspend fun matchOnYouTube(
+internal suspend fun matchOnYouTube(
     track: SpotifySnapshotTrack,
     searchRepository: SearchRepository,
 ): Track? {
