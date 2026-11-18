@@ -118,7 +118,7 @@ class OpenPodcastViewModel(
         episode: OpenPodcastEpisode,
     ) {
         val state = playerState.value
-        if (state.episodeId == episode.id) player.togglePlayPause() else player.play(show, episode)
+        if (state.isEpisode(episode)) player.togglePlayPause() else player.play(show, episode)
     }
 
     private companion object {

@@ -46,7 +46,6 @@ import androidx.navigation.NavController
 import com.maxrave.simpmusic.podcast.OpenPodcastShow
 import com.maxrave.simpmusic.ui.component.EndOfPage
 import com.maxrave.simpmusic.ui.component.OpenPodcastCover
-import com.maxrave.simpmusic.ui.component.OpenPodcastNowPlayingCard
 import com.maxrave.simpmusic.ui.component.OpenPodcastShowRow
 import com.maxrave.simpmusic.ui.icon.Close
 import com.maxrave.simpmusic.ui.icon.Search
@@ -84,7 +83,6 @@ internal fun HomePodcastsView(
     val subscriptions by viewModel.subscriptions.collectAsStateWithLifecycle()
     val trending by viewModel.trending.collectAsStateWithLifecycle()
     val results by viewModel.searchResults.collectAsStateWithLifecycle()
-    val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.loadTrending() }
@@ -93,26 +91,6 @@ internal fun HomePodcastsView(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = topPadding + 8.dp, bottom = 24.dp),
     ) {
-        if (playerState.isActive) {
-            stickyHeader {
-                OpenPodcastNowPlayingCard(
-                    state = playerState,
-                    onToggle = viewModel.player::togglePlayPause,
-                    onSeekBy = viewModel.player::seekBy,
-                    onSeekTo = viewModel.player::seekTo,
-                    onSetSpeed = viewModel.player::setSpeed,
-                    onOpenShow =
-                        playerState.feedUrl?.let { feed ->
-                            {
-                                navController.navigate(
-                                    OpenPodcastDestination(feedUrl = feed, title = playerState.showTitle, imageUrl = playerState.imageUrl),
-                                )
-                            }
-                        },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background),
-                )
-            }
-        }
         item {
             TextField(
                 value = query,

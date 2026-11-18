@@ -12,7 +12,7 @@ dark streaming-app look and a Podcasts view on Home. The YouTube Music code is u
 | Mini player | Card tinted from the artwork, square cover, plain heart and play icons, thin progress line |
 | Chips | Filled grey pills, accent fill when selected |
 | Home | No YouTube Music podcast cards or podcast chart; a "Same vibe, new artists" mix under the first shelf |
-| Podcasts | Home's Podcasts chip reads open sources only: fyyd.de for search and trending, each show's RSS feed for episodes, played by a separate podcast player |
+| Podcasts | Home's Podcasts chip reads open sources only: fyyd.de for search and trending, each show's RSS feed for episodes, played by the music player |
 | Search | Large title and a white search field |
 | Library | "Your Library" title, + button for a new playlist, Playlists / Podcasts / Downloaded first |
 
@@ -33,11 +33,13 @@ The Podcasts chip lists shows from [fyyd](https://fyyd.de) (open directory, keyl
 the "hot" list) and reads episodes straight from the show's RSS feed, skipping video enclosures.
 Followed shows are stored on the device (DataStore key `open_podcast_subscriptions`).
 
-Playback is a second Media3 session (`podcast/OpenPodcastPlayer.android.kt`,
-`OpenPodcastPlaybackService`), because the music player resolves every track as a YouTube video id
-and that code lives in the upstream `core` submodule. It has its own notification and lock-screen
-controls, −15 s / +30 s, remembers where each episode was left, pauses the music when an episode
-starts and is paused when music starts. Android only; Desktop lists shows but cannot play them.
+Episodes play through the music player itself (`podcast/OpenPodcastPlayer.kt`): the track id is
+`DirectAudio.idFor(audioUrl)` (`"podcast:"` + base64url of the file URL, defined in core), which core
+resolves straight to that URL and for which it skips everything YouTube-only (radio, SponsorBlock,
+formats, watch-time pings, scrobbling, listening analytics; the app also skips lyrics and canvas).
+So an episode gets the normal mini player, Now Playing, notification and lock-screen controls, on
+Android and Desktop. The app remembers where each episode was left (DataStore key
+`open_podcast_positions`) and starts it there.
 
 Not covered: YouTube podcast results in Search and YouTube podcasts already saved in Library still
 open YouTube pages, and a YouTube radio can still slip in an episode (the queue code is in `core`).

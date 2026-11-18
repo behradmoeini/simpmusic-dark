@@ -37,7 +37,6 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.maxrave.simpmusic.podcast.OpenPodcastPlayerState
 import com.maxrave.simpmusic.podcast.OpenPodcastShow
 import com.maxrave.simpmusic.ui.icon.FastForward
 import com.maxrave.simpmusic.ui.icon.FastRewind
@@ -118,116 +117,6 @@ fun OpenPodcastShowRow(
             }
         }
     }
-}
-
-/** The episode playing now: cover, titles, −15 s, play/pause, +30 s and a seek bar. */
-@Composable
-fun OpenPodcastNowPlayingCard(
-    state: OpenPodcastPlayerState,
-    onToggle: () -> Unit,
-    onSeekBy: (Long) -> Unit,
-    onSeekTo: (Long) -> Unit,
-    onOpenShow: (() -> Unit)?,
-    onSetSpeed: (Float) -> Unit = {},
-    modifier: Modifier = Modifier,
-) {
-    var dragging by remember { mutableStateOf<Float?>(null) }
-    Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(10.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OpenPodcastCover(
-                state.imageUrl,
-                44.dp,
-                corner = 6.dp,
-                modifier = if (onOpenShow != null) Modifier.clickable(onClick = onOpenShow) else Modifier,
-            )
-            Spacer(Modifier.width(10.dp))
-            // Cycles 1x → 1.25x → 1.5x → 2x → 1x.
-            val speeds = listOf(1f, 1.25f, 1.5f, 2f)
-            TextButton(onClick = {
-                val current = speeds.indexOf(state.playbackSpeed).takeIf { it >= 0 } ?: 0
-                onSetSpeed(speeds[(current + 1) % speeds.size])
-            }) {
-                Text(
-                    text = "${state.playbackSpeed.let { if (it % 1f == 0f) it.toInt().toString() else it.toString() }}×",
-                    style = typo().labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-            Column(
-                Modifier
-                    .weight(1f)
-                    .then(if (onOpenShow != null) Modifier.clickable(onClick = onOpenShow) else Modifier),
-            ) {
-                Text(
-                    text = state.episodeTitle,
-                    style = typo().titleSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = state.showTitle,
-                    style = typo().bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            IconButton(onClick = { onSeekBy(-15_000) }) {
-                Icon(SimpIcons.FastRewind, contentDescription = "-15s", tint = MaterialTheme.colorScheme.onBackground)
-            }
-            IconButton(onClick = onToggle) {
-                if (state.isBuffering && !state.isPlaying) {
-                    CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
-                } else {
-                    Icon(
-                        if (state.isPlaying) SimpIcons.Pause else SimpIcons.PlayArrow,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
-            }
-            IconButton(onClick = { onSeekBy(30_000) }) {
-                Icon(SimpIcons.FastForward, contentDescription = "+30s", tint = MaterialTheme.colorScheme.onBackground)
-            }
-        }
-        val duration = state.durationMs.coerceAtLeast(1L)
-        Slider(
-            value = dragging ?: (state.positionMs.toFloat() / duration).coerceIn(0f, 1f),
-            onValueChange = { dragging = it },
-            onValueChangeFinished = {
-                dragging?.let { onSeekTo((it * duration).toLong()) }
-                dragging = null
-            },
-            enabled = state.durationMs > 0,
-            colors =
-                SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                ),
-            modifier = Modifier.fillMaxWidth().height(24.dp),
-        )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(formatClock(((dragging?.let { it * duration })?.toLong() ?: state.positionMs)), style = typo().bodySmall)
-            Text(if (state.durationMs > 0) formatClock(state.durationMs) else "--:--", style = typo().bodySmall)
-        }
-    }
-}
-
-fun formatClock(ms: Long): String {
-    val total = (ms / 1000).coerceAtLeast(0)
-    val h = total / 3600
-    val m = (total % 3600) / 60
-    val s = total % 60
-    return if (h > 0) "$h:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}" else "$m:${s.toString().padStart(2, '0')}"
 }
 
 /** "12 Mar 2026 · 1 h 5 min" */

@@ -44,7 +44,6 @@ import com.maxrave.simpmusic.podcast.OpenPodcastEpisode
 import com.maxrave.simpmusic.podcast.OpenPodcastShow
 import com.maxrave.simpmusic.ui.component.EndOfPage
 import com.maxrave.simpmusic.ui.component.OpenPodcastCover
-import com.maxrave.simpmusic.ui.component.OpenPodcastNowPlayingCard
 import com.maxrave.simpmusic.ui.component.formatEpisodeMeta
 import com.maxrave.simpmusic.ui.icon.ArrowBackIosNew
 import com.maxrave.simpmusic.ui.icon.Check
@@ -97,19 +96,6 @@ fun OpenPodcastScreen(
                 }
             }
         }
-        if (playerState.isActive) {
-            stickyHeader {
-                OpenPodcastNowPlayingCard(
-                    state = playerState,
-                    onToggle = viewModel.player::togglePlayPause,
-                    onSeekBy = viewModel.player::seekBy,
-                    onSeekTo = viewModel.player::seekTo,
-                    onOpenShow = null,
-                    onSetSpeed = viewModel.player::setSpeed,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background),
-                )
-            }
-        }
         item {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 OpenPodcastCover(show.imageUrl, 180.dp, corner = 12.dp)
@@ -150,10 +136,6 @@ fun OpenPodcastScreen(
                         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
                     )
                 }
-                if (!viewModel.player.isAvailable) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(Res.string.open_podcasts_android_only), style = typo().bodySmall, color = MaterialTheme.colorScheme.error)
-                }
             }
         }
         item {
@@ -179,10 +161,10 @@ fun OpenPodcastScreen(
                 items(f.value.episodes, key = { it.id }) { episode ->
                     EpisodeRow(
                         episode = episode,
-                        isCurrent = playerState.episodeId == episode.id,
-                        isPlaying = playerState.episodeId == episode.id && playerState.isPlaying,
-                        savedMs = remember(episode.id, playerState.episodeId) { viewModel.player.savedPosition(episode.id) },
-                        enabled = viewModel.player.isAvailable,
+                        isCurrent = playerState.isEpisode(episode),
+                        isPlaying = playerState.isEpisode(episode) && playerState.isPlaying,
+                        savedMs = remember(episode.id, playerState.audioId) { viewModel.player.savedPosition(episode) },
+                        enabled = true,
                         onPlay = { viewModel.play(f.value.show, episode) },
                     )
                 }

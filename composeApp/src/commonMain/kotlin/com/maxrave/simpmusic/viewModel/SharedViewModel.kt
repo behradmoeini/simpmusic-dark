@@ -663,6 +663,8 @@ class SharedViewModel(
         duration: Int,
     ) {
         Logger.w(tag, "Start getCanvas: $videoId $duration")
+        // Fork: a podcast episode has no canvas; a search by its title would find some song's.
+        if (com.maxrave.domain.data.player.DirectAudio.isDirect(videoId)) return
 //        canvasJob?.cancel()
         viewModelScope.launch {
             // Both sources fill the same slot, so they are tried in order rather than raced:
@@ -1562,6 +1564,8 @@ class SharedViewModel(
         // A live broadcast has nothing to sync lyrics to — the "duration" mpv reports for it is only
         // its seek window — so no provider is asked. Every caller comes through here.
         if (LiveStreamRegistry.isLive(song.videoId)) return
+        // Fork: a podcast episode has no lyrics; a search by its title would find some song's.
+        if (com.maxrave.domain.data.player.DirectAudio.isDirect(song.videoId)) return
         // A fetch in flight is not "no lyrics": switching the provider re-fetches the same song, and
         // Add lyrics offered meanwhile could be saved over the lyrics the new provider finds.
         _nowPlayingScreenData.update { it.copy(lyricsNotFound = false) }
