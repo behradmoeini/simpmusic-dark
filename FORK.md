@@ -125,3 +125,18 @@ git submodule update --init
 
 Upstream's own workflows were removed on purpose (one of them builds on macOS runners); check that a
 merge does not bring them back.
+
+## MCP server: music from a chat client
+
+`mcpServer/` is a standalone program that lets Claude (or any MCP client) play YouTube Music on the
+user's computer, with no SimpMusic app installed. It reuses core's `kotlinYtmusicScraper` for
+search, radio (`YouTube.next`) and stream extraction (`YouTube.player`, the same tiers as the app),
+picks Opus 251, then AAC 140, and plays the URL in an `mpv` process driven over its JSON IPC
+(two connections: commands and events). The protocol is MCP over stdio, written by hand (JSON-RPC
+2.0 with kotlinx.serialization: initialize, ping, tools/list, tools/call). Real stdout is kept for
+the protocol and System.out is pointed at stderr, so core's logger cannot corrupt it.
+
+It has to run locally: googlevideo URLs are tied to the IP that resolved them. Users need Java 21+
+and mpv. CI builds `:mcpServer:distZip` and attaches `simpmusic-mcp.zip` to the `latest` release.
+Setup and tools: `mcpServer/README.md`.
+

@@ -87,6 +87,15 @@ jobs:
           "-Dorg.gradle.jvmargs=-Xmx5g -XX:+UseParallelGC"
           --console=plain
 
+      # The MCP server (mcpServer/): a zip with launch scripts, published beside the APKs.
+      - name: Build MCP server
+        run: >
+          ./gradlew :mcpServer:distZip
+          -PisFullBuild=false
+          -Pkotlin.compiler.execution.strategy=in-process
+          "-Dorg.gradle.jvmargs=-Xmx5g -XX:+UseParallelGC"
+          --console=plain
+
       - name: Collect APKs
         run: |
           SHA=$(git rev-parse --short HEAD)
@@ -98,6 +107,7 @@ jobs:
           # https://github.com/<owner>/<repo>/releases/download/latest/simpmusic-dark-arm64-v8a.apk
           cp androidApp/build/outputs/apk/debug/androidApp-arm64-v8a-debug.apk out/simpmusic-dark-arm64-v8a.apk
           cp androidApp/build/outputs/apk/debug/androidApp-universal-debug.apk out/simpmusic-dark-universal.apk
+          cp mcpServer/build/distributions/simpmusic-mcp*.zip out/simpmusic-mcp.zip
           ls -la out
 
       # Builds of main replace the single "latest" pre-release, so only one set of APKs is kept.
@@ -107,11 +117,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest out/*.apk \
+          gh release create latest out/*.apk out/simpmusic-mcp.zip \
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Latest build ($SHORT_SHA)" \
-            --notes "Debug APK built from $GITHUB_SHA. Most phones want the arm64-v8a file; the universal one runs on any device."
+            --notes "Debug APK built from $GITHUB_SHA. Most phones want the arm64-v8a file; the universal one runs on any device. simpmusic-mcp.zip is the MCP server that plays music from a chat client (see mcpServer/README.md)."
 
       # Builds started by hand on another branch keep the arm64 APK for three days instead.
       - name: Upload APK artifact
@@ -119,5 +129,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: simpmusic-dark-${{ env.SHORT_SHA }}
-          path: out/simpmusic-dark-arm64-v8a-*.apk
+          path: |
+            out/simpmusic-dark-arm64-v8a-*.apk
+            out/simpmusic-mcp.zip
           retention-days: 3

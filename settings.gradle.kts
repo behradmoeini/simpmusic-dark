@@ -62,6 +62,8 @@ include(
     ":kizzy",
     ":listenTogether",
     ":loginSync",
+    // Fork: MCP server that plays YouTube Music from a chat client (JVM only).
+    ":mcpServer",
 )
 
 // core modules
