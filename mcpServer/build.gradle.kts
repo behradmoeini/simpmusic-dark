@@ -21,3 +21,13 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.coroutines.android.get()}")
 }
+
+// The scraper reaches PipePipeExtractor through two dependency paths that resolve to the same jar
+// file name, which the distribution's lib/ folder cannot hold twice.
+distributions {
+    main {
+        contents {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+    }
+}
