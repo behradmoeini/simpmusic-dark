@@ -39,6 +39,14 @@
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="false" />
+    <!-- Fork: the same APK runs on Android TV. A TV has no touchscreen, and without these two
+         lines the app is treated as phone-only there. -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.wifi"
         android:required="false" />
@@ -71,6 +79,7 @@
         android:allowBackup="true"
         android:appCategory="audio"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -100,6 +109,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.APP_MUSIC" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Fork: puts the app on the Android TV home screen (its tile is android:banner). -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
             <!-- Car App Library: host asks to surface the media playback screen

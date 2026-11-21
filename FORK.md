@@ -19,6 +19,13 @@ dark streaming-app look and a Podcasts view on Home. The YouTube Music code is u
 Files touched are under `composeApp/src/commonMain/kotlin/com/maxrave/simpmusic/` (theme, `ui/component`,
 `ui/screen`, `viewModel/HomeViewModel.kt`), plus `androidApp/build.gradle.kts` for signing.
 
+## Android TV
+
+The same APK installs on Android TV: the manifest declares a `LEANBACK_LAUNCHER` entry and a home
+screen tile (`androidApp/src/main/res/drawable-xhdpi/tv_banner.png`), and marks touchscreen as not
+required. The wide layout (navigation rail) is what a TV shows. A 32-bit TV such as the Google TV
+Streamer needs the `universal` APK; the forced update already picks it there.
+
 ## Podcasts from open sources
 
 YouTube Music's podcasts are gone from Home: every card YouTube marks as a podcast (an episode's
