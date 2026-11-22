@@ -113,6 +113,7 @@ import com.maxrave.simpmusic.Platform
 import com.maxrave.simpmusic.expect.ui.LoginSyncDialog
 import com.maxrave.simpmusic.expect.ui.filePickerResult
 import com.maxrave.simpmusic.expect.ui.fileSaverResult
+import com.maxrave.simpmusic.expect.ui.isLoginSyncHost
 import com.maxrave.simpmusic.expect.ui.isLyricsBlurSupported
 import com.maxrave.simpmusic.expect.ui.isWallpaperDynamicColorSupported
 import com.maxrave.simpmusic.expect.ui.openEqResult
@@ -325,6 +326,8 @@ import simpmusic.composeapp.generated.resources.logged_in_as
 import simpmusic.composeapp.generated.resources.login_sync_android_description
 import simpmusic.composeapp.generated.resources.login_sync_android_title
 import simpmusic.composeapp.generated.resources.login_sync_desktop_description
+import simpmusic.composeapp.generated.resources.login_sync_tv_description
+import simpmusic.composeapp.generated.resources.login_sync_tv_title
 import simpmusic.composeapp.generated.resources.login_sync_desktop_title
 import simpmusic.composeapp.generated.resources.login_sync_section
 import simpmusic.composeapp.generated.resources.lrclib
@@ -712,17 +715,24 @@ fun SettingScreen(
                     title = stringResource(Res.string.login_sync_section),
                     modifier = Modifier.onSizeChanged { devicesGroupHeightPx = it.height },
                 ) {
+                    // A phone sends; a computer and a TV receive.
+                    val receives = isLoginSyncHost()
+                    val onAndroid = getPlatform() == Platform.Android
                     SettingItem(
                         title =
                             stringResource(
-                                if (getPlatform() == Platform.Android) Res.string.login_sync_android_title else Res.string.login_sync_desktop_title,
+                                when {
+                                    !receives -> Res.string.login_sync_android_title
+                                    onAndroid -> Res.string.login_sync_tv_title
+                                    else -> Res.string.login_sync_desktop_title
+                                },
                             ),
                         subtitle =
                             stringResource(
-                                if (getPlatform() == Platform.Android) {
-                                    Res.string.login_sync_android_description
-                                } else {
-                                    Res.string.login_sync_desktop_description
+                                when {
+                                    !receives -> Res.string.login_sync_android_description
+                                    onAndroid -> Res.string.login_sync_tv_description
+                                    else -> Res.string.login_sync_desktop_description
                                 },
                             ),
                         onClick = { showLoginSyncDialog = true },

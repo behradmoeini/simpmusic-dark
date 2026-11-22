@@ -916,9 +916,12 @@
     <string name="login_sync_section">Devices</string>
     <string name="login_sync_desktop_title">Sign in from your phone</string>
     <string name="login_sync_desktop_description">Scan a QR code with SimpMusic on Android to bring your sign-ins here</string>
-    <string name="login_sync_android_title">Send sign-ins to desktop</string>
-    <string name="login_sync_android_description">Scan the QR code shown by SimpMusic on your computer</string>
-    <string name="login_sync_desktop_instructions">On your phone, open SimpMusic → Settings → %1$s, then scan this code.</string>
+    <string name="login_sync_android_title">Send sign-ins to a TV or computer</string>
+    <string name="login_sync_android_description">Scan the QR code shown by the app on your TV or computer</string>
+    <string name="login_sync_tv_title">Sign in with your phone</string>
+    <string name="login_sync_tv_description">Scan a QR code with the app on your phone to bring your sign-ins to this TV</string>
+    <string name="login_sync_tv_no_network">This TV is not connected to a network.</string>
+    <string name="login_sync_desktop_instructions">On your phone, open the app → Settings → %1$s, then scan this code.</string>
     <string name="login_sync_pick_address">Pick an address your phone can reach — on the same network, or over Tailscale.</string>
     <string name="login_sync_phone_connected">Phone connected. Confirm on your phone to continue.</string>
     <string name="login_sync_received">Signed in to %1$s</string>

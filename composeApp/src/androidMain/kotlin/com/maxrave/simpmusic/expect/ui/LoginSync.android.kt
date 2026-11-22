@@ -1,5 +1,10 @@
 package com.maxrave.simpmusic.expect.ui
 
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.maxrave.simpmusic.ui.component.LoginSyncHostDialog
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -99,9 +104,34 @@ import simpmusic.composeapp.generated.resources.login_sync_unreachable
 import simpmusic.composeapp.generated.resources.ok
 import simpmusic.composeapp.generated.resources.retry
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 actual fun LoginSyncDialog(onDismiss: () -> Unit) {
+    if (isLoginSyncHost()) LoginSyncHostDialog(onDismiss) else LoginSyncSenderSheet(onDismiss)
+}
+
+/** A TV has no camera to scan with, so it is the end that shows the code. */
+@Composable
+actual fun isLoginSyncHost(): Boolean {
+    val context = LocalContext.current
+    return remember(context) { context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) }
+}
+
+/** ZXing is a plain JVM library, so each platform encodes for itself. */
+actual fun encodeQr(text: String): QrMatrix {
+    val bits =
+        QRCodeWriter().encode(
+            text,
+            BarcodeFormat.QR_CODE,
+            0,
+            0,
+            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M),
+        )
+    return QrMatrix(bits.width) { x, y -> bits[x, y] }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LoginSyncSenderSheet(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val viewModel: LoginSyncSenderViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

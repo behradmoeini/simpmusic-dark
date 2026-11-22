@@ -30,7 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.maxrave.common.Config
 import com.maxrave.logger.Logger
+import com.maxrave.simpmusic.Platform
+import com.maxrave.simpmusic.expect.ui.LoginSyncDialog
 import com.maxrave.simpmusic.expect.ui.PlatformWebView
+import com.maxrave.simpmusic.expect.ui.isLoginSyncHost
+import com.maxrave.simpmusic.getPlatform
 import com.maxrave.simpmusic.expect.ui.createWebViewCookieManager
 import com.maxrave.simpmusic.expect.ui.rememberWebViewState
 import com.maxrave.simpmusic.extension.ultraThinBarStyle
@@ -66,6 +70,12 @@ fun LoginScreen(
     hideBottomNavigation: () -> Unit,
     showBottomNavigation: () -> Unit,
 ) {
+    // On a TV there is no typing a Google password with a remote: the phone that is already signed in
+    // scans a QR code and hands its sign-in over. (The Desktop keeps its own browser sign-in here.)
+    if (getPlatform() == Platform.Android && isLoginSyncHost()) {
+        LoginSyncDialog(onDismiss = { navController.navigateUp() })
+        return
+    }
     val hazeState = rememberHazeState()
     val coroutineScope = rememberCoroutineScope()
     var devLoginSheet by rememberSaveable {
