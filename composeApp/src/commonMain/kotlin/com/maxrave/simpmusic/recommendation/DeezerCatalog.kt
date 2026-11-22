@@ -7,6 +7,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -44,39 +45,83 @@ object DeezerCatalog {
 
     private fun JsonObject.str(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString || it.content.isNotEmpty() }?.content
 
-    /** Deezer's id for an artist: the exact name match if there is one, else the first hit. */
-    suspend fun artistId(name: String): Long? {
-        val hits = (getJson("/search/artist", "q" to name, "limit" to "5")["data"] as? JsonArray)?.mapNotNull { it as? JsonObject } ?: return null
-        val wanted = SimilarMix.key(name)
-        val best = hits.firstOrNull { SimilarMix.key(it.str("name").orEmpty()) == wanted } ?: hits.firstOrNull()
-        return best?.str("id")?.toLongOrNull()
+    private fun rows(o: JsonObject): List<JsonObject> = (o["data"] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
+
+    private fun JsonObject.toArtist(): DeezerArtist? {
+        val id = str("id")?.toLongOrNull() ?: return null
+        return DeezerArtist(id, str("name") ?: return null, str("picture_big") ?: str("picture_medium"))
     }
 
-    /** Related artists of an artist: (id, name) pairs, Deezer's order. */
+    private fun JsonObject.toTrack(): DeezerTrack? {
+        val title = str("title") ?: return null
+        val artist = (this["artist"] as? JsonObject)?.str("name") ?: return null
+        val album = this["album"] as? JsonObject
+        return DeezerTrack(artist, title, album?.str("cover_big") ?: album?.str("cover_medium"))
+    }
+
+    /** The artist Deezer lists under [name]: the exact name match if there is one, else the first hit. */
+    suspend fun artist(name: String): DeezerArtist? {
+        val hits = rows(getJson("/search/artist", "q" to name, "limit" to "5"))
+        val wanted = SimilarMix.key(name)
+        return (hits.firstOrNull { SimilarMix.key(it.str("name").orEmpty()) == wanted } ?: hits.firstOrNull())?.toArtist()
+    }
+
+    suspend fun artistId(name: String): Long? = artist(name)?.id
+
+    /** Related artists of an artist, Deezer's order. */
     suspend fun relatedArtists(
         id: Long,
         limit: Int = 4,
-    ): List<Pair<Long, String>> {
-        val rows = getJson("/artist/$id/related", "limit" to limit.toString())["data"] as? JsonArray ?: return emptyList()
-        return rows.mapNotNull { element ->
-            val o = element as? JsonObject ?: return@mapNotNull null
-            val rid = o.str("id")?.toLongOrNull() ?: return@mapNotNull null
-            val name = o.str("name") ?: return@mapNotNull null
-            rid to name
-        }
-    }
+    ): List<DeezerArtist> = rows(getJson("/artist/$id/related", "limit" to limit.toString())).mapNotNull { it.toArtist() }
 
-    /** An artist's top tracks: (artist, title) pairs. */
+    /** An artist's top tracks. */
     suspend fun topTracks(
         id: Long,
         limit: Int = 3,
-    ): List<Pair<String, String>> {
-        val rows = getJson("/artist/$id/top", "limit" to limit.toString())["data"] as? JsonArray ?: return emptyList()
-        return rows.mapNotNull { element ->
-            val o = element as? JsonObject ?: return@mapNotNull null
-            val title = o.str("title") ?: return@mapNotNull null
-            val artist = (o["artist"] as? JsonObject)?.str("name") ?: return@mapNotNull null
-            artist to title
+    ): List<DeezerTrack> = rows(getJson("/artist/$id/top", "limit" to limit.toString())).mapNotNull { it.toTrack() }
+
+    /** The artist's station: songs by the artist and by artists close to them. */
+    suspend fun radio(
+        id: Long,
+        limit: Int = 30,
+    ): List<DeezerTrack> = rows(getJson("/artist/$id/radio", "limit" to limit.toString())).mapNotNull { it.toTrack() }
+
+    /** The artist's albums, singles and EPs. The rows do not name the artist, so [artistName] is passed in. */
+    suspend fun albums(
+        id: Long,
+        artistName: String,
+        limit: Int = 50,
+    ): List<DeezerAlbum> =
+        rows(getJson("/artist/$id/albums", "limit" to limit.toString())).mapNotNull { o ->
+            DeezerAlbum(
+                title = o.str("title") ?: return@mapNotNull null,
+                artist = artistName,
+                cover = o.str("cover_big") ?: o.str("cover_medium"),
+                releaseDate = o.str("release_date").orEmpty(),
+                recordType = o.str("record_type").orEmpty(),
+            )
         }
-    }
 }
+
+@Serializable
+data class DeezerArtist(
+    val id: Long,
+    val name: String,
+    val picture: String? = null,
+)
+
+@Serializable
+data class DeezerTrack(
+    val artist: String,
+    val title: String,
+    val cover: String? = null,
+)
+
+@Serializable
+data class DeezerAlbum(
+    val title: String,
+    val artist: String,
+    val cover: String? = null,
+    val releaseDate: String = "",
+    val recordType: String = "",
+)

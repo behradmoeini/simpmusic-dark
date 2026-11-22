@@ -933,6 +933,16 @@ fun HomeScreen(
                                         DiscoverMixShelf(viewModel)
                                         SimilarShelf(viewModel)
                                     }
+                                    // Fork: the history shelves follow, one pair per YouTube shelf, so
+                                    // Home alternates between the two sources as Spotify's does.
+                                    if (index == 1.coerceAtMost(homeShelves.lastIndex)) {
+                                        TopMixesShelf(viewModel)
+                                        NewReleasesShelf(viewModel, navController)
+                                    }
+                                    if (index == 2.coerceAtMost(homeShelves.lastIndex)) {
+                                        MoreLikeShelfRow(viewModel)
+                                        LikedAlbumsShelf(viewModel, navController)
+                                    }
                                 }
                             }
                         }

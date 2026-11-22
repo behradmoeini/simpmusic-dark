@@ -5,14 +5,12 @@ import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.repository.AnalyticsRepository
 import com.maxrave.domain.repository.SearchRepository
 import com.maxrave.domain.repository.SongRepository
-import com.maxrave.domain.utils.toTrack
 import com.maxrave.logger.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
@@ -47,6 +45,7 @@ class SimilarTracksLoader(
     private val dataStoreManager: DataStoreManager,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+    private val matcher = YouTubeMatcher(searchRepository)
 
     suspend fun load(newVariant: Boolean = false): List<Track> {
         val today = LocalDate.now().toEpochDay()
@@ -89,8 +88,8 @@ class SimilarTracksLoader(
                             limit.withPermit {
                                 guarded("related of ${seed.channelId}") {
                                     val id = DeezerCatalog.artistId(seed.channelId) ?: return@guarded emptyList()
-                                    DeezerCatalog.relatedArtists(id, RELATED_PER_SEED).mapIndexed { index, (relatedId, name) ->
-                                        RelatedHit(seed = seed.channelId, channelId = relatedId.toString(), name = name, position = index)
+                                    DeezerCatalog.relatedArtists(id, RELATED_PER_SEED).mapIndexed { index, related ->
+                                        RelatedHit(seed = seed.channelId, channelId = related.id.toString(), name = related.name, position = index)
                                     }
                                 }.orEmpty()
                             }
@@ -116,19 +115,19 @@ class SimilarTracksLoader(
                                     guarded("top of ${candidate.name}") {
                                         DeezerCatalog.topTracks(candidate.channelId.toLong(), TOP_PER_ARTIST)
                                     }.orEmpty()
-                                        .distinctBy { SimilarMix.trackKey(it.first, it.second) }
-                                        .filter { SimilarMix.trackKey(it.first, it.second) !in playedKeys }
+                                        .distinctBy { SimilarMix.trackKey(it.artist, it.title) }
+                                        .filter { SimilarMix.trackKey(it.artist, it.title) !in playedKeys }
                                 DiscoverMix.pickSongs(top, SONGS_PER_ARTIST, random)
                             }
                         }
                     }.awaitAll()
             }
-        val candidates = DiscoverMix.interleave(perArtist.filter { it.isNotEmpty() }).distinctBy { SimilarMix.trackKey(it.first, it.second) }
+        val candidates = DiscoverMix.interleave(perArtist.filter { it.isNotEmpty() }).distinctBy { SimilarMix.trackKey(it.artist, it.title) }
 
         val matched =
             coroutineScope {
                 candidates
-                    .map { (artist, title) -> async { limit.withPermit { guarded("match $title") { matchOnYouTube(artist, title, playedIds) } } } }
+                    .map { c -> async { limit.withPermit { guarded("match ${c.title}") { matcher.song(c.artist, c.title, playedIds) } } } }
                     .awaitAll()
             }
         val out =
@@ -139,24 +138,6 @@ class SimilarTracksLoader(
                 .take(MAX_TRACKS)
         Logger.i(TAG, "Similar: seeds ${seeds.size}, related ${hits.size}, artists ${chosen.size}, candidates ${candidates.size}, tracks ${out.size}")
         return out
-    }
-
-    /** The YouTube Music song for the pair that the listener has not played yet. */
-    private suspend fun matchOnYouTube(
-        artist: String,
-        title: String,
-        played: Set<String>,
-    ): Track? {
-        val results =
-            searchRepository
-                .getSearchDataSong("$title $artist")
-                .firstOrNull { it.data != null }
-                ?.data
-                .orEmpty()
-                .filter { it.videoId.isNotBlank() }
-                .take(MATCH_POOL)
-        val index = SimilarMix.bestMatch(artist, title, results.map { it.title.orEmpty() to it.artists.orEmpty().joinToString(" ") { a -> a.name } })
-        return results.getOrNull(index)?.takeIf { it.videoId !in played }?.toTrack()
     }
 
     /** One slow or failing request costs its own result, not the shelf. */
@@ -193,7 +174,6 @@ class SimilarTracksLoader(
         const val TOP_PER_ARTIST = 8
         const val SONGS_PER_ARTIST = 2
         const val MAX_TRACKS = 24
-        const val MATCH_POOL = 5
         const val PARALLEL = 4
         const val REQUEST_TIMEOUT_MS = 15_000L
     }

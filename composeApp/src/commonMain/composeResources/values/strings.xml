@@ -1087,6 +1087,16 @@
     <string name="similar_mix_title">Like what you play</string>
     <string name="similar_mix_subtitle">New songs close to what you have been playing, from Deezer</string>
     <string name="similar_mix_play">Play</string>
+    <string name="home_top_mixes">Your top mixes</string>
+    <string name="home_mix_name">%1$s Mix</string>
+    <string name="home_mix_and_more">%1$s and more</string>
+    <string name="home_more_like">More like</string>
+    <string name="home_new_releases">New releases for you</string>
+    <string name="home_release_single">Single</string>
+    <string name="home_release_album">Album</string>
+    <string name="home_release_ep">EP</string>
+    <string name="home_albums_you_like">Albums featuring songs you like</string>
+    <string name="home_shelf_not_found">Couldn\'t find it on YouTube Music</string>
     <string name="discover_mix_title">Same vibe, new artists</string>
     <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
     <string name="discover_mix_play">Play mix</string>

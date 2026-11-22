@@ -7,7 +7,20 @@ import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
 import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
 import com.maxrave.simpmusic.chart.toIranChart
+import com.maxrave.simpmusic.recommendation.DeezerAlbum
+import com.maxrave.simpmusic.recommendation.DeezerCatalog
+import com.maxrave.simpmusic.recommendation.DeezerTrack
+import com.maxrave.simpmusic.recommendation.HomeShelves
+import com.maxrave.simpmusic.recommendation.HomeShelvesLoader
+import com.maxrave.simpmusic.recommendation.MixCard
+import com.maxrave.simpmusic.recommendation.SimilarMix
 import com.maxrave.simpmusic.recommendation.SimilarTracksLoader
+import com.maxrave.simpmusic.recommendation.YouTubeMatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.sync.withPermit
+import simpmusic.composeapp.generated.resources.home_mix_name
+import simpmusic.composeapp.generated.resources.home_shelf_not_found
 import org.koin.core.component.get
 import simpmusic.composeapp.generated.resources.discover_mix_title
 import simpmusic.composeapp.generated.resources.similar_mix_title
@@ -499,6 +512,111 @@ class HomeViewModel(
             )
             loadMediaItem(first, Config.PLAYLIST_CLICK, index)
         }
+    }
+
+    // Fork: Spotify-style history shelves — see recommendation/HomeShelvesLoader.kt.
+    private val homeShelvesLoader by lazy { HomeShelvesLoader(get(), get(), dataStoreManager) }
+    private val matcher by lazy { YouTubeMatcher(get()) }
+    private val _homeShelves = MutableStateFlow(HomeShelves())
+    val homeShelves: StateFlow<HomeShelves> = _homeShelves
+    private var homeShelvesJob: Job? = null
+
+    /** Key of the card being resolved on YouTube Music (it shows a spinner), or null. */
+    val shelfBusy = MutableStateFlow<String?>(null)
+    private var shelfJob: Job? = null
+
+    fun loadHomeShelves() {
+        if (homeShelvesJob != null) return
+        homeShelvesJob =
+            viewModelScope.launch {
+                try {
+                    _homeShelves.value = homeShelvesLoader.load()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Logger.w("HomeShelves", "Shelves failed: ${e.message}")
+                    homeShelvesJob = null
+                }
+            }
+    }
+
+    /** One card at a time: a second tap while one is resolving replaces it. */
+    private fun shelfAction(
+        key: String,
+        block: suspend () -> Unit,
+    ) {
+        shelfJob?.cancel()
+        shelfJob =
+            viewModelScope.launch {
+                shelfBusy.value = key
+                try {
+                    block()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Logger.w("HomeShelves", "Card $key failed: ${e.message}")
+                    makeToast(getString(Res.string.home_shelf_not_found))
+                } finally {
+                    if (shelfBusy.value == key) shelfBusy.value = null
+                }
+            }
+    }
+
+    /** Matches [tracks] on YouTube Music, four at a time, and plays them from [startIndex]. */
+    private suspend fun playDeezerTracks(
+        tracks: List<DeezerTrack>,
+        startIndex: Int,
+        name: String,
+    ) {
+        val limit = kotlinx.coroutines.sync.Semaphore(4)
+        val matched =
+            kotlinx.coroutines.coroutineScope {
+                tracks
+                    .map { t ->
+                        async {
+                            limit.withPermit { kotlinx.coroutines.withTimeoutOrNull(15_000) { runCatching { matcher.song(t.artist, t.title) }.getOrNull() } }
+                        }
+                    }.awaitAll()
+            }
+        // The tapped card keeps its place even when cards before it found no match.
+        val startId = matched.getOrNull(startIndex)?.videoId
+        val queue = matched.filterNotNull().distinctBy { it.videoId }
+        val index = queue.indexOfFirst { it.videoId == startId }.coerceAtLeast(0)
+        val first = queue.getOrNull(index)
+        if (first == null) {
+            makeToast(getString(Res.string.home_shelf_not_found))
+            return
+        }
+        setQueueData(
+            QueueData.Data(
+                listTracks = ArrayList(queue),
+                firstPlayedTrack = first,
+                playlistId = null,
+                playlistName = name,
+                playlistType = PlaylistType.RADIO,
+                continuation = null,
+            ),
+        )
+        loadMediaItem(first, Config.PLAYLIST_CLICK, index)
+    }
+
+    fun playMix(card: MixCard) =
+        shelfAction("mix:${card.artist.id}") {
+            val station = DeezerCatalog.radio(card.artist.id).distinctBy { SimilarMix.trackKey(it.artist, it.title) }
+            playDeezerTracks(station, 0, getString(Res.string.home_mix_name).replace("%1\$s", card.artist.name))
+        }
+
+    fun playMoreLike(index: Int) {
+        val shelf = _homeShelves.value.moreLike ?: return
+        shelfAction("more:$index") { playDeezerTracks(shelf.tracks, index, shelf.artist.name) }
+    }
+
+    fun openRelease(
+        album: DeezerAlbum,
+        onFound: (String) -> Unit,
+    ) = shelfAction("release:${album.artist}:${album.title}") {
+        val browseId = matcher.album(album.artist, album.title)
+        if (browseId != null) onFound(browseId) else makeToast(getString(Res.string.home_shelf_not_found))
     }
 
     fun setParams(params: String?) {
