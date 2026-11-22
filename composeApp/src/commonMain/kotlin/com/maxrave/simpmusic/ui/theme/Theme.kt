@@ -17,6 +17,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.PaletteStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.LocalHazeBlurStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.simpmusic.expect.ui.SystemBarAppearanceEffect
@@ -208,6 +210,10 @@ fun AppTheme(
             CompositionLocalProvider(
                 LocalRippleConfiguration provides if (onTv) TvRippleConfiguration else SoftRippleConfiguration,
                 LocalIndication provides if (onTv) TvFocusIndication else LocalIndication.current,
+                // No blur on a TV: with the frosted bar over Home every frame waited ~80 ms on the
+                // Google TV Streamer's graphics chip, against ~5 ms on a screen without it. Each bar
+                // style already names the opaque colour it falls back to.
+                LocalHazeBlurStyle provides if (onTv) TvNoBlurStyle else LocalHazeBlurStyle.current,
                 LocalContentColor provides colorScheme.onSurfaceVariant,
                 LocalAppColors provides if (isDark) DarkAppColors else LightAppColors,
                 LocalIsDarkTheme provides isDark,
@@ -257,6 +263,8 @@ private val SoftRippleConfiguration =
                 pressedAlpha = 0.04f,
             ),
     )
+
+private val TvNoBlurStyle = HazeBlurStyle { blurEnabled(false) }
 
 /**
  * The TV counterpart of [SoftRippleConfiguration], for Material components that bring their own

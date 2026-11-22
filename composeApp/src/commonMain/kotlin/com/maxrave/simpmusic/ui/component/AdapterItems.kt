@@ -13,6 +13,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.maxrave.simpmusic.expect.ui.isTelevision
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -423,11 +427,27 @@ internal fun rememberCardHover(enabled: Boolean): Pair<Modifier, Boolean> {
         targetValue = if (active) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f) else Color.Transparent,
         label = "cardHoverTint",
     )
+    // On a TV the 7% tint cannot be seen from the sofa, so the focused card also gets the white
+    // outline every other focused thing has there (ui/theme/TvFocus.kt).
+    val outlined = focused && isTelevision()
     val modifier =
         Modifier
             .onFocusChanged { focused = it.isFocused }
             .hoverable(source)
-            .drawBehind { drawRoundRect(color = tint, cornerRadius = CornerRadius(8.dp.toPx())) }
+            .drawBehind {
+                val corner = CornerRadius(8.dp.toPx())
+                drawRoundRect(color = tint, cornerRadius = corner)
+                if (outlined) {
+                    val stroke = 2.dp.toPx()
+                    drawRoundRect(
+                        color = Color.White,
+                        topLeft = Offset(stroke / 2, stroke / 2),
+                        size = Size(size.width - stroke, size.height - stroke),
+                        cornerRadius = corner,
+                        style = Stroke(stroke),
+                    )
+                }
+            }
     return modifier to active
 }
 
