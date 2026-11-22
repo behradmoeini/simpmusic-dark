@@ -80,14 +80,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -151,6 +144,8 @@ import com.maxrave.simpmusic.ui.component.EndOfPage
 import com.maxrave.simpmusic.ui.component.ExpandableChip
 import com.maxrave.simpmusic.ui.component.FootgunsStarDialog
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
+import com.maxrave.simpmusic.ui.component.tvDownTo
+import com.maxrave.simpmusic.ui.component.tvPage
 import com.maxrave.simpmusic.ui.component.HomeDiscoverSection
 import com.maxrave.simpmusic.ui.component.HomeItem
 import com.maxrave.simpmusic.ui.component.HomeItemContentPlaylist
@@ -801,8 +796,8 @@ fun HomeScreen(
                         return@Crossfade
                     }
                     LazyColumn(
-                        // A group the header can hand focus to; see the header's key handler.
-                        modifier = Modifier.focusRequester(shelvesFocus).focusGroup(),
+                        // The page the header's Down key leads to (ui/component/TvKeys.kt).
+                        modifier = Modifier.tvPage(shelvesFocus),
                         state = scrollState,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -1113,17 +1108,10 @@ fun HomeScreen(
                 modifier =
                     Modifier
                         .align(Alignment.TopCenter)
-                        // With a remote, Down from the avatar, the chips or Create stayed in this
-                        // row: focus search never left it for the shelves underneath (seen on the
-                        // Google TV Streamer, 2026-11-21). The key is handed to the shelves by name.
-                        // An unattached requester (Podcasts view, loading) throws, and the key then
-                        // takes its normal course.
-                        .onPreviewKeyEvent { event ->
-                            onTv &&
-                                event.type == KeyEventType.KeyDown &&
-                                event.key == Key.DirectionDown &&
-                                runCatching { shelvesFocus.requestFocus() }.isSuccess
-                        }.then(
+                        // Down from the avatar, the chips or Create leads to the shelves, which
+                        // arrow-key focus search cannot find by itself (ui/component/TvKeys.kt).
+                        .tvDownTo(shelvesFocus)
+                        .then(
                             if (target) {
                                 Modifier.background(Color.Transparent)
                             } else {

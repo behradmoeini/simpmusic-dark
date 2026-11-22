@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -73,6 +74,8 @@ import com.maxrave.simpmusic.extension.copy
 import com.maxrave.simpmusic.extension.isScrollingUp
 import com.maxrave.simpmusic.extension.ultraThinBarStyle
 import com.maxrave.simpmusic.getPlatform
+import com.maxrave.simpmusic.ui.component.tvDownTo
+import com.maxrave.simpmusic.ui.component.tvPage
 import com.maxrave.simpmusic.ui.component.AddToPlaylistModalBottomSheet
 import com.maxrave.simpmusic.ui.component.Chip
 import com.maxrave.simpmusic.ui.component.CreateLocalPlaylistSheet
@@ -245,8 +248,9 @@ fun LibraryScreen(
     // The floating chip row refracts the page scrolling under it, so the page is the glass source and
     // the row its sibling (nesting the row inside the source is the RuntimeShader feedback loop).
     val chipBackdrop = rememberBackdrop(MaterialTheme.colorScheme.background)
+    val pageFocus = remember { FocusRequester() }
     Crossfade(
-        modifier = Modifier.then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
+        modifier = Modifier.tvPage(pageFocus).then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
         targetState = currentFilter,
     ) { filter ->
         when (filter) {
@@ -445,6 +449,7 @@ fun LibraryScreen(
     }
     Column(
         Modifier
+            .tvDownTo(pageFocus)
             .background(Color.Transparent)
             .hazeBlur(HazeInput.Sources(hazeState), ultraThinBarStyle()).onGloballyPositioned { coordinates ->
                 topAppBarHeight = with(density) { coordinates.size.height.toDp() }

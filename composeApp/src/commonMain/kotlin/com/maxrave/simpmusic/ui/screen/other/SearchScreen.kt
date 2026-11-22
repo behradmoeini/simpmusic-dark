@@ -113,6 +113,8 @@ import com.maxrave.simpmusic.extension.getScreenSizeInfo
 import com.maxrave.simpmusic.extension.ultraThinBarStyle
 import com.maxrave.simpmusic.getPlatform
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
+import com.maxrave.simpmusic.ui.component.tvDownTo
+import com.maxrave.simpmusic.ui.component.tvPage
 import com.maxrave.simpmusic.ui.component.AddToPlaylistModalBottomSheet
 import com.maxrave.simpmusic.ui.component.CenterLoadingBox
 import com.maxrave.simpmusic.ui.component.MoodCategoryCard
@@ -200,6 +202,7 @@ fun SearchScreen(
     var isExpanded by rememberSaveable { mutableStateOf(false) }
 
     val focusRequester = remember { FocusRequester() }
+    val pageFocus = remember { FocusRequester() }
 
     var isFocused by rememberSaveable { mutableStateOf(false) }
 
@@ -434,7 +437,7 @@ fun SearchScreen(
         // equal to the bar's measured height to keep its first item clear of it.
         Crossfade(
             targetState = searchUIType,
-            modifier = Modifier.fillMaxSize().then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
+            modifier = Modifier.fillMaxSize().tvPage(pageFocus).then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
         ) {
             when (it) {
                 SearchUIType.SEARCH_SUGGESTIONS -> {
@@ -1088,6 +1091,9 @@ fun SearchScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        // Down from the field (which would keep the key for its cursor) or from
+                        // the filter chips leads to the page; Up from the page finds them again.
+                        .tvDownTo(pageFocus)
                         .windowInsetsPadding(WindowInsets.statusBars)
                         .padding(vertical = 10.dp),
             ) {
