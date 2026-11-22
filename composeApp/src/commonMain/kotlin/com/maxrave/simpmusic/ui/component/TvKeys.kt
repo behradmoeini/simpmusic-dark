@@ -1,6 +1,7 @@
 package com.maxrave.simpmusic.ui.component
 
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -41,3 +42,19 @@ fun Modifier.tvDownTo(page: FocusRequester): Modifier {
             runCatching { page.requestFocus() }.isSuccess
     }
 }
+
+/**
+ * Whether this device is a TV, for code that is not composable. A device does not stop being a TV,
+ * so the theme writes it once on its first composition ([isTelevision] needs a composition to ask).
+ */
+object TvDevice {
+    @Volatile
+    var isTv: Boolean = false
+}
+
+/**
+ * `focusable()` everywhere but on a TV. The scrolling (marquee) text lines are focusable so a
+ * keyboard can reach them; with a remote each one was an extra stop inside its own row, where OK
+ * does nothing. Not composable, so it can stand wherever `focusable()` stood.
+ */
+fun Modifier.focusableUnlessTv(): Modifier = if (TvDevice.isTv) this else focusable()

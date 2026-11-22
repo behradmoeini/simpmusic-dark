@@ -140,7 +140,7 @@ fun LibraryItem(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
             }
             Crossfade(targetState = state.isLoading, label = "Loading") { isLoading ->
@@ -312,7 +312,7 @@ fun LibraryItem(
                                                     ).basicMarquee(
                                                         iterations = Int.MAX_VALUE,
                                                         animationMode = MarqueeAnimationMode.Immediately,
-                                                    ).focusable(),
+                                                    ).focusableUnlessTv(),
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             androidx.compose.animation.AnimatedVisibility(visible = song.isExplicit) {
@@ -336,7 +336,7 @@ fun LibraryItem(
                                                         ).basicMarquee(
                                                             iterations = Int.MAX_VALUE,
                                                             animationMode = MarqueeAnimationMode.Immediately,
-                                                        ).focusable(),
+                                                        ).focusableUnlessTv(),
                                             )
                                         }
                                         Spacer(Modifier.height(8.dp))

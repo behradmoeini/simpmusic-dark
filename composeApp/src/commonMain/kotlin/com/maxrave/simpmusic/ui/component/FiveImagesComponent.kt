@@ -206,7 +206,7 @@ private fun MarqueeLine(
                 .basicMarquee(
                     iterations = Int.MAX_VALUE,
                     animationMode = MarqueeAnimationMode.Immediately,
-                ).focusable(),
+                ).focusableUnlessTv(),
     )
 }
 

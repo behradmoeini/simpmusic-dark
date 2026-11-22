@@ -383,7 +383,7 @@ fun FullscreenLyricsContent(
                                         .basicMarquee(
                                             iterations = Int.MAX_VALUE,
                                             animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        ).focusableUnlessTv(),
                             )
 
                             Spacer(modifier = Modifier.height(2.dp))
@@ -429,7 +429,7 @@ fun FullscreenLyricsContent(
                                             .basicMarquee(
                                                 iterations = Int.MAX_VALUE,
                                                 animationMode = MarqueeAnimationMode.Immediately,
-                                            ).focusable(),
+                                            ).focusableUnlessTv(),
                                 )
                             }
                         }

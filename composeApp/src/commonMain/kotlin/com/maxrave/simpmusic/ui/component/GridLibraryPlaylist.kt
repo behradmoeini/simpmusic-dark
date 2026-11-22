@@ -221,7 +221,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                                 .basicMarquee(
                                                     iterations = Int.MAX_VALUE,
                                                     animationMode = MarqueeAnimationMode.Immediately,
-                                                ).focusable(),
+                                                ).focusableUnlessTv(),
                                     )
                                 }
                             }

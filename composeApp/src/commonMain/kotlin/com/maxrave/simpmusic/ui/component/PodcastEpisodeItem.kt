@@ -88,7 +88,7 @@ fun PodcastEpisodeFullWidthItem(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
 
                 Text(
@@ -103,7 +103,7 @@ fun PodcastEpisodeFullWidthItem(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
 
                 val description = episode.description
@@ -120,7 +120,7 @@ fun PodcastEpisodeFullWidthItem(
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                ).focusableUnlessTv(),
                     )
                 }
             }

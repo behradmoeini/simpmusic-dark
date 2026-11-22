@@ -518,7 +518,7 @@ fun InfoPlayerBottomSheet(
                                         .basicMarquee(
                                             iterations = Int.MAX_VALUE,
                                             animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        ).focusableUnlessTv(),
                             )
                         }
                     },
@@ -925,7 +925,7 @@ fun InfoPlayerBottomSheet(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                     style = typo().bodyMedium,
                     textAlign = TextAlign.Center,
                 )
@@ -1100,7 +1100,7 @@ fun QueueBottomSheet(
                                         .basicMarquee(
                                             iterations = Int.MAX_VALUE,
                                             animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        ).focusableUnlessTv(),
                             )
                         }
                     },

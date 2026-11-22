@@ -327,7 +327,7 @@ fun SongFullWidthItems(
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                ).focusableUnlessTv(),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AnimatedVisibility(
@@ -378,7 +378,7 @@ fun SongFullWidthItems(
                                     .basicMarquee(
                                         iterations = Int.MAX_VALUE,
                                         animationMode = MarqueeAnimationMode.Immediately,
-                                    ).focusable(),
+                                    ).focusableUnlessTv(),
                         )
                     }
                 }
@@ -482,7 +482,7 @@ fun SuggestItems(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (track.isLive) LiveBadge(modifier = Modifier.padding(end = 6.dp))
@@ -501,7 +501,7 @@ fun SuggestItems(
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                ).focusableUnlessTv(),
                     )
                 }
             }
@@ -637,7 +637,7 @@ fun PlaylistFullWidthItems(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -664,7 +664,7 @@ fun PlaylistFullWidthItems(
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                ).focusableUnlessTv(),
                     )
                 }
 
@@ -681,7 +681,7 @@ fun PlaylistFullWidthItems(
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                ).focusableUnlessTv(),
                     )
                 }
             }
@@ -759,7 +759,7 @@ fun ArtistFullWidthItems(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
 
                 Text(
@@ -774,7 +774,7 @@ fun ArtistFullWidthItems(
                             .basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            ).focusableUnlessTv(),
                 )
             }
             if (rightView != null) {

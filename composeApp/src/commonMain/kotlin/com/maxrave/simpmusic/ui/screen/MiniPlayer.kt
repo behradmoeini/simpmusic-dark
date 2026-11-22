@@ -1,5 +1,6 @@
 package com.maxrave.simpmusic.ui.screen
 
+import com.maxrave.simpmusic.ui.component.focusableUnlessTv
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -473,7 +474,7 @@ fun MiniPlayer(
                                                     ).basicMarquee(
                                                         iterations = Int.MAX_VALUE,
                                                         animationMode = MarqueeAnimationMode.Immediately,
-                                                    ).focusable(),
+                                                    ).focusableUnlessTv(),
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             androidx.compose.animation.AnimatedVisibility(visible = songEntity?.isExplicit == true) {
@@ -498,7 +499,7 @@ fun MiniPlayer(
                                                         ).basicMarquee(
                                                             iterations = Int.MAX_VALUE,
                                                             animationMode = MarqueeAnimationMode.Immediately,
-                                                        ).focusable(),
+                                                        ).focusableUnlessTv(),
                                             )
                                         }
                                     }
@@ -806,7 +807,7 @@ fun MiniPlayer(
                                         ).basicMarquee(
                                             iterations = Int.MAX_VALUE,
                                             animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        ).focusableUnlessTv(),
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 androidx.compose.animation.AnimatedVisibility(visible = songEntity?.isExplicit == true) {

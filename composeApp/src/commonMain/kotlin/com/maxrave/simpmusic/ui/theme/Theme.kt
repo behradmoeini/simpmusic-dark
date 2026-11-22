@@ -1,6 +1,8 @@
 package com.maxrave.simpmusic.ui.theme
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -15,6 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.PaletteStyle
 import dev.chrisbanes.haze.blur.HazeBlurStyle
@@ -23,6 +28,7 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.simpmusic.expect.ui.SystemBarAppearanceEffect
 import com.maxrave.simpmusic.expect.ui.isTelevision
+import com.maxrave.simpmusic.ui.component.TvDevice
 import com.maxrave.simpmusic.expect.ui.platformDynamicColorScheme
 
 /**
@@ -154,7 +160,7 @@ private fun ColorScheme.withStreamDarkSurfaces(accent: Color): ColorScheme =
         inverseOnSurface = Color.Black,
     )
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AppTheme(
     themeMode: String = DataStoreManager.THEME_MODE_DARK,
@@ -207,7 +213,11 @@ fun AppTheme(
         content = {
             // A TV is driven by focus alone, so focus has to be seen from across the room.
             val onTv = isTelevision()
+            TvDevice.isTv = onTv
+            val tvPivot = with(LocalDensity.current) { 150.dp.toPx() }
+            val tvBringIntoView = remember(tvPivot) { TvBringIntoViewSpec(tvPivot) }
             CompositionLocalProvider(
+                LocalBringIntoViewSpec provides if (onTv) tvBringIntoView else LocalBringIntoViewSpec.current,
                 LocalRippleConfiguration provides if (onTv) TvRippleConfiguration else SoftRippleConfiguration,
                 LocalIndication provides if (onTv) TvFocusIndication else LocalIndication.current,
                 // No blur on a TV: with the frosted bar over Home every frame waited ~80 ms on the

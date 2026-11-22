@@ -213,7 +213,6 @@ fun HomeSectionHeader(
         modifier =
             if (channelId != null) {
                 Modifier
-                    .focusable(true)
                     .clip(RoundedCornerShape(8.dp))
                     .clickable {
                         navController.navigate(
@@ -225,7 +224,6 @@ fun HomeSectionHeader(
             } else if (moreEndpoint != null) {
                 // The section title carries the same endpoint as its "More" button, as on the web.
                 Modifier
-                    .focusable(true)
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { navController.navigateToMoreEndpoint(moreEndpoint, data.title) }
             } else {
@@ -579,7 +577,6 @@ fun HomeItemContentPlaylist(
         Modifier
             .then(hoverModifier)
             .wrapContentSize()
-            .focusable(true)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
                 onClick()
@@ -841,7 +838,6 @@ fun QuickPicksItem(
             Modifier
                 .wrapContentHeight()
                 .width(widthDp - 30.dp)
-                .focusable(true)
                 .clip(RoundedCornerShape(8.dp))
                 .combinedClickable(
                     onClick = onClick,
@@ -965,7 +961,6 @@ fun HomeItemSong(
             Modifier
                 .then(hoverModifier)
                 .fillMaxSize()
-                .focusable(true)
                 .clip(RoundedCornerShape(8.dp))
                 .combinedClickable(
                     onClick = onClick,
@@ -1076,7 +1071,6 @@ fun HomeItemVideo(
         Modifier
             .then(hoverModifier)
             .fillMaxSize()
-            .focusable(true)
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 onClick = onClick,
@@ -1195,7 +1189,6 @@ fun HomeItemArtist(
     Box(
         Modifier
             .fillMaxSize()
-            .focusable(true)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
                 onClick()
@@ -1314,7 +1307,6 @@ fun ItemVideoChart(
     Box(
         Modifier
             .wrapContentSize()
-            .focusable(true)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
                 onClick()
@@ -1414,7 +1406,6 @@ fun ItemArtistChart(
     Box(
         Modifier
             .wrapContentSize()
-            .focusable(true)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
                 onClick()
@@ -1515,7 +1506,6 @@ fun ItemTrackChart(
         modifier =
             Modifier
                 .wrapContentSize()
-                .focusable(true)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable {
                     onClick()

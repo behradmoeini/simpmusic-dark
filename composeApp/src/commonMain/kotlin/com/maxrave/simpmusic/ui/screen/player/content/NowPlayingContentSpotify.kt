@@ -2,6 +2,7 @@
 
 package com.maxrave.simpmusic.ui.screen.player.content
 
+import com.maxrave.simpmusic.ui.component.focusableUnlessTv
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -888,7 +889,7 @@ fun NowPlayingContentSpotify(
                                         .basicMarquee(
                                             iterations = Int.MAX_VALUE,
                                             animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        ).focusableUnlessTv(),
                             )
                         }
                     },
@@ -1007,7 +1008,7 @@ fun NowPlayingContentSpotify(
                                                 .basicMarquee(
                                                     iterations = Int.MAX_VALUE,
                                                     animationMode = MarqueeAnimationMode.Immediately,
-                                                ).focusable(),
+                                                ).focusableUnlessTv(),
                                     )
                                 }
                             }
@@ -1249,7 +1250,7 @@ fun NowPlayingContentSpotify(
                                                                     .basicMarquee(
                                                                         iterations = Int.MAX_VALUE,
                                                                         animationMode = MarqueeAnimationMode.Immediately,
-                                                                    ).focusable(),
+                                                                    ).focusableUnlessTv(),
                                                             text = lineText,
                                                             style = typo().bodyMedium,
                                                             color = Color.White,
@@ -1273,7 +1274,7 @@ fun NowPlayingContentSpotify(
                                                                         .basicMarquee(
                                                                             iterations = Int.MAX_VALUE,
                                                                             animationMode = MarqueeAnimationMode.Immediately,
-                                                                        ).focusable(),
+                                                                        ).focusableUnlessTv(),
                                                                 text = translatedLineText,
                                                                 alignmentText = lineText,
                                                                 style = typo().bodyMedium,
@@ -1703,7 +1704,7 @@ fun NowPlayingContentSpotify(
                                             ).basicMarquee(
                                                 iterations = Int.MAX_VALUE,
                                                 animationMode = MarqueeAnimationMode.Immediately,
-                                            ).focusable(),
+                                            ).focusableUnlessTv(),
                                 )
                                 val artistRowState = rememberLazyListState()
                                 LazyRow(
@@ -1737,7 +1738,7 @@ fun NowPlayingContentSpotify(
                                                     ).basicMarquee(
                                                         iterations = Int.MAX_VALUE,
                                                         animationMode = MarqueeAnimationMode.Immediately,
-                                                    ).focusable(),
+                                                    ).focusableUnlessTv(),
                                         )
                                     }
                                 }
@@ -1870,7 +1871,7 @@ internal fun NowPlayingTrackInfoRow(
                         .basicMarquee(
                             iterations = Int.MAX_VALUE,
                             animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        ).focusableUnlessTv(),
             )
             Spacer(modifier = Modifier.height(3.dp))
             val artistRowState = rememberLazyListState()

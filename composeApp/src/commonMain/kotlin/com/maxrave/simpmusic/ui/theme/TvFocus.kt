@@ -1,6 +1,8 @@
 package com.maxrave.simpmusic.ui.theme
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -76,5 +78,30 @@ private class TvFocusNode(
                 style = Stroke(stroke),
             )
         }
+    }
+}
+
+/**
+ * Where a list puts the item the remote moves to, on a TV: its leading edge a fixed distance in
+ * from the list's own, the way TV apps keep the focused row and card in one place and move the
+ * page under it.
+ *
+ * The default only scrolls far enough for the item to be inside the list, and the lists here run
+ * under a floating header, so the focused shelf ended up behind the header with nothing visibly
+ * focused. [pivotPx] clears the header and leaves the shelf's title showing above its cards. In a
+ * row the same distance keeps the previous card peeking in at the left.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+internal class TvBringIntoViewSpec(
+    private val pivotPx: Float,
+) : BringIntoViewSpec {
+    override fun calculateScrollDistance(
+        offset: Float,
+        size: Float,
+        containerSize: Float,
+    ): Float {
+        // An item too large to sit at the pivot goes as far in as still fits whole.
+        val target = minOf(pivotPx, (containerSize - size).coerceAtLeast(0f))
+        return offset - target
     }
 }

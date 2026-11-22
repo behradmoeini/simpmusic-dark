@@ -1,5 +1,6 @@
 package com.maxrave.simpmusic.ui.screen.player.content
 
+import com.maxrave.simpmusic.ui.component.focusableUnlessTv
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -396,7 +397,7 @@ private fun NowPlayingM3ExpressiveLayout(
                                     .basicMarquee(
                                         iterations = Int.MAX_VALUE,
                                         animationMode = MarqueeAnimationMode.Immediately,
-                                    ).focusable(),
+                                    ).focusableUnlessTv(),
                         )
                     }
                     IconButton(
@@ -505,7 +506,7 @@ private fun NowPlayingM3ExpressiveLayout(
                                             .basicMarquee(
                                                 iterations = Int.MAX_VALUE,
                                                 animationMode = MarqueeAnimationMode.Immediately,
-                                            ).focusable(),
+                                            ).focusableUnlessTv(),
                                 )
                             }
                         }
@@ -621,7 +622,7 @@ private fun NowPlayingM3ExpressiveLayout(
                                                                 .basicMarquee(
                                                                     iterations = Int.MAX_VALUE,
                                                                     animationMode = MarqueeAnimationMode.Immediately,
-                                                                ).focusable(),
+                                                                ).focusableUnlessTv(),
                                                         text = lineText,
                                                         style = typo().bodyMedium,
                                                         color = Color.White,
@@ -645,7 +646,7 @@ private fun NowPlayingM3ExpressiveLayout(
                                                                     .basicMarquee(
                                                                         iterations = Int.MAX_VALUE,
                                                                         animationMode = MarqueeAnimationMode.Immediately,
-                                                                    ).focusable(),
+                                                                    ).focusableUnlessTv(),
                                                             text = translatedLineText,
                                                             alignmentText = lineText,
                                                             style = typo().bodyMedium,
@@ -738,7 +739,7 @@ internal fun ExpressiveTrackInfoRow(
                         .basicMarquee(
                             iterations = Int.MAX_VALUE,
                             animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        ).focusableUnlessTv(),
             )
             Spacer(modifier = Modifier.height(3.dp))
             Row(
