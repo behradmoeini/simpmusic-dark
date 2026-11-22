@@ -110,7 +110,7 @@ fun HomeDiscoverSection(
                 val play: () -> Unit = {
                     if (info.isHero()) song.playRadio(homeViewModel) else scope.launch { state.animateScrollToItem(index) }
                 }
-                val (hoverModifier, hovered) = rememberCardHover(enabled = true)
+                val (hoverModifier, hovered) = rememberCardHover(enabled = true, hero = song.toTvHero())
                 Box(
                     Modifier
                         .fillMaxSize()

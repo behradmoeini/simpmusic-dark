@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.maxrave.simpmusic.ui.component.TvHeroItem
+import com.maxrave.simpmusic.ui.component.tvHero
 import com.maxrave.simpmusic.ui.component.OpenPodcastCover
 import com.maxrave.simpmusic.ui.navigation.destination.list.AlbumDestination
 import com.maxrave.simpmusic.ui.theme.typo
@@ -78,7 +80,12 @@ private fun ShelfCard(
     size: Dp = CARD,
     band: String? = null,
 ) {
-    Column(Modifier.width(size).clickable(onClick = onClick)) {
+    Column(
+        Modifier
+            .tvHero(TvHeroItem(title = title.ifEmpty { band.orEmpty() }, subtitle = subtitle, artwork = cover))
+            .width(size)
+            .clickable(onClick = onClick),
+    ) {
         Box(Modifier.size(size).clip(RoundedCornerShape(8.dp))) {
             OpenPodcastCover(cover, size)
             if (band != null) {

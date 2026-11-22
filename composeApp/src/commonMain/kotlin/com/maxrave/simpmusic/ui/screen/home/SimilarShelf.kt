@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.maxrave.simpmusic.ui.component.TvHeroItem
+import com.maxrave.simpmusic.ui.component.tvHero
 import com.maxrave.simpmusic.ui.component.OpenPodcastCover
 import com.maxrave.simpmusic.ui.icon.PlayArrow
 import com.maxrave.simpmusic.ui.icon.Refresh
@@ -90,7 +92,13 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
             itemsIndexed(tracks, key = { _, t -> t.videoId }) { index, track ->
                 Column(
                     Modifier
-                        .width(140.dp)
+                        .tvHero(
+                            TvHeroItem(
+                                title = track.title,
+                                subtitle = track.artists?.joinToString { it.name },
+                                artwork = track.thumbnails?.maxByOrNull { it.width }?.url?.replace(Regex("=w\\d+-h\\d+"), "=w544-h544"),
+                            ),
+                        ).width(140.dp)
                         .clickable { viewModel.playSimilar(index) },
                 ) {
                     Box {

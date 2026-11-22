@@ -14,6 +14,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -62,6 +63,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -144,7 +146,12 @@ import com.maxrave.simpmusic.ui.component.EndOfPage
 import com.maxrave.simpmusic.ui.component.ExpandableChip
 import com.maxrave.simpmusic.ui.component.FootgunsStarDialog
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
+import com.maxrave.simpmusic.ui.component.LocalTvHero
+import com.maxrave.simpmusic.ui.component.TvHeroState
+import com.maxrave.simpmusic.ui.component.TvHomeHero
+import com.maxrave.simpmusic.ui.component.toTvHero
 import com.maxrave.simpmusic.ui.component.tvDownTo
+import com.maxrave.simpmusic.ui.theme.TvBringIntoViewSpec
 import com.maxrave.simpmusic.ui.component.tvPage
 import com.maxrave.simpmusic.ui.component.HomeDiscoverSection
 import com.maxrave.simpmusic.ui.component.HomeItem
@@ -421,6 +428,18 @@ fun HomeScreen(
     }
     val onTv = isTelevision()
     val shelvesFocus = remember { FocusRequester() }
+    // The TV hero (ui/component/TvHero.kt): cards report themselves to it as the remote reaches
+    // them; until one has, it shows the first card on the page.
+    val tvHero = remember { TvHeroState() }
+    val showHero = onTv && !podcastMode && homeShelves.isNotEmpty()
+    val heroItem =
+        tvHero.item ?: homeShelves.firstNotNullOfOrNull { shelf -> shelf.contents.firstNotNullOfOrNull { it } }?.toTvHero()
+    // With the hero the header is ~180dp tall, more than the app-wide 150dp a focused item is kept
+    // from its list's edge, so the focused shelf would sit behind it. The page keeps it the header's
+    // own height down, plus room for the shelf's title.
+    val rowBringIntoView = LocalBringIntoViewSpec.current
+    val shelfPivotPx = topAppBarHeightPx + with(LocalDensity.current) { 40.dp.toPx() }
+    val shelfBringIntoView = remember(shelfPivotPx) { TvBringIntoViewSpec(shelfPivotPx) }
     val hazeState =
         rememberHazeState()
     // The floating chip row refracts the page scrolling under it, so the page is the glass source and
@@ -745,6 +764,7 @@ fun HomeScreen(
     }
 
     HidePullIndicatorOnKeys(pullToRefreshState, isRefreshing)
+    CompositionLocalProvider(LocalTvHero provides if (onTv) tvHero else null) {
     Box {
         PullToRefreshBox(
             modifier =
@@ -795,6 +815,9 @@ fun HomeScreen(
                         )
                         return@Crossfade
                     }
+                    CompositionLocalProvider(
+                        LocalBringIntoViewSpec provides if (showHero) shelfBringIntoView else rowBringIntoView,
+                    ) {
                     LazyColumn(
                         // The page the header's Down key leads to (ui/component/TvKeys.kt).
                         modifier = Modifier.tvPage(shelvesFocus),
@@ -804,6 +827,8 @@ fun HomeScreen(
                         itemsIndexed(homeShelves, key = { _, item ->
                             item.hashCode().toString() + (mainHomeThumbnail ?: "nothumb")
                         }) { index, item ->
+                            // Rows keep the app-wide TV distance; only the page itself clears the hero.
+                            CompositionLocalProvider(LocalBringIntoViewSpec provides rowBringIntoView) {
                             Box {
                                 // No glow on a TV. It is five see-through layers the width of the
                                 // screen (tint, artwork, wash, scrim, over the page), and filling them
@@ -953,6 +978,7 @@ fun HomeScreen(
                                     }
                                 }
                             }
+                            }
                         }
                         item {
                             AnimatedVisibility(
@@ -1080,6 +1106,7 @@ fun HomeScreen(
                         item {
                             EndOfPage()
                         }
+                    }
                     }
                 } else {
                     Column {
@@ -1228,8 +1255,12 @@ fun HomeScreen(
                         Box(Modifier.padding(start = 8.dp, end = 16.dp)) { createActions() }
                     }
                 }
+                // On a TV the card the remote is on, drawn large (ui/component/TvHero.kt). It is part
+                // of the header, so the page starts below it by the header's measured height.
+                if (showHero) TvHomeHero(heroItem)
             }
         }
+    }
     }
 }
 

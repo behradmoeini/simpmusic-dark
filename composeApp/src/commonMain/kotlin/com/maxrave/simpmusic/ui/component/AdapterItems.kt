@@ -416,7 +416,12 @@ private fun Content.hoverPlay(viewModel: BaseViewModel): (() -> Unit)? {
  * before the card's own focusable to see its focus) and whether the card is active.
  */
 @Composable
-internal fun rememberCardHover(enabled: Boolean): Pair<Modifier, Boolean> {
+internal fun rememberCardHover(
+    enabled: Boolean,
+    // What Home's TV hero shows while this card has focus (ui/component/TvHero.kt).
+    hero: TvHeroItem? = null,
+): Pair<Modifier, Boolean> {
+    val heroState = LocalTvHero.current
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
     var focused by remember { mutableStateOf(false) }
@@ -430,7 +435,10 @@ internal fun rememberCardHover(enabled: Boolean): Pair<Modifier, Boolean> {
     val outlined = focused && isTelevision()
     val modifier =
         Modifier
-            .onFocusChanged { focused = it.isFocused }
+            .onFocusChanged {
+                focused = it.isFocused
+                if (it.isFocused && hero != null) heroState?.item = hero
+            }
             .hoverable(source)
             .drawBehind {
                 val corner = CornerRadius(8.dp.toPx())
@@ -572,7 +580,7 @@ fun HomeItemContentPlaylist(
 ) {
     val titleColor = if (forceDark) Color.White else MaterialTheme.colorScheme.onSurface
     val textWidth = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.width(thumbSize)
-    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null)
+    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null, hero = (data as? Content)?.toTvHero())
     Box(
         Modifier
             .then(hoverModifier)
@@ -836,6 +844,7 @@ fun QuickPicksItem(
     Box(
         modifier =
             Modifier
+                .tvHero(data.toTvHero())
                 .wrapContentHeight()
                 .width(widthDp - 30.dp)
                 .clip(RoundedCornerShape(8.dp))
@@ -955,7 +964,7 @@ fun HomeItemSong(
     onPlay: (() -> Unit)? = null,
 ) {
     val textWidth = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.width(160.dp)
-    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null)
+    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null, hero = data.toTvHero())
     Box(
         modifier =
             Modifier
@@ -1066,7 +1075,7 @@ fun HomeItemVideo(
 ) {
     val titleColor = if (forceDark) Color.White else MaterialTheme.colorScheme.onSurface
     val textWidth = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.width(284.5.dp)
-    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null)
+    val (hoverModifier, hovered) = rememberCardHover(enabled = onPlay != null, hero = data.toTvHero())
     Box(
         Modifier
             .then(hoverModifier)
@@ -1188,6 +1197,7 @@ fun HomeItemArtist(
     val textWidth = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.width(160.dp)
     Box(
         Modifier
+            .tvHero(data.toTvHero())
             .fillMaxSize()
             .clip(RoundedCornerShape(8.dp))
             .clickable {
