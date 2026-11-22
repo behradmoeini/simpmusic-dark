@@ -36,6 +36,21 @@ What is different on a TV (`isTelevision()`, the `leanback` system feature):
 - **Focus is a white outline** (`ui/theme/TvFocus.kt`), provided as `LocalIndication`, plus a strong
   focus tint for Material components that bring their own ripple. The phone's 4% tint is invisible
   from a sofa.
+- **Tabs are a bar across the top** (Home, Search, Library, then Mix and Analytics), the way
+  Spotify's TV app has them, in place of the side rail (`AppNavigationRail(topBar = true)`).
+- **No blur and no Home glow.** A system trace on the Google TV Streamer showed the app's own work
+  under 3 ms a frame while the graphics chip took ~45 ms to paint Home: the glow is five see-through
+  layers the width of the screen. Without it Home paints in ~4 ms. Blur is off for the whole tree
+  (`LocalHazeBlurStyle`), so bars draw the opaque fallback their style names.
+- **Down from a floating header reaches the page** (`ui/component/TvKeys.kt`: `tvPage` on the page,
+  `tvDownTo` on the header; Home, Search, Library). The pages scroll under their header, so they
+  start level with it, and arrow-key focus search only takes a group for Down when its top edge is
+  below the focused item's. A screen with a floating header and no `tvDownTo` traps the remote in
+  the header.
+- **The focused item sits 150dp in from its list's leading edge** (`TvBringIntoViewSpec`), clear of
+  the header, with the previous card peeking in on a row.
+- **One focus target per card.** Cards had `focusable(true)` above their `clickable`; the remote
+  landed on the outer one, where OK does nothing. Marquee text lines use `focusableUnlessTv()`.
 - **Pull-to-refresh hides itself under key input** (`ui/component/PullRefreshKeys.kt`): moving focus
   up at the top of a list counts as a pull that keys never release.
 
