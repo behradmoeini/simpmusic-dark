@@ -42,7 +42,7 @@ import simpmusic.composeapp.generated.resources.similar_mix_play
 import simpmusic.composeapp.generated.resources.similar_mix_subtitle
 import simpmusic.composeapp.generated.resources.similar_mix_title
 
-/** Home shelf "Like what you play": Last.fm similar songs the listener has not played yet. Hidden until it has tracks. */
+/** Home shelf "Like what you play": songs by artists Deezer relates to the listener's own, not played yet. Hidden until it has tracks. */
 @Composable
 internal fun SimilarShelf(viewModel: HomeViewModel) {
     val tracks by viewModel.similar.collectAsStateWithLifecycle()

@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -24,6 +25,7 @@ object DeezerCatalog {
     private suspend fun getJson(
         path: String,
         vararg params: Pair<String, String>,
+        retry: Boolean = true,
     ): JsonObject {
         val body =
             client
@@ -31,7 +33,13 @@ object DeezerCatalog {
                     header("User-Agent", "SimpMusicDark/1.0 (recommendations)")
                     params.forEach { parameter(it.first, it.second) }
                 }.bodyAsText()
-        return json.parseToJsonElement(body) as? JsonObject ?: JsonObject(emptyMap())
+        val parsed = json.parseToJsonElement(body) as? JsonObject ?: JsonObject(emptyMap())
+        // Deezer allows 50 requests per 5 seconds and answers over that with error code 4.
+        if (retry && ((parsed["error"] as? JsonObject)?.get("code") as? JsonPrimitive)?.content == "4") {
+            delay(1_500)
+            return getJson(path, *params, retry = false)
+        }
+        return parsed
     }
 
     private fun JsonObject.str(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString || it.content.isNotEmpty() }?.content
@@ -39,8 +47,8 @@ object DeezerCatalog {
     /** Deezer's id for an artist: the exact name match if there is one, else the first hit. */
     suspend fun artistId(name: String): Long? {
         val hits = (getJson("/search/artist", "q" to name, "limit" to "5")["data"] as? JsonArray)?.mapNotNull { it as? JsonObject } ?: return null
-        val wanted = name.trim().lowercase()
-        val best = hits.firstOrNull { it.str("name")?.trim()?.lowercase() == wanted } ?: hits.firstOrNull()
+        val wanted = SimilarMix.key(name)
+        val best = hits.firstOrNull { SimilarMix.key(it.str("name").orEmpty()) == wanted } ?: hits.firstOrNull()
         return best?.str("id")?.toLongOrNull()
     }
 

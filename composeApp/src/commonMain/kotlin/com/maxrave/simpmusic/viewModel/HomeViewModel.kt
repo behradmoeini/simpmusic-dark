@@ -458,23 +458,21 @@ class HomeViewModel(
         }
     }
 
-    // Fork: "Like what you play" — Last.fm similar tracks, see recommendation/SimilarTracksLoader.kt.
-    private val similarLoader by lazy { SimilarTracksLoader(get(), get(), get()) }
+    // Fork: "Like what you play" — Deezer related artists, see recommendation/SimilarTracksLoader.kt.
+    private val similarLoader by lazy { SimilarTracksLoader(get(), get(), get(), dataStoreManager) }
     private val _similar = MutableStateFlow<List<Track>>(emptyList())
     val similar: StateFlow<List<Track>> = _similar
     val similarLoading = MutableStateFlow(false)
     private var similarJob: Job? = null
-    private var similarVariant = 0
 
     fun loadSimilar(newVariant: Boolean = false) {
         if (!newVariant && (_similar.value.isNotEmpty() || similarJob?.isActive == true)) return
-        if (newVariant) similarVariant++
         similarJob?.cancel()
         similarJob =
             viewModelScope.launch {
                 similarLoading.value = true
                 try {
-                    _similar.value = similarLoader.load(similarVariant)
+                    _similar.value = similarLoader.load(newVariant)
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
