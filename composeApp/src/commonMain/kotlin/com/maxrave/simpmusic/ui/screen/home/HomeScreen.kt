@@ -80,6 +80,14 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -125,6 +133,7 @@ import com.maxrave.simpmusic.expect.openUrl
 import com.maxrave.simpmusic.expect.ui.HorizontalScrollBar
 import com.maxrave.simpmusic.expect.ui.layerBackdrop
 import com.maxrave.simpmusic.expect.ui.rememberBackdrop
+import com.maxrave.simpmusic.expect.ui.isTelevision
 import com.maxrave.simpmusic.extension.angledGradientBackground
 import com.maxrave.simpmusic.extension.artworkScrimBrush
 import com.maxrave.simpmusic.extension.getScreenSizeInfo
@@ -415,6 +424,8 @@ fun HomeScreen(
     val atTop by remember {
         derivedStateOf { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
     }
+    val onTv = isTelevision()
+    val shelvesFocus = remember { FocusRequester() }
     val hazeState =
         rememberHazeState()
     // The floating chip row refracts the page scrolling under it, so the page is the glass source and
@@ -790,6 +801,8 @@ fun HomeScreen(
                         return@Crossfade
                     }
                     LazyColumn(
+                        // A group the header can hand focus to; see the header's key handler.
+                        modifier = Modifier.focusRequester(shelvesFocus).focusGroup(),
                         state = scrollState,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -797,7 +810,11 @@ fun HomeScreen(
                             item.hashCode().toString() + (mainHomeThumbnail ?: "nothumb")
                         }) { index, item ->
                             Box {
-                                if (index == 0) {
+                                // No glow on a TV. It is five see-through layers the width of the
+                                // screen (tint, artwork, wash, scrim, over the page), and filling them
+                                // took the Google TV Streamer's graphics chip ~45 ms a frame, measured
+                                // in a system trace, against ~5 ms on Library, which has none.
+                                if (index == 0 && !onTv) {
                                     Box(
                                         modifier =
                                             Modifier
@@ -1096,7 +1113,17 @@ fun HomeScreen(
                 modifier =
                     Modifier
                         .align(Alignment.TopCenter)
-                        .then(
+                        // With a remote, Down from the avatar, the chips or Create stayed in this
+                        // row: focus search never left it for the shelves underneath (seen on the
+                        // Google TV Streamer, 2026-11-21). The key is handed to the shelves by name.
+                        // An unattached requester (Podcasts view, loading) throws, and the key then
+                        // takes its normal course.
+                        .onPreviewKeyEvent { event ->
+                            onTv &&
+                                event.type == KeyEventType.KeyDown &&
+                                event.key == Key.DirectionDown &&
+                                runCatching { shelvesFocus.requestFocus() }.isSuccess
+                        }.then(
                             if (target) {
                                 Modifier.background(Color.Transparent)
                             } else {
