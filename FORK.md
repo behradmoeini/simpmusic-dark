@@ -68,6 +68,24 @@ the I/O), built from this device's listening history, so it needs **local tracki
 
 The mix is fixed for the day and cached; the refresh button builds the next variant.
 
+## Home shelves from the play history and Deezer
+
+Home has five shelves modelled on Spotify's, built from the local play history and Deezer's
+public API (no key; `recommendation/DeezerCatalog.kt`):
+
+- **Like what you play** (`SimilarTracksLoader`): unplayed songs by artists Deezer relates to the
+  listener's own. Seeds are sampled by plays, an artist named by several seeds ranks higher,
+  artists already played are discounted, two songs per artist.
+- **Your top mixes**: one card per top artist; a tap plays that artist's Deezer station.
+- **More like <artist>**: the top song of each artist related to one the listener plays.
+- **New releases for you**: releases of the last 120 days by the listener's top artists.
+- **Albums featuring songs you like**: the albums behind the most played songs (local only).
+
+The last four come from `HomeShelvesLoader`. Both loaders build once a day and cache in
+DataStore (`similar_mix_cache`, `home_shelves_cache`). Deezer only supplies names and covers:
+a card is matched on YouTube Music when it is tapped (`YouTubeMatcher`), choosing among the
+first five results the one whose title and artist agree, else the first result.
+
 ## Library charts: countries and Persian
 
 Your library shows the SimpMusic chart playlists (one "Trending Weekly" per country, from the chart
