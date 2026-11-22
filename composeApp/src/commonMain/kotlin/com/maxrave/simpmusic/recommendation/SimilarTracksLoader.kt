@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 /**
- * "Like what you play": Last.fm's similar tracks for a few songs the listener played recently,
- * minus every song already in their history, each matched to a YouTube Music song to play.
+ * "Like what you play": Deezer's related artists of the artists the listener played recently, their
+ * top tracks, minus everything already in the listener's history, each matched to a YouTube Music song.
  */
 class SimilarTracksLoader(
     private val analyticsRepository: AnalyticsRepository,
@@ -20,41 +20,54 @@ class SimilarTracksLoader(
     private val searchRepository: SearchRepository,
 ) {
     suspend fun load(variant: Int = 0): List<Track> {
-        if (!LastFmSimilar.isConfigured) return emptyList()
         val played = analyticsRepository.queryTopPlayedSongsLastXDays(3650).first().map { it.videoId }
         if (played.isEmpty()) return emptyList()
-        val playedSet = played.toHashSet()
+        val playedIds = played.toHashSet()
+
+        // Titles the listener already knows, so a candidate they have heard is never offered again.
+        val playedKeys = HashSet<String>()
+        for (id in played.take(HISTORY_KEYS)) {
+            val song = songRepository.getSongById(id).first() ?: continue
+            playedKeys += trackKey(song.artistName?.firstOrNull().orEmpty(), song.title)
+        }
+
         val recent = analyticsRepository.queryTopPlayedSongsLastXDays(30).first().map { it.videoId }
         val random = Random(variant.toLong() + played.size)
-        val seeds = recent.ifEmpty { played }.shuffled(random).take(SEEDS)
+        val seedArtists =
+            (recent.ifEmpty { played })
+                .shuffled(random)
+                .take(SEEDS)
+                .mapNotNull { id -> songRepository.getSongById(id).first()?.artistName?.firstOrNull() }
+                .distinct()
+
+        val candidates = ArrayList<Pair<String, String>>()
+        for (artist in seedArtists) {
+            try {
+                val id = DeezerCatalog.artistId(artist) ?: continue
+                for ((relatedId, _) in DeezerCatalog.relatedArtists(id)) {
+                    candidates += DeezerCatalog.topTracks(relatedId)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Logger.w(TAG, "Deezer failed for $artist: ${e.message}")
+            }
+        }
 
         val out = ArrayList<Track>()
         val used = HashSet<String>()
-        for (seedId in seeds) {
+        for ((candArtist, candTitle) in candidates.shuffled(random)) {
             if (out.size >= MAX_TRACKS) break
-            val seed = songRepository.getSongById(seedId).first() ?: continue
-            val artist = seed.artistName?.firstOrNull() ?: continue
-            val similar =
-                try {
-                    LastFmSimilar.similarTracks(artist, seed.title)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Logger.w(TAG, "Last.fm failed for $seedId: ${e.message}")
-                    continue
-                }
-            for ((simArtist, simTitle) in similar.take(PER_SEED)) {
-                if (out.size >= MAX_TRACKS) break
-                val match = matchOnYouTube(simArtist, simTitle, playedSet, used) ?: continue
-                used += match.videoId
-                out += match
-            }
+            if (trackKey(candArtist, candTitle) in playedKeys) continue
+            val match = matchOnYouTube(candArtist, candTitle, playedIds, used) ?: continue
+            used += match.videoId
+            out += match
         }
-        Logger.i(TAG, "Similar: ${out.size} new tracks from ${seeds.size} seeds")
+        Logger.i(TAG, "Similar: ${out.size} new tracks from ${seedArtists.size} artists, ${candidates.size} candidates")
         return out
     }
 
-    /** The first YouTube Music song for the Last.fm pair that the listener has not played yet. */
+    /** The first YouTube Music song for the pair that the listener has not played yet. */
     private suspend fun matchOnYouTube(
         artist: String,
         title: String,
@@ -67,10 +80,15 @@ class SimilarTracksLoader(
             ?.toTrack()
     }
 
+    private fun trackKey(
+        artist: String,
+        title: String,
+    ): String = (artist + "|" + title).lowercase().filter { it.isLetterOrDigit() || it == '|' }
+
     private companion object {
         const val TAG = "SimilarTracks"
         const val SEEDS = 6
-        const val PER_SEED = 8
+        const val HISTORY_KEYS = 300
         const val MAX_TRACKS = 30
     }
 }
