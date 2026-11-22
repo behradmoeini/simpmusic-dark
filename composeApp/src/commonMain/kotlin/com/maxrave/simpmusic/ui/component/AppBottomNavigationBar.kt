@@ -461,18 +461,32 @@ fun AppNavigationRail(
     navController: NavController,
     showAnalyticsTab: Boolean = false,
     showMixForYouTab: Boolean = false,
+    // A TV shows the same tabs as a bar across the top, the way Spotify's TV app does.
+    topBar: Boolean = false,
+    modifier: Modifier = Modifier,
     reloadDestinationIfNeeded: (KClass<*>) -> Unit = { _ -> },
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     // See the note in AppBottomNavigationBar: `ordinal` is the tab's identity, not its position.
     val bottomNavScreens =
-        listOfNotNull(
-            BottomNavScreen.Home,
-            BottomNavScreen.MixForYou.takeIf { showMixForYouTab },
-            BottomNavScreen.Analytics.takeIf { showAnalyticsTab },
-            BottomNavScreen.Library,
-            BottomNavScreen.Search,
-        )
+        if (topBar) {
+            // Spotify's order: Home, Search, Your Library.
+            listOfNotNull(
+                BottomNavScreen.Home,
+                BottomNavScreen.Search,
+                BottomNavScreen.Library,
+                BottomNavScreen.MixForYou.takeIf { showMixForYouTab },
+                BottomNavScreen.Analytics.takeIf { showAnalyticsTab },
+            )
+        } else {
+            listOfNotNull(
+                BottomNavScreen.Home,
+                BottomNavScreen.MixForYou.takeIf { showMixForYouTab },
+                BottomNavScreen.Analytics.takeIf { showAnalyticsTab },
+                BottomNavScreen.Library,
+                BottomNavScreen.Search,
+            )
+        }
     var selectedIndex by rememberSaveable {
         mutableIntStateOf(
             when (startDestination) {
@@ -494,6 +508,76 @@ fun AppNavigationRail(
         ) {
             selectedIndex = BottomNavScreen.Home.ordinal
         }
+    }
+    val open: (BottomNavScreen) -> Unit = { screen ->
+        if (selectedIndex == screen.ordinal) {
+            if (currentBackStackEntry?.destination?.hierarchy?.any {
+                    it.hasRoute(screen.destination::class)
+                } == true
+            ) {
+                reloadDestinationIfNeeded(
+                    screen.destination::class,
+                )
+            } else {
+                navController.navigate(screen.destination)
+            }
+        } else {
+            selectedIndex = screen.ordinal
+            navController.navigate(screen.destination) {
+                popUpTo(navController.graph.startDestinationId) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+    if (topBar) {
+        Row(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .height(TvTopBarHeight)
+                    .padding(horizontal = 24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.circle_app_icon),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp),
+            )
+            Spacer(Modifier.weight(1f))
+            bottomNavScreens.forEach { screen ->
+                val selected = selectedIndex == screen.ordinal
+                Row(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { open(screen) }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // The icon and label follow one colour: full for the open tab, grey for the rest.
+                    CompositionLocalProvider(
+                        LocalContentColor provides
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = if (selected) 1f else 0.6f),
+                    ) {
+                        screen.icon()
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            stringResource(screen.title),
+                            style = typo().labelMedium,
+                            color = LocalContentColor.current,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            // As wide as the logo, so the tabs sit on the screen's centre.
+            Spacer(Modifier.width(36.dp))
+        }
+        return
     }
     // Transparent, not the default `surface`: the rail sits on the Desktop window (pure black/white)
     // and on the page background on tablets, and must read as part of whatever is behind it.
@@ -523,31 +607,12 @@ fun AppNavigationRail(
                     )
                 },
                 selected = selectedIndex == screen.ordinal,
-                onClick = {
-                    if (selectedIndex == screen.ordinal) {
-                        if (currentBackStackEntry?.destination?.hierarchy?.any {
-                                it.hasRoute(screen.destination::class)
-                            } == true
-                        ) {
-                            reloadDestinationIfNeeded(
-                                screen.destination::class,
-                            )
-                        } else {
-                            navController.navigate(screen.destination)
-                        }
-                    } else {
-                        selectedIndex = screen.ordinal
-                        navController.navigate(screen.destination) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
+                onClick = { open(screen) },
             )
         }
         Spacer(Modifier.height(32.dp))
     }
 }
+
+/** Where the TV's top bar ends and the page begins. */
+val TvTopBarHeight = 64.dp

@@ -72,11 +72,13 @@ import com.maxrave.simpmusic.expect.ForkUpdateScreenIfRequired
 import com.maxrave.simpmusic.expect.Orientation
 import com.maxrave.simpmusic.expect.currentOrientation
 import com.maxrave.simpmusic.expect.openUrl
+import com.maxrave.simpmusic.expect.ui.isTelevision
 import com.maxrave.simpmusic.expect.ui.layerBackdrop
 import com.maxrave.simpmusic.expect.ui.rememberBackdrop
 import com.maxrave.simpmusic.extension.copy
 import com.maxrave.simpmusic.ui.component.AppBottomNavigationBar
 import com.maxrave.simpmusic.ui.component.AppNavigationRail
+import com.maxrave.simpmusic.ui.component.TvTopBarHeight
 import com.maxrave.simpmusic.ui.component.DesktopSidebar
 import com.maxrave.simpmusic.ui.component.LiquidGlassAppBottomNavigationBar
 import com.maxrave.simpmusic.ui.component.LocalAppDialogOpen
@@ -511,6 +513,7 @@ fun App(
     }
     val isTablet = windowSize.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isTabletLandscape = isTablet && currentOrientation() == Orientation.LANDSCAPE
+    val onTv = isTelevision()
 
     AppTheme(
         themeMode = themeMode,
@@ -718,7 +721,7 @@ fun App(
                                         ) { klass ->
                                             viewModel.reloadDestination(klass)
                                         }
-                                    } else {
+                                    } else if (!onTv) {
                                         AppNavigationRail(
                                             navController = navController,
                                             showAnalyticsTab = showAnalyticsTab,
@@ -747,9 +750,12 @@ fun App(
                                             },
                                         ),
                                 ) {
+                                    // A TV has its tabs in a bar across the top (below), not in a rail.
+                                    val tvTopBar = onTv && isTablet && !isInFullscreen
                                     Box(
                                         Modifier
                                             .fillMaxSize()
+                                            .then(if (tvTopBar) Modifier.padding(top = TvTopBarHeight) else Modifier)
                                             .then(
                                                 // Tablets record the capsule's source here; Desktop records it on
                                                 // the Row above, which takes in the sidebar as well.
@@ -781,6 +787,17 @@ fun App(
                                                     isScrolledToTop = it
                                                 },
                                             )
+                                        }
+                                    }
+                                    if (tvTopBar) {
+                                        AppNavigationRail(
+                                            navController = navController,
+                                            showAnalyticsTab = showAnalyticsTab,
+                                            showMixForYouTab = showMixForYouTab,
+                                            topBar = true,
+                                            modifier = Modifier.align(Alignment.TopCenter),
+                                        ) { klass ->
+                                            viewModel.reloadDestination(klass)
                                         }
                                     }
                                     if (!isDesktopShell) {
