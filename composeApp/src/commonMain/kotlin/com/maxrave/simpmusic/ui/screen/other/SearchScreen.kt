@@ -112,6 +112,7 @@ import com.maxrave.simpmusic.expect.ui.rememberBackdrop
 import com.maxrave.simpmusic.extension.getScreenSizeInfo
 import com.maxrave.simpmusic.extension.ultraThinBarStyle
 import com.maxrave.simpmusic.getPlatform
+import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
 import com.maxrave.simpmusic.ui.component.AddToPlaylistModalBottomSheet
 import com.maxrave.simpmusic.ui.component.CenterLoadingBox
 import com.maxrave.simpmusic.ui.component.MoodCategoryCard
@@ -734,6 +735,7 @@ fun SearchScreen(
                 SearchUIType.SEARCH_RESULTS -> {
                     // Content area — chips now live in the blurred bar block above.
                     Column(modifier = Modifier.fillMaxSize()) {
+                        HidePullIndicatorOnKeys(pullToRefreshState, uiState is SearchScreenUIState.Loading)
                         PullToRefreshBox(
                             modifier = Modifier.fillMaxSize(),
                             state = pullToRefreshState,

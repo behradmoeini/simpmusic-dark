@@ -141,6 +141,7 @@ import com.maxrave.simpmusic.ui.component.DropdownButton
 import com.maxrave.simpmusic.ui.component.EndOfPage
 import com.maxrave.simpmusic.ui.component.ExpandableChip
 import com.maxrave.simpmusic.ui.component.FootgunsStarDialog
+import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
 import com.maxrave.simpmusic.ui.component.HomeDiscoverSection
 import com.maxrave.simpmusic.ui.component.HomeItem
 import com.maxrave.simpmusic.ui.component.HomeItemContentPlaylist
@@ -737,6 +738,7 @@ fun HomeScreen(
         )
     }
 
+    HidePullIndicatorOnKeys(pullToRefreshState, isRefreshing)
     Box {
         PullToRefreshBox(
             modifier =

@@ -133,6 +133,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
             }
     }
     val pullToRefreshState = rememberPullToRefreshState()
+    HidePullIndicatorOnKeys(pullToRefreshState, data is LocalResource.Loading)
     PullToRefreshBox(
         modifier = Modifier.fillMaxSize(),
         state = pullToRefreshState,
