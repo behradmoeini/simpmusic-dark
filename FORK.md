@@ -26,6 +26,24 @@ screen tile (`androidApp/src/main/res/drawable-xhdpi/tv_banner.png`), and marks 
 required. The wide layout (navigation rail) is what a TV shows. A 32-bit TV such as the Google TV
 Streamer needs the `universal` APK; the forced update already picks it there.
 
+What is different on a TV (`isTelevision()`, the `leanback` system feature):
+
+- **Sign-in is a QR code.** The YouTube sign-in screen and Settings → Devices show the login sync
+  dialog the Desktop shows (`ui/component/LoginSyncHostDialog.kt`): the phone app scans it and sends
+  its sign-ins over the local network. For that the host side of login sync also runs on Android
+  (core: `LoginSyncServer` in loginSync's `commonMain`, `LoginSyncHostRepositoryImpl` in
+  `data/src/jvmAndroidMain`, compiled by both the Android and JVM source sets).
+- **Focus is a white outline** (`ui/theme/TvFocus.kt`), provided as `LocalIndication`, plus a strong
+  focus tint for Material components that bring their own ripple. The phone's 4% tint is invisible
+  from a sofa.
+- **Pull-to-refresh hides itself under key input** (`ui/component/PullRefreshKeys.kt`): moving focus
+  up at the top of a list counts as a pull that keys never release.
+
+The dev build is **not debuggable** (`isDebuggable = false` in `androidApp/build.gradle.kts`).
+Android runs a debuggable app in its interpreter with nothing compiled, which made every frame take
+about 150 ms on the Streamer. `BuildConfig.DEBUG` follows that flag, so the code reads
+`BuildConfig.DEV_BUILD` instead. To attach a debugger, flip the flag locally.
+
 ## Podcasts from open sources
 
 YouTube Music's podcasts are gone from Home: every card YouTube marks as a podcast (an episode's
