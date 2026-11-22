@@ -103,6 +103,7 @@ android {
 
     buildTypes {
         release {
+            buildConfigField("boolean", "DEV_BUILD", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -119,6 +120,12 @@ android {
             }
         }
         debug {
+            // Not debuggable: Android runs a debuggable app in its slow interpreter with no
+            // compilation, which made the UI crawl at ~7 fps on the TV. Everything else about the
+            // dev build (package suffix, signing key, no R8) stays, so it still updates in place.
+            // BuildConfig.DEBUG follows this flag, so the code asks DEV_BUILD instead.
+            isDebuggable = false
+            buildConfigField("boolean", "DEV_BUILD", "true")
             isMinifyEnabled = false
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"

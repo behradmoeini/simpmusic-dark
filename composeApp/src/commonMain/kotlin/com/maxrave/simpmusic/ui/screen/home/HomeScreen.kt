@@ -468,14 +468,8 @@ fun HomeScreen(
             if (sharedViewModel.getString(BLOG_PROMO_KEY) != "true") {
                 showBlogPromoDialog = true
             }
-        } else if (openAppTime % 10 == 6 &&
-            openAppTime <= 46 &&
-            sharedViewModel.getString(FOOTGUNS_STAR_KEY) != "true"
-        ) {
-            // kotlin-footguns star prompt: 6, 16, 26, 36, 46 - one open after each review milestone,
-            // and clear of the share-lyrics (15, 45) and blog-promo (5) milestones
-            showFootgunsDialog = true
         } else {
+            // Fork: the upstream kotlin-footguns star prompt is never shown.
             showReviewDialog = false
             showFootgunsDialog = false
             showRequestShareLyricsPermissions = false
