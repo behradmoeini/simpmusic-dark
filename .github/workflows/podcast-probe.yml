@@ -12,27 +12,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Search for the two shows
+      - name: Deezer related artists for Persian artists
         run: |
           python3 - <<'PY'
-          import urllib.parse, subprocess
-          for term in ['رختکن بازنده ها', 'عقاید دو دلقک']:
-              url = 'https://itunes.apple.com/search?media=podcast&limit=30&term=' + urllib.parse.quote(term)
-              out = subprocess.run(['curl', '-sS', '--max-time', '30', '-w', '\nHTTP %{http_code}', '-o', '-', url], capture_output=True, text=True).stdout
-              body, _, code = out.rpartition('\nHTTP ')
-              import json
-              r = json.loads(body).get('results', []) if body.strip() else []
-              print(term, code, 'results', len(r))
-              for x in r[:4]:
-                  print('   ', x.get('collectionName'), '|', 'feed' if x.get('feedUrl') else 'NO FEED')
+          import json, urllib.request, urllib.parse
+          def get(u):
+              try:
+                  with urllib.request.urlopen(u, timeout=30) as r:
+                      return r.status, json.loads(r.read().decode('utf-8', 'replace'))
+              except Exception as e:
+                  return 'ERR', str(e)[:200]
+          for name in ['Hoomaan', 'Sogand', 'Koorosh']:
+              code, d = get('https://api.deezer.com/search/artist?q=' + urllib.parse.quote(name))
+              items = d.get('data', []) if isinstance(d, dict) else []
+              print(name, 'search', code, 'hits', len(items))
+              if not items:
+                  continue
+              aid = items[0]['id']
+              print('  artist', items[0].get('name'), aid, 'fans', items[0].get('nb_fan'))
+              for path in ['related', 'radio']:
+                  c, r = get(f'https://api.deezer.com/artist/{aid}/{path}')
+                  rows = r.get('data', []) if isinstance(r, dict) else []
+                  print('  ', path, c, 'count', len(rows), [x.get('name') for x in rows[:6]])
           PY
-      - name: Chart endpoints, three tries each
+      - name: ListenBrainz similar artists
         run: |
-          for u in "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/50/podcasts.json" "https://itunes.apple.com/us/rss/toppodcasts/limit=50/json"; do
-            for i in 1 2 3; do
-              code=$(curl -sS --max-time 40 -o /dev/null -w "%{http_code}" "$u" || echo ERR)
-              echo "$u try $i: $code"
-              [ "$code" = "200" ] && break
-              sleep 3
-            done
+          for u in "https://labs.api.listenbrainz.org/similar-artists/json?artist_mbids=8f8a3b9e-3b29-4ac9-b7e6-d2a79c4e8ea5&algorithm=session_based_days_7500_session_300_contribution_5_threshold_15_limit_100_skip_30" "https://api.listenbrainz.org/1/popularity/top-recordings-for-artist/8f8a3b9e-3b29-4ac9-b7e6-d2a79c4e8ea5"; do
+            code=$(curl -sS --max-time 30 -o /tmp/lb.json -w "%{http_code}" "$u" || echo ERR)
+            echo "$u -> $code"; head -c 300 /tmp/lb.json; echo
           done
