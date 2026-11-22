@@ -111,10 +111,7 @@ actual fun LoginSyncDialog(onDismiss: () -> Unit) {
 
 /** A TV has no camera to scan with, so it is the end that shows the code. */
 @Composable
-actual fun isLoginSyncHost(): Boolean {
-    val context = LocalContext.current
-    return remember(context) { context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) }
-}
+actual fun isLoginSyncHost(): Boolean = isTelevision()
 
 /** ZXing is a plain JVM library, so each platform encodes for itself. */
 actual fun encodeQr(text: String): QrMatrix {

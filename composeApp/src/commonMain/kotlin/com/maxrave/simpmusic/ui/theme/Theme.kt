@@ -1,5 +1,6 @@
 package com.maxrave.simpmusic.ui.theme
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -19,6 +20,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.simpmusic.expect.ui.SystemBarAppearanceEffect
+import com.maxrave.simpmusic.expect.ui.isTelevision
 import com.maxrave.simpmusic.expect.ui.platformDynamicColorScheme
 
 /**
@@ -201,8 +203,11 @@ fun AppTheme(
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         content = {
+            // A TV is driven by focus alone, so focus has to be seen from across the room.
+            val onTv = isTelevision()
             CompositionLocalProvider(
-                LocalRippleConfiguration provides SoftRippleConfiguration,
+                LocalRippleConfiguration provides if (onTv) TvRippleConfiguration else SoftRippleConfiguration,
+                LocalIndication provides if (onTv) TvFocusIndication else LocalIndication.current,
                 LocalContentColor provides colorScheme.onSurfaceVariant,
                 LocalAppColors provides if (isDark) DarkAppColors else LightAppColors,
                 LocalIsDarkTheme provides isDark,
@@ -250,6 +255,24 @@ private val SoftRippleConfiguration =
                 focusedAlpha = 0.04f,
                 hoveredAlpha = 0.03f,
                 pressedAlpha = 0.04f,
+            ),
+    )
+
+/**
+ * The TV counterpart of [SoftRippleConfiguration], for Material components that bring their own
+ * ripple (chips, icon buttons, the navigation rail): there the focus tint is the only focus mark, so
+ * it is strong. Bare `clickable`s get an outline instead, see [TvFocusIndication].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
+private val TvRippleConfiguration =
+    RippleConfiguration(
+        rippleAlpha =
+            RippleAlpha(
+                draggedAlpha = 0.06f,
+                focusedAlpha = 0.28f,
+                hoveredAlpha = 0.03f,
+                pressedAlpha = 0.12f,
             ),
     )
 
