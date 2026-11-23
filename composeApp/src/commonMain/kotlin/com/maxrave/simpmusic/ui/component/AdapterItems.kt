@@ -444,9 +444,11 @@ internal fun rememberCardHover(
                 val corner = CornerRadius(8.dp.toPx())
                 drawRoundRect(color = tint, cornerRadius = corner)
                 if (outlined) {
-                    val stroke = 2.dp.toPx()
+                    val stroke = 3.dp.toPx()
+                    val accent = com.maxrave.simpmusic.ui.theme.TvFocusColor.accent
+                    drawRoundRect(accent.copy(alpha = 0.22f), cornerRadius = corner)
                     drawRoundRect(
-                        color = Color.White,
+                        color = accent,
                         topLeft = Offset(stroke / 2, stroke / 2),
                         size = Size(size.width - stroke, size.height - stroke),
                         cornerRadius = corner,

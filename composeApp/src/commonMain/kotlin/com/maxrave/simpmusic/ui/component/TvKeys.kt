@@ -69,3 +69,9 @@ fun Modifier.focusableUnlessTv(): Modifier = if (TvDevice.isTv) this else focusa
 object TvHomeMode {
     var podcasts by androidx.compose.runtime.mutableStateOf(false)
 }
+
+/** When the remote was last used, for the TV's idle behaviour (the player opening by itself). */
+object TvIdle {
+    @Volatile
+    var lastKeyAt: Long = System.currentTimeMillis()
+}

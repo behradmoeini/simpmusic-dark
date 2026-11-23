@@ -156,6 +156,13 @@ class RecommendationEngine(
     suspend fun hideSong(track: Track) =
         hide(HiddenItem(SimilarMix.trackKey(track.artists?.firstOrNull()?.name.orEmpty(), track.title), track.title, artist = false, videoId = track.videoId))
 
+    /** The same for a song known only by its id and names (the one playing). */
+    suspend fun hideSong(
+        videoId: String,
+        title: String,
+        artist: String,
+    ) = hide(HiddenItem(SimilarMix.trackKey(artist, title), title, artist = false, videoId = videoId.takeIf { it.isNotBlank() }))
+
     /**
      * Never recommend this artist again, alone or as a guest. Artists close to them on the map are
      * rated down too, the way artists the listener skips are: it is the clearest "not this" there is.

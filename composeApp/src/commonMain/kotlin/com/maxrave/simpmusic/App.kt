@@ -103,6 +103,9 @@ import com.maxrave.simpmusic.ui.screen.MiniPlayer
 import com.maxrave.simpmusic.ui.screen.other.UnofficialBuildScreen
 import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreen
 import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreenContent
+import com.maxrave.simpmusic.ui.screen.player.TvNowPlaying
+import com.maxrave.simpmusic.ui.component.TvIdle
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.maxrave.simpmusic.ui.theme.AppTheme
 import com.maxrave.simpmusic.ui.theme.ForceDarkContent
 import com.maxrave.simpmusic.ui.theme.desktopPanelDark
@@ -546,7 +549,12 @@ fun App(
             // Watches for userStarted without consuming anything. Dialogs and sheets are windows or
             // layers of their own, so a press inside one (closing the update dialog, say) does not count.
             modifier =
-                Modifier.pointerInput(Unit) {
+                Modifier
+                    // Every remote key resets the TV's idle clock (see TvIdle); nothing is consumed.
+                    .onPreviewKeyEvent {
+                        TvIdle.lastKeyAt = System.currentTimeMillis()
+                        false
+                    }.pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (!userStarted) {
                             val type = awaitPointerEvent(PointerEventPass.Initial).type
@@ -809,7 +817,8 @@ fun App(
                                 tabletMiniPlayer(Modifier.padding(innerPadding).align(Alignment.BottomCenter))
                             }
                         }
-                        if (isTablet && isTabletLandscape && !isInFullscreen) {
+                        // Not on a TV: there Now Playing is a screen of its own (TvNowPlaying), below.
+                        if (isTablet && isTabletLandscape && !isInFullscreen && !onTv) {
                             AnimatedVisibility(
                                 isShowNowPlaylistScreen,
                                 enter = expandHorizontally() + fadeIn(),
@@ -875,6 +884,26 @@ fun App(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+
+                if (onTv) {
+                    if (isShowNowPlaylistScreen) {
+                        TvNowPlaying(sharedViewModel = viewModel) { isShowNowPlaylistScreen = false }
+                    }
+                    // Left alone while music plays, a TV shows the player by itself: the cover and
+                    // the lyrics instead of a page nobody is steering (and instead of the system
+                    // screensaver, which the player keeps away by holding the screen on).
+                    val playing by viewModel.controllerState.collectAsStateWithLifecycle()
+                    LaunchedEffect(playing.isPlaying, isShowNowPlaylistScreen, isInFullscreen) {
+                        if (!playing.isPlaying || isShowNowPlaylistScreen || isInFullscreen) return@LaunchedEffect
+                        while (true) {
+                            kotlinx.coroutines.delay(5_000)
+                            if (System.currentTimeMillis() - TvIdle.lastKeyAt >= TV_PLAYER_AFTER_IDLE_MS) {
+                                isShowNowPlaylistScreen = true
+                                return@LaunchedEffect
                             }
                         }
                     }
@@ -1136,3 +1165,6 @@ fun App(
         )
     }
 }
+
+/** How long a TV is left alone, while music plays, before the player opens by itself. */
+private const val TV_PLAYER_AFTER_IDLE_MS = 90_000L

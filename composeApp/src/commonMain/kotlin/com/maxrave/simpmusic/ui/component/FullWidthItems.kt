@@ -275,7 +275,8 @@ fun SongFullWidthItems(
                 ) {
                     Crossfade(isPlaying) {
                         if (it) {
-                            AudioPlayingIndicator(
+                            PlayingArtwork(
+                                thumbnail = track?.thumbnails?.lastOrNull()?.url ?: songEntity?.thumbnails,
                                 modifier = Modifier.fillMaxSize(),
                             )
                         } else if (index == null) {
@@ -437,7 +438,8 @@ fun SuggestItems(
             Box(modifier = Modifier.size(40.dp)) {
                 Crossfade(isPlaying) {
                     if (it) {
-                        AudioPlayingIndicator(
+                        PlayingArtwork(
+                            thumbnail = track.thumbnails?.lastOrNull()?.url,
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {

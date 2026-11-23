@@ -27,6 +27,16 @@ import kotlinx.coroutines.launch
  * exists) and invisible from a sofa. A ripple cannot draw an outline, so on a TV this takes its place
  * as LocalIndication; there is no touch to ripple for there anyway.
  */
+/**
+ * The colour of focus on a TV: the theme's accent, set by AppTheme. The owner's rule (2026-11-23):
+ * whatever the remote is on is painted in the theme's colour, so there is never a question of
+ * where it is. A white outline on a dark page of white text and bright covers did not stand out.
+ */
+internal object TvFocusColor {
+    @Volatile
+    var accent: Color = Color(0xFF1ED760)
+}
+
 internal object TvFocusIndication : IndicationNodeFactory {
     override fun create(interactionSource: InteractionSource): DelegatableNode = TvFocusNode(interactionSource)
 
@@ -63,15 +73,18 @@ private class TvFocusNode(
     override fun ContentDrawScope.draw() {
         drawContent()
         if (!focused && !pressed) return
-        val stroke = 2.dp.toPx()
+        val stroke = 3.dp.toPx()
+        val accent = TvFocusColor.accent
         // Small round things (an icon button) get a round outline, cards a softly rounded one.
         val radius = minOf(8.dp.toPx(), size.minDimension / 2)
         val corner = CornerRadius(radius, radius)
-        if (pressed) drawRoundRect(Color.White.copy(alpha = 0.12f), cornerRadius = corner)
+        if (pressed) drawRoundRect(accent.copy(alpha = 0.3f), cornerRadius = corner)
         if (focused) {
-            // Inside the bounds, so a clipped parent cannot cut it off.
+            // A wash of the accent over the whole item and a thick outline in it. Inside the
+            // bounds, so a clipped parent cannot cut it off.
+            drawRoundRect(accent.copy(alpha = 0.22f), cornerRadius = corner)
             drawRoundRect(
-                color = Color.White,
+                color = accent,
                 topLeft = Offset(stroke / 2, stroke / 2),
                 size = Size(size.width - stroke, size.height - stroke),
                 cornerRadius = corner,

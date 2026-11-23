@@ -1,5 +1,12 @@
 package com.maxrave.simpmusic.ui.component
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
+import com.maxrave.simpmusic.ui.icon.Pause
+import com.maxrave.simpmusic.ui.icon.SimpIcons
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -60,7 +67,9 @@ import kotlin.math.sin
 @Composable
 fun AudioPlayingIndicator(
     modifier: Modifier = Modifier,
-    color: Color = AudioIndicatorCyan,
+    // The theme's accent. It was a fixed cyan from the upstream animation file, which stopped
+    // matching anything once the theme turned green.
+    color: Color = MaterialTheme.colorScheme.primary,
 ) {
     val transition = rememberInfiniteTransition(label = "audioPlaying")
     val phase by transition.animateFloat(
@@ -262,7 +271,6 @@ private fun lerpSmooth(
 ): Float = from + (to - from) * t * t * (3f - 2f * t)
 
 /** Fill colour of the source animation (#05EBFF), constant across every keyframe. */
-private val AudioIndicatorCyan = Color(0xFF05EBFF)
 
 private const val AUDIO_COMP_WIDTH = 200f
 private const val AUDIO_COMP_HEIGHT = 150f
@@ -305,3 +313,39 @@ private const val DL_HEAD_RADIUS = 125f
 private const val DL_HEAD_OFFSET_Y = 85f
 private const val DL_HEAD_SQUASH = 0.8f
 private val DL_HEAD_ANGLES = floatArrayOf(90f, 210f, 330f)
+
+/**
+ * The mark on the row of the song that is playing: its own cover, dimmed, under a pause sign in the
+ * theme's accent. The row keeps its picture (the bars alone replaced it, so the playing row was the
+ * one row with no cover) and the sign says what a press will do. Without a cover, the bars.
+ */
+@Composable
+fun PlayingArtwork(
+    thumbnail: String?,
+    modifier: Modifier = Modifier,
+) {
+    if (thumbnail.isNullOrBlank()) {
+        AudioPlayingIndicator(modifier = modifier)
+        return
+    }
+    androidx.compose.foundation.layout.Box(modifier, contentAlignment = androidx.compose.ui.Alignment.Center) {
+        coil3.compose.AsyncImage(
+            model = thumbnail,
+            contentDescription = null,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.matchParentSize().clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp)),
+        )
+        androidx.compose.foundation.layout.Box(
+            Modifier
+                .matchParentSize()
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                .background(Color.Black.copy(alpha = 0.55f)),
+        )
+        androidx.compose.material3.Icon(
+            SimpIcons.Pause,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.fillMaxSize(0.6f),
+        )
+    }
+}

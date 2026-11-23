@@ -214,11 +214,13 @@ fun AppTheme(
             // A TV is driven by focus alone, so focus has to be seen from across the room.
             val onTv = isTelevision()
             TvDevice.isTv = onTv
+            TvFocusColor.accent = colorScheme.primary
+            val tvRipple = remember(colorScheme.primary) { tvRippleConfiguration(colorScheme.primary) }
             val tvPivot = with(LocalDensity.current) { 150.dp.toPx() }
             val tvBringIntoView = remember(tvPivot) { TvBringIntoViewSpec(tvPivot) }
             CompositionLocalProvider(
                 LocalBringIntoViewSpec provides if (onTv) tvBringIntoView else LocalBringIntoViewSpec.current,
-                LocalRippleConfiguration provides if (onTv) TvRippleConfiguration else SoftRippleConfiguration,
+                LocalRippleConfiguration provides if (onTv) tvRipple else SoftRippleConfiguration,
                 LocalIndication provides if (onTv) TvFocusIndication else LocalIndication.current,
                 // No blur on a TV: with the frosted bar over Home every frame waited ~80 ms on the
                 // Google TV Streamer's graphics chip, against ~5 ms on a screen without it. Each bar
@@ -283,14 +285,16 @@ private val TvNoBlurStyle = HazeBlurStyle { blurEnabled(false) }
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("DEPRECATION")
-private val TvRippleConfiguration =
+private fun tvRippleConfiguration(accent: Color) =
     RippleConfiguration(
+        // In the accent, and strong: a focused Material button on a TV reads as "lit".
+        color = accent,
         rippleAlpha =
             RippleAlpha(
                 draggedAlpha = 0.06f,
-                focusedAlpha = 0.28f,
+                focusedAlpha = 0.45f,
                 hoveredAlpha = 0.03f,
-                pressedAlpha = 0.12f,
+                pressedAlpha = 0.3f,
             ),
     )
 
