@@ -58,6 +58,8 @@ private data class DailyLists(
     val discover: List<Track> = emptyList(),
     val newArtists: List<Track> = emptyList(),
     val mixes: List<TasteMix> = emptyList(),
+    /** Built with no taste to go on (the chart). Never kept: the next build may know the listener. */
+    val coldStart: Boolean = false,
 )
 
 /**
@@ -130,11 +132,11 @@ class RecommendationEngine(
             withContext(Dispatchers.IO) {
                 val today = LocalDate.now().toEpochDay()
                 val cached = read(DAILY_FILE, DailyLists.serializer())
-                if (!newVariant && cached != null && cached.day == today && cached.discover.isNotEmpty()) return@withContext cached
+                if (!newVariant && cached != null && cached.day == today && cached.discover.isNotEmpty() && !cached.coldStart) return@withContext cached
                 val variant = if (cached?.day == today) cached.variant + 1 else 0
                 val built = buildDaily(today, variant)
                 // A day with no network must not pin empty shelves until tomorrow.
-                if (built.discover.isNotEmpty()) write(DAILY_FILE, DailyLists.serializer(), built)
+                if (built.discover.isNotEmpty() && !built.coldStart) write(DAILY_FILE, DailyLists.serializer(), built)
                 built
             }
         }
@@ -148,7 +150,7 @@ class RecommendationEngine(
         if (snap.taste.isEmpty) {
             // No history yet: what is played most on Deezer today, until there is something to learn from.
             val chart = guarded("chart") { DeezerCatalog.chart() }.orEmpty()
-            return DailyLists(day = today, variant = variant, discover = match(chart.take(COLD_START_SONGS), emptySet()).map { it.first })
+            return DailyLists(day = today, variant = variant, discover = match(chart.take(COLD_START_SONGS), emptySet()).map { it.first }, coldStart = true)
         }
         val g = graph()
         val liked = snap.taste.liked().take(TASTE_ARTISTS)
@@ -521,28 +523,53 @@ class RecommendationEngine(
             songs[track.videoId] = track
             facts[track.videoId] = SongFacts(track.videoId, track.title, track.artists.orEmpty().map { it.name }, liked = true)
         }
-        val plays = history.map { Play(it.videoId, it.ageDays, it.listenedSecond, it.durationSecond) }
+        var plays = history.map { Play(it.videoId, it.ageDays, it.listenedSecond, it.durationSecond) }
+        // The account's listening history stands in while this device has little of its own (a
+        // TV signed in an hour ago knows nothing; the account knows months). Each row counts as a
+        // song heard through, the list's order as its age. A device with a real history of its own
+        // has these plays already and with better detail, so it is left alone there.
+        if (plays.size < THIN_HISTORY) {
+            val account = accountHistory()
+            account.forEachIndexed { index, track ->
+                if (track.videoId !in facts) {
+                    songs[track.videoId] = track
+                    facts[track.videoId] = SongFacts(track.videoId, track.title, track.artists.orEmpty().map { it.name })
+                }
+            }
+            plays = plays + account.mapIndexed { index, track -> Play(track.videoId, index * ACCOUNT_HISTORY_DAYS / account.size.coerceAtLeast(1), 200, 200) }
+        }
         return Snapshot(Taste.build(plays, facts), songs, facts, plays.groupBy { it.videoId }, System.currentTimeMillis()).also { snapshot = it }
     }
 
     /** The signed-in account's liked songs, read once a day; nothing when signed out. */
-    private suspend fun accountLikes(): List<Track> {
+    private suspend fun accountLikes(): List<Track> =
+        accountList(LIKES_FILE, "likes") { playlistRepository.getFullPlaylistData("LM", "").lastOrNull()?.data?.tracks }
+
+    /** The signed-in account's listening history, most recent first, read once a day. */
+    private suspend fun accountHistory(): List<Track> = accountList(HISTORY_FILE, "history") { songRepository.getAccountHistory() }
+
+    private suspend fun accountList(
+        file: String,
+        what: String,
+        fetch: suspend () -> List<Track>?,
+    ): List<Track> {
         if (dataStoreManager.cookie.first().isBlank()) return emptyList()
         val today = LocalDate.now().toEpochDay()
-        val cached = read(LIKES_FILE, AccountLikes.serializer())
+        val cached = read(file, AccountLikes.serializer())
         if (cached != null && cached.day == today) return cached.tracks
         val fetched =
             try {
-                withTimeoutOrNull(LIKES_TIMEOUT_MS) { playlistRepository.getFullPlaylistData("LM", "").lastOrNull()?.data?.tracks }
+                withTimeoutOrNull(LIKES_TIMEOUT_MS) { fetch() }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Logger.w(TAG, "Account likes failed: ${e.message}")
+                Logger.w(TAG, "Account $what failed: ${e.message}")
                 null
             }
+        Logger.i(TAG, "Account $what: ${fetched?.size ?: "no answer"}")
+        // An empty answer is not kept: the account may simply not have been read properly.
         if (fetched.isNullOrEmpty()) return cached?.tracks.orEmpty()
-        Logger.i(TAG, "Account likes: ${fetched.size} songs")
-        write(LIKES_FILE, AccountLikes.serializer(), AccountLikes(today, fetched))
+        write(file, AccountLikes.serializer(), AccountLikes(today, fetched))
         return fetched
     }
 
@@ -605,6 +632,9 @@ class RecommendationEngine(
         const val SERVED_FILE = "offered.json"
         const val DAILY_FILE = "daily.json"
         const val LIKES_FILE = "account-likes.json"
+        const val HISTORY_FILE = "account-history.json"
+        const val THIN_HISTORY = 150
+        const val ACCOUNT_HISTORY_DAYS = 45.0
         const val LIKES_TIMEOUT_MS = 30_000L
         const val HISTORY_DAYS = 730
         const val SNAPSHOT_MS = 120_000L
