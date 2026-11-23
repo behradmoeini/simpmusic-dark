@@ -21,6 +21,13 @@ concurrency:
 
 permissions:
   contents: write
+  # For the "build progress" status on the commit (.github/scripts/progress.sh): how far the build
+  # is and about how long it has left, read from how long the last successful runs took.
+  statuses: write
+  actions: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   # Unit tests run on every branch and pull request, before anything is built or published.
@@ -39,13 +46,19 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # The unit tests are the first third of a build (measured: ~3.5 of ~14 minutes).
       - name: Run desktop unit tests
         run: >
+          .github/scripts/progress.sh run 3 30 "Running the unit tests" --
           ./gradlew :composeApp:jvmTest
           -PisFullBuild=false
           -Pkotlin.compiler.execution.strategy=in-process
           "-Dorg.gradle.jvmargs=-Xmx4g -XX:+UseParallelGC"
           --console=plain
+
+      - name: Report a failed build
+        if: failure()
+        run: .github/scripts/progress.sh failed
 
   build:
     needs: test
@@ -70,6 +83,9 @@ jobs:
           echo "$APK_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/signing.jks"
           echo "APK_KEYSTORE_FILE=$RUNNER_TEMP/signing.jks" >> "$GITHUB_ENV"
 
+      - name: Report progress
+        run: .github/scripts/progress.sh at 34 "Tests passed, starting the APK build"
+
       - name: Build debug APK
         env:
           APK_KEYSTORE_PASSWORD: ${{ secrets.APK_KEYSTORE_PASSWORD }}
@@ -80,6 +96,7 @@ jobs:
           FORK_UPDATE_COMMIT: ${{ github.ref == 'refs/heads/main' && github.sha || '' }}
         # The hosted runner has 7 GB of RAM: one Gradle heap, Kotlin compiled inside it.
         run: >
+          .github/scripts/progress.sh run 36 88 "Building the APK" --
           ./gradlew :androidApp:assembleDebug
           -PisFullBuild=false
           -Pkotlin.compiler.execution.strategy=in-process
@@ -89,6 +106,7 @@ jobs:
       # The MCP server (mcpServer/): a zip with launch scripts, published beside the APKs.
       - name: Build MCP server
         run: >
+          .github/scripts/progress.sh run 88 94 "Building the MCP server" --
           ./gradlew :mcpServer:distZip
           -PisFullBuild=false
           -Pkotlin.compiler.execution.strategy=in-process
@@ -97,6 +115,7 @@ jobs:
 
       - name: Collect APKs
         run: |
+          .github/scripts/progress.sh at 95 "Publishing the APKs"
           SHA=$(git rev-parse --short HEAD)
           echo "SHORT_SHA=$SHA" >> "$GITHUB_ENV"
           mkdir -p out
@@ -132,3 +151,10 @@ jobs:
             out/simpmusic-dark-arm64-v8a-*.apk
             out/simpmusic-mcp.zip
           retention-days: 3
+
+      - name: Report the finished build
+        run: .github/scripts/progress.sh done
+
+      - name: Report a failed build
+        if: failure()
+        run: .github/scripts/progress.sh failed
