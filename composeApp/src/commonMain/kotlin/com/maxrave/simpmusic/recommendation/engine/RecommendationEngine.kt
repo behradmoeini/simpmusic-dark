@@ -3,6 +3,8 @@ package com.maxrave.simpmusic.recommendation.engine
 import com.maxrave.domain.data.entities.SongEntity
 import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.recommendation.OwnRadioSource
+import com.maxrave.domain.manager.DataStoreManager
+import com.maxrave.domain.repository.PlaylistRepository
 import com.maxrave.domain.repository.SearchRepository
 import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.toTrack
@@ -22,6 +24,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
@@ -68,6 +71,8 @@ private data class DailyLists(
 class RecommendationEngine(
     private val songRepository: SongRepository,
     searchRepository: SearchRepository,
+    private val playlistRepository: PlaylistRepository,
+    private val dataStoreManager: DataStoreManager,
 ) : OwnRadioSource {
     private val matcher = YouTubeMatcher(searchRepository)
     private val json = Json { ignoreUnknownKeys = true }
@@ -83,9 +88,17 @@ class RecommendationEngine(
 
     private class Snapshot(
         val taste: TasteProfile,
-        val songs: Map<String, SongEntity>,
+        /** Every song the listener is known to have played or liked, ready to queue. */
+        val songs: Map<String, Track>,
+        val facts: Map<String, SongFacts>,
         val plays: Map<String, List<Play>>,
         val builtAt: Long,
+    )
+
+    @Serializable
+    private data class AccountLikes(
+        val day: Long = 0,
+        val tracks: List<Track> = emptyList(),
     )
 
     private class RadioSession(
@@ -295,7 +308,7 @@ class RecommendationEngine(
         val skippedNow =
             session.emittedIds
                 .flatMap { id -> snap.plays[id].orEmpty().filter { it.ageDays < 0.25 && Taste.signal(it.listenedSec, it.durationSec) < 0 }.map { id } }
-                .mapNotNull { snap.songs[it]?.artistName?.firstOrNull()?.let { name -> SimilarMix.key(name) } }
+                .mapNotNull { snap.facts[it]?.artists?.firstOrNull()?.let { name -> SimilarMix.key(name) } }
                 .toSet()
         val recentArtists = session.lastArtists.takeLast(8).toSet()
         val candidates =
@@ -323,7 +336,7 @@ class RecommendationEngine(
                         .filter { it.score > 0.3 && it.lastAgeDays > 0.5 && it.skips <= it.plays / 2 && it.videoId !in session.emittedIds }
                         .mapNotNull { t ->
                             val song = snap.songs[t.videoId] ?: return@mapNotNull null
-                            val key = SimilarMix.key(song.artistName?.firstOrNull().orEmpty())
+                            val key = SimilarMix.key(snap.facts[t.videoId]?.artists?.firstOrNull().orEmpty())
                             val closeness = (rated[key] ?: return@mapNotNull null) / top
                             if (key in skippedNow) return@mapNotNull null
                             Triple(song, key, closeness * kotlin.math.sqrt(t.score))
@@ -332,7 +345,7 @@ class RecommendationEngine(
             }
 
         remember(fresh, today)
-        val picked = Sequencer.weave(fresh.map { Picked(it.first, it.second, true) }, familiar.map { Picked(it.first.toTrack(), it.second, false) })
+        val picked = Sequencer.weave(fresh.map { Picked(it.first, it.second, true) }, familiar.map { Picked(it.first, it.second, false) })
         val ordered = Sequencer.spread(picked.distinctBy { it.track.videoId }, 3) { it.artistKey }
         ordered.forEach {
             session.emittedIds += it.track.videoId
@@ -490,13 +503,47 @@ class RecommendationEngine(
         val history = songRepository.getPlayHistory(HISTORY_DAYS)
         val liked = songRepository.getLikedSongs().first()
         val ids = (history.map { it.videoId } + liked.map { it.videoId }).distinct()
-        val songs = HashMap<String, SongEntity>()
+        val local = HashMap<String, SongEntity>()
         // SQLite takes at most 999 values in one IN list.
-        for (chunk in ids.chunked(400)) songRepository.getSongsByListVideoId(chunk).first().forEach { songs[it.videoId] = it }
-        liked.forEach { songs[it.videoId] = it }
+        for (chunk in ids.chunked(400)) songRepository.getSongsByListVideoId(chunk).first().forEach { local[it.videoId] = it }
+        liked.forEach { local[it.videoId] = it }
+        val songs = HashMap<String, Track>()
+        val facts = HashMap<String, SongFacts>()
+        for (song in local.values) {
+            songs[song.videoId] = song.toTrack()
+            facts[song.videoId] = SongFacts(song.videoId, song.title, song.artistName.orEmpty(), song.liked)
+        }
+        // The account's liked songs are the listener's own statement of taste, and the only one a
+        // device with little history of its own has (a TV signed in an hour ago). Not YouTube's
+        // suggestions: the list of what this person pressed Like on.
+        for (track in accountLikes()) {
+            if (track.videoId in facts) continue
+            songs[track.videoId] = track
+            facts[track.videoId] = SongFacts(track.videoId, track.title, track.artists.orEmpty().map { it.name }, liked = true)
+        }
         val plays = history.map { Play(it.videoId, it.ageDays, it.listenedSecond, it.durationSecond) }
-        val facts = songs.mapValues { (_, s) -> SongFacts(s.videoId, s.title, s.artistName.orEmpty(), s.liked) }
-        return Snapshot(Taste.build(plays, facts), songs, plays.groupBy { it.videoId }, System.currentTimeMillis()).also { snapshot = it }
+        return Snapshot(Taste.build(plays, facts), songs, facts, plays.groupBy { it.videoId }, System.currentTimeMillis()).also { snapshot = it }
+    }
+
+    /** The signed-in account's liked songs, read once a day; nothing when signed out. */
+    private suspend fun accountLikes(): List<Track> {
+        if (dataStoreManager.cookie.first().isBlank()) return emptyList()
+        val today = LocalDate.now().toEpochDay()
+        val cached = read(LIKES_FILE, AccountLikes.serializer())
+        if (cached != null && cached.day == today) return cached.tracks
+        val fetched =
+            try {
+                withTimeoutOrNull(LIKES_TIMEOUT_MS) { playlistRepository.getFullPlaylistData("LM", "").lastOrNull()?.data?.tracks }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Logger.w(TAG, "Account likes failed: ${e.message}")
+                null
+            }
+        if (fetched.isNullOrEmpty()) return cached?.tracks.orEmpty()
+        Logger.i(TAG, "Account likes: ${fetched.size} songs")
+        write(LIKES_FILE, AccountLikes.serializer(), AccountLikes(today, fetched))
+        return fetched
     }
 
     private fun served(): List<Served> = served ?: (read(SERVED_FILE, ListSerializer(Served.serializer())) ?: emptyList()).also { served = it }
@@ -557,6 +604,8 @@ class RecommendationEngine(
         const val GRAPH_FILE = "artist-map.json"
         const val SERVED_FILE = "offered.json"
         const val DAILY_FILE = "daily.json"
+        const val LIKES_FILE = "account-likes.json"
+        const val LIKES_TIMEOUT_MS = 30_000L
         const val HISTORY_DAYS = 730
         const val SNAPSHOT_MS = 120_000L
         const val TASTE_ARTISTS = 30
