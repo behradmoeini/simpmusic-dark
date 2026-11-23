@@ -46,7 +46,7 @@ import simpmusic.composeapp.generated.resources.hide_song
  * hidden ones back.
  */
 
-/** How long OK is held before it counts as a long press. */
+/** For a remote that sends no repeats: held this long, a release counts as a long press. */
 private const val HOLD_MS = 550L
 
 /** Key repeats arrive tens of milliseconds apart; a longer gap is a new press. */
@@ -56,8 +56,8 @@ private const val NEW_PRESS_GAP_MS = 700L
  * A recommended song's card: [onClick] plays it, [onLongClick] opens the menu.
  *
  * A phone gets the usual long press. A TV remote has no such thing in Compose's clickable, so the
- * OK key is read here: a short press clicks when the key comes up, and one held past [HOLD_MS]
- * opens the menu and does not click.
+ * OK key is read here: a short press clicks when the key comes up; a held one (the key repeats,
+ * or is released after [HOLD_MS]) opens the menu and does not click.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -72,12 +72,14 @@ internal fun Modifier.songCardActions(
         val now = System.currentTimeMillis()
         when (event.type) {
             KeyEventType.KeyDown -> {
-                if (press.downAt == 0L || now - press.lastEventAt > NEW_PRESS_GAP_MS) {
+                val repeat = press.downAt != 0L && now - press.lastEventAt <= NEW_PRESS_GAP_MS
+                press.lastEventAt = now
+                if (!repeat) {
                     press.downAt = now
                     press.held = false
-                }
-                press.lastEventAt = now
-                if (!press.held && now - press.downAt >= HOLD_MS) {
+                } else if (!press.held) {
+                    // A second key-down with no key-up between is the remote repeating a held
+                    // key, which is how Android itself tells a long press on OK.
                     press.held = true
                     onLongClick()
                 }
