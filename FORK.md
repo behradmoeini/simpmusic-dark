@@ -42,6 +42,13 @@ What is different on a TV (`isTelevision()`, the `leanback` system feature):
   under 3 ms a frame while the graphics chip took ~45 ms to paint Home: the glow is five see-through
   layers the width of the screen. Without it Home paints in ~4 ms. Blur is off for the whole tree
   (`LocalHazeBlurStyle`), so bars draw the opaque fallback their style names.
+- **Home has a hero** (`ui/component/TvHero.kt`): under the chips, the card the remote is on is
+  drawn large (cover, title, the line under it), as Spotify's TV app does. Home provides
+  `LocalTvHero`; a card reports itself with `Modifier.tvHero(...)` (or `rememberCardHover`'s `hero`)
+  when it takes focus, and a card that does not leaves the hero on the previous one. The hero is
+  part of the header, so Home's page keeps the focused shelf the header's measured height down
+  (its own `LocalBringIntoViewSpec`), while rows keep the app-wide 150dp. It has no artwork
+  backdrop, for the reason the glow is gone.
 - **Down from a floating header reaches the page** (`ui/component/TvKeys.kt`: `tvPage` on the page,
   `tvDownTo` on the header; Home, Search, Library). The pages scroll under their header, so they
   start level with it, and arrow-key focus search only takes a group for Down when its top edge is
