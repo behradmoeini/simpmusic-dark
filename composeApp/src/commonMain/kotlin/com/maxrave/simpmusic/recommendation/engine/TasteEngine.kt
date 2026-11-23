@@ -485,6 +485,69 @@ object Clusters {
     }
 }
 
+object Scenes {
+    /**
+     * Which scene each artist on the map belongs to: label propagation over the whole map, so
+     * artists densely linked to each other share a label. Scenes follow who is played alongside
+     * whom, which in practice follows language and country more than genre: Persian pop and
+     * Persian rap sit together, apart from Western pop, because their listeners overlap. A radio
+     * for a Persian song uses this to stay Persian, without the catalogues ever stating a language.
+     *
+     * Deterministic: artists are visited strongest-linked first, ties keep the current label,
+     * then the smaller one.
+     */
+    fun of(
+        adjacency: Map<String, List<Pair<String, Double>>>,
+        rounds: Int = 8,
+    ): Map<String, String> {
+        val links = HashMap<String, HashMap<String, Double>>()
+        for ((from, list) in adjacency) {
+            for ((to, w) in list) {
+                if (to == from) continue
+                val forward = links.getOrPut(from) { HashMap() }
+                forward[to] = maxOf(forward[to] ?: 0.0, w)
+                val back = links.getOrPut(to) { HashMap() }
+                back[from] = maxOf(back[from] ?: 0.0, w)
+            }
+        }
+        val order = links.keys.sortedWith(compareByDescending<String> { links.getValue(it).values.sum() }.thenBy { it })
+        val label = HashMap<String, String>()
+        order.forEach { label[it] = it }
+        repeat(rounds) {
+            var changed = false
+            for (artist in order) {
+                val votes = HashMap<String, Double>()
+                for ((to, w) in links.getValue(artist)) {
+                    val l = label.getValue(to)
+                    votes[l] = (votes[l] ?: 0.0) + w
+                }
+                val top = votes.values.maxOrNull() ?: continue
+                val current = label.getValue(artist)
+                val best = if ((votes[current] ?: 0.0) >= top - 1e-9) current else votes.filter { it.value >= top - 1e-9 }.keys.min()
+                if (best != current) {
+                    label[artist] = best
+                    changed = true
+                }
+            }
+            if (!changed) return label
+        }
+        return label
+    }
+
+    /** The scene most of [weights] sits in, or null when none of it is on the map. */
+    fun home(
+        scenes: Map<String, String>,
+        weights: Map<String, Double>,
+    ): String? =
+        weights
+            .filter { it.value > 0 }
+            .entries
+            .groupBy({ scenes[it.key] }, { it.value })
+            .filterKeys { it != null }
+            .maxByOrNull { it.value.sum() }
+            ?.key
+}
+
 object Calibration {
     /**
      * Splits [slots] between groups. Proportional to weight raised to [exponent]: below 1 a small

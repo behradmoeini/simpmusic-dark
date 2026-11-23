@@ -3,6 +3,8 @@ package com.maxrave.simpmusic.ui.component
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -58,3 +60,12 @@ object TvDevice {
  * does nothing. Not composable, so it can stand wherever `focusable()` stood.
  */
 fun Modifier.focusableUnlessTv(): Modifier = if (TvDevice.isTv) this else focusable()
+
+/**
+ * Which face of Home a TV shows. On a phone Music and Podcasts are chips on Home; on a TV the chip
+ * row is gone (two rows of controls above the page was one too many to steer with a remote) and
+ * the two are tabs in the top bar, which lives outside Home and so needs the state here.
+ */
+object TvHomeMode {
+    var podcasts by androidx.compose.runtime.mutableStateOf(false)
+}

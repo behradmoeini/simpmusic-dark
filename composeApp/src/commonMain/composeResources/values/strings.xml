@@ -1104,6 +1104,13 @@
     <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
     <string name="discover_mix_play">Play mix</string>
     <string name="discover_mix_refresh">New mix</string>
+    <string name="hide_song">Don\'t recommend this song</string>
+    <string name="hide_artist">Don\'t recommend %1$s</string>
+    <string name="hidden_manage">Hidden songs and artists (%1$s)</string>
+    <string name="hidden_title">Hidden from recommendations</string>
+    <string name="hidden_hint">Choose one to bring it back</string>
+    <string name="hidden_empty">Nothing is hidden</string>
+    <string name="hidden_done">Hidden. It will not be recommended again.</string>
     <string name="library_chart_countries">Library charts</string>
     <string name="library_chart_countries_all">All countries</string>
 </resources>

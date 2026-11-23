@@ -94,6 +94,8 @@ private class TvFocusNode(
 @OptIn(ExperimentalFoundationApi::class)
 internal class TvBringIntoViewSpec(
     private val pivotPx: Float,
+    /** What covers the list's far end (the mini player): the focused item is kept clear of it. */
+    private val coveredEndPx: Float = 0f,
 ) : BringIntoViewSpec {
     override fun calculateScrollDistance(
         offset: Float,
@@ -101,7 +103,7 @@ internal class TvBringIntoViewSpec(
         containerSize: Float,
     ): Float {
         // An item too large to sit at the pivot goes as far in as still fits whole.
-        val target = minOf(pivotPx, (containerSize - size).coerceAtLeast(0f))
+        val target = minOf(pivotPx, (containerSize - coveredEndPx - size).coerceAtLeast(0f))
         return offset - target
     }
 }

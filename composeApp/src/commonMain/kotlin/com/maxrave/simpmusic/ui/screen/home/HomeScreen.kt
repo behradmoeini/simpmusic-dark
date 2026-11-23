@@ -148,6 +148,7 @@ import com.maxrave.simpmusic.ui.component.FootgunsStarDialog
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
 import com.maxrave.simpmusic.ui.component.LocalTvHero
 import com.maxrave.simpmusic.ui.component.TvHeroItem
+import com.maxrave.simpmusic.ui.component.TvHomeMode
 import com.maxrave.simpmusic.ui.component.TvHeroState
 import com.maxrave.simpmusic.ui.component.TvHomeHero
 import com.maxrave.simpmusic.ui.component.toTvHero
@@ -428,6 +429,8 @@ fun HomeScreen(
         derivedStateOf { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
     }
     val onTv = isTelevision()
+    // On a TV Music and Podcasts are tabs in the top bar, not chips here (TvHomeMode).
+    if (onTv && podcastMode != TvHomeMode.podcasts) podcastMode = TvHomeMode.podcasts
     val shelvesFocus = remember { FocusRequester() }
     // The TV hero (ui/component/TvHero.kt): cards report themselves to it as the remote reaches
     // them; until one has, it shows the first card on the page.
@@ -452,8 +455,11 @@ fun HomeScreen(
     // from its list's edge, so the focused shelf would sit behind it. The page keeps it the header's
     // own height down, plus room for the shelf's title.
     val rowBringIntoView = LocalBringIntoViewSpec.current
-    val shelfPivotPx = topAppBarHeightPx + with(LocalDensity.current) { 40.dp.toPx() }
-    val shelfBringIntoView = remember(shelfPivotPx) { TvBringIntoViewSpec(shelfPivotPx) }
+    val shelfPivotPx = topAppBarHeightPx + with(LocalDensity.current) { 56.dp.toPx() }
+    // The mini player lies over the bottom of the page: a focused card stops above it, so the
+    // card's title and artist can be read.
+    val miniPlayerPx = with(LocalDensity.current) { 72.dp.toPx() }
+    val shelfBringIntoView = remember(shelfPivotPx, miniPlayerPx) { TvBringIntoViewSpec(shelfPivotPx, miniPlayerPx) }
     val hazeState =
         rememberHazeState()
     // The floating chip row refracts the page scrolling under it, so the page is the glass source and
@@ -1073,7 +1079,9 @@ fun HomeScreen(
                                     }
                                 }
                             }
-                            item {
+                            // YouTube's charts (video charts, top artists, trending) are the same for
+                                // everyone and say nothing about this listener: not on the own Home.
+                            if (!ownHome) item {
                                 Column(
                                     Modifier
                                         .padding(vertical = 10.dp)
@@ -1222,7 +1230,11 @@ fun HomeScreen(
                         onSettings = { navController.navigate(SettingsDestination) },
                     )
                 }
-                Row(
+                // Not on a TV: the avatar, the chips and Create made a second row of controls
+                // between the tabs and the page, and with a remote it was never clear which way
+                // led where. There the tabs carry Music and Podcasts, Settings sits in the top bar,
+                // and Home is the hero and the shelves.
+                if (!onTv) Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()

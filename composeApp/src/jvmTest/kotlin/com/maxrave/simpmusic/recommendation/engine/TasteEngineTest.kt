@@ -120,6 +120,25 @@ class TasteEngineTest {
     }
 
     @Test
+    fun aWeakBridgeDoesNotMergeTwoScenes() {
+        val adjacency =
+            mapOf(
+                "a1" to listOf("a2" to 1.0, "a3" to 1.0, "b1" to 0.1),
+                "a2" to listOf("a1" to 1.0, "a3" to 1.0),
+                "a3" to listOf("a1" to 1.0, "a2" to 1.0),
+                "b1" to listOf("b2" to 1.0, "b3" to 1.0),
+                "b2" to listOf("b1" to 1.0, "b3" to 1.0),
+                "b3" to listOf("b1" to 1.0, "b2" to 1.0),
+            )
+        val scenes = Scenes.of(adjacency)
+        assertEquals(scenes["a1"], scenes["a2"])
+        assertEquals(scenes["a1"], scenes["a3"])
+        assertEquals(scenes["b1"], scenes["b3"])
+        assertTrue(scenes["a1"] != scenes["b1"])
+        assertEquals(scenes["a1"], Scenes.home(scenes, mapOf("a2" to 1.0, "b2" to 0.3)))
+    }
+
+    @Test
     fun aSmallGroupGetsMoreThanItsStrictShare() {
         val slots = Calibration.allocate(10, listOf(9.0, 1.0))
         assertEquals(10, slots.sum())

@@ -1,0 +1,156 @@
+package com.maxrave.simpmusic.ui.screen.home
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.maxrave.domain.data.model.browse.album.Track
+import com.maxrave.simpmusic.expect.ui.isTelevision
+import com.maxrave.simpmusic.ui.theme.typo
+import com.maxrave.simpmusic.viewModel.HomeViewModel
+import org.jetbrains.compose.resources.stringResource
+import simpmusic.composeapp.generated.resources.Res
+import simpmusic.composeapp.generated.resources.cancel
+import simpmusic.composeapp.generated.resources.hidden_empty
+import simpmusic.composeapp.generated.resources.hidden_hint
+import simpmusic.composeapp.generated.resources.hidden_manage
+import simpmusic.composeapp.generated.resources.hidden_title
+import simpmusic.composeapp.generated.resources.hide_artist
+import simpmusic.composeapp.generated.resources.hide_song
+
+/*
+ * "Don't recommend this": a long press on a recommended song (holding OK on a TV remote) opens a
+ * short menu to hide the song or its artist from everything the recommender builds, and to bring
+ * hidden ones back.
+ */
+
+/** How long OK is held before it counts as a long press. */
+private const val HOLD_MS = 550L
+
+/** Key repeats arrive tens of milliseconds apart; a longer gap is a new press. */
+private const val NEW_PRESS_GAP_MS = 700L
+
+/**
+ * A recommended song's card: [onClick] plays it, [onLongClick] opens the menu.
+ *
+ * A phone gets the usual long press. A TV remote has no such thing in Compose's clickable, so the
+ * OK key is read here: a short press clicks when the key comes up, and one held past [HOLD_MS]
+ * opens the menu and does not click.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun Modifier.songCardActions(
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+): Modifier {
+    if (!isTelevision()) return combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    val press = remember { OkPress() }
+    return onPreviewKeyEvent { event ->
+        if (event.key != Key.DirectionCenter && event.key != Key.Enter && event.key != Key.NumPadEnter) return@onPreviewKeyEvent false
+        val now = System.currentTimeMillis()
+        when (event.type) {
+            KeyEventType.KeyDown -> {
+                if (press.downAt == 0L || now - press.lastEventAt > NEW_PRESS_GAP_MS) {
+                    press.downAt = now
+                    press.held = false
+                }
+                press.lastEventAt = now
+                if (!press.held && now - press.downAt >= HOLD_MS) {
+                    press.held = true
+                    onLongClick()
+                }
+                true
+            }
+
+            KeyEventType.KeyUp -> {
+                // A key-up with no key-down here (the press began on a dialog or another card) is not a click.
+                val click = !press.held && press.downAt != 0L && now - press.lastEventAt <= NEW_PRESS_GAP_MS + HOLD_MS
+                press.downAt = 0L
+                press.held = false
+                if (click) onClick()
+                true
+            }
+
+            else -> {
+                false
+            }
+        }
+    }.clickable(onClick = onClick)
+}
+
+private class OkPress {
+    var downAt = 0L
+    var lastEventAt = 0L
+    var held = false
+}
+
+/** The menu for one recommended song. */
+@Composable
+internal fun HideMenu(
+    track: Track,
+    viewModel: HomeViewModel,
+    onDismiss: () -> Unit,
+) {
+    val hidden by viewModel.hidden.collectAsStateWithLifecycle()
+    var managing by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { viewModel.loadHidden() }
+    val artist = track.artists?.firstOrNull()?.name.orEmpty()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (managing) stringResource(Res.string.hidden_title) else track.title,
+                style = typo().titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        text = {
+            Column(Modifier.fillMaxWidth().heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                if (!managing) {
+                    TextButton(onClick = {
+                        viewModel.hideSong(track)
+                        onDismiss()
+                    }) { Text(stringResource(Res.string.hide_song)) }
+                    if (artist.isNotBlank()) {
+                        TextButton(onClick = {
+                            viewModel.hideArtist(artist)
+                            onDismiss()
+                        }) { Text(stringResource(Res.string.hide_artist, artist)) }
+                    }
+                    TextButton(onClick = { managing = true }) { Text(stringResource(Res.string.hidden_manage, hidden.size.toString())) }
+                } else if (hidden.isEmpty()) {
+                    Text(stringResource(Res.string.hidden_empty), style = typo().bodyMedium)
+                } else {
+                    Text(stringResource(Res.string.hidden_hint), style = typo().bodySmall)
+                    hidden.forEach { item ->
+                        TextButton(onClick = { viewModel.showAgain(item) }) { Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) } },
+    )
+}

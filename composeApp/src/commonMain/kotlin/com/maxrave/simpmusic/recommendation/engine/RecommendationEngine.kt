@@ -51,6 +51,31 @@ data class TasteMix(
     val artists: List<String> = emptyList(),
 )
 
+/** A song or an artist the listener asked never to be recommended. */
+@Serializable
+data class HiddenItem(
+    /** [SimilarMix.trackKey] for a song, [SimilarMix.key] of the name for an artist. */
+    val key: String,
+    /** What to call it in the list of hidden things. */
+    val label: String,
+    val artist: Boolean,
+    val videoId: String? = null,
+)
+
+/** The hidden songs and artists, shaped for the checks the builds make. */
+private class Hidden(
+    items: List<HiddenItem>,
+) {
+    val artists: Set<String> = items.filter { it.artist }.map { it.key }.toSet()
+    val songs: Set<String> = items.filter { !it.artist }.map { it.key }.toSet()
+    val ids: Set<String> = items.mapNotNull { it.videoId }.toSet()
+
+    fun covers(track: Track): Boolean =
+        track.videoId in ids ||
+            SimilarMix.trackKey(track.artists?.firstOrNull()?.name.orEmpty(), track.title) in songs ||
+            track.artists.orEmpty().any { SimilarMix.key(it.name) in artists }
+}
+
 @Serializable
 private data class DailyLists(
     val day: Long = 0,
@@ -116,6 +141,60 @@ class RecommendationEngine(
         val fresh: Boolean,
     )
 
+    /* ---------------------------------------------------------- hidden */
+
+    private val hiddenLock = Any()
+    private var hiddenItems: List<HiddenItem>? = null
+
+    /** Everything the listener asked not to be recommended, newest first. */
+    fun hidden(): List<HiddenItem> =
+        synchronized(hiddenLock) {
+            hiddenItems ?: (read(HIDDEN_FILE, ListSerializer(HiddenItem.serializer())) ?: emptyList()).also { hiddenItems = it }
+        }
+
+    /** Never recommend this song again. It is also taken out of today's lists. */
+    suspend fun hideSong(track: Track) =
+        hide(HiddenItem(SimilarMix.trackKey(track.artists?.firstOrNull()?.name.orEmpty(), track.title), track.title, artist = false, videoId = track.videoId))
+
+    /**
+     * Never recommend this artist again, alone or as a guest. Artists close to them on the map are
+     * rated down too, the way artists the listener skips are: it is the clearest "not this" there is.
+     */
+    suspend fun hideArtist(name: String) {
+        val key = SimilarMix.key(name)
+        if (key.isNotEmpty()) hide(HiddenItem(key, name.trim(), artist = true))
+    }
+
+    suspend fun showAgain(item: HiddenItem) =
+        withContext(Dispatchers.IO) {
+            synchronized(hiddenLock) {
+                val next = hidden().filterNot { it.key == item.key && it.artist == item.artist }
+                hiddenItems = next
+                write(HIDDEN_FILE, ListSerializer(HiddenItem.serializer()), next)
+            }
+        }
+
+    private suspend fun hide(item: HiddenItem) =
+        withContext(Dispatchers.IO) {
+            synchronized(hiddenLock) {
+                val next = listOf(item) + hidden().filterNot { it.key == item.key && it.artist == item.artist }
+                hiddenItems = next
+                write(HIDDEN_FILE, ListSerializer(HiddenItem.serializer()), next)
+                // Today's lists are already built: take it out of them as well.
+                read(DAILY_FILE, DailyLists.serializer())?.let { daily ->
+                    val now = Hidden(next)
+                    write(
+                        DAILY_FILE,
+                        DailyLists.serializer(),
+                        daily.copy(discover = daily.discover.filterNot { now.covers(it) }, newArtists = daily.newArtists.filterNot { now.covers(it) }),
+                    )
+                }
+            }
+        }
+
+    /** Whether [track] is hidden, for a list already on screen. */
+    fun isHidden(track: Track): Boolean = Hidden(hidden()).covers(track)
+
     /* ------------------------------------------------------------ Home */
 
     /** "Like what you play": songs not yet played, by artists near the listener's taste. */
@@ -153,21 +232,24 @@ class RecommendationEngine(
             return DailyLists(day = today, variant = variant, discover = match(chart.take(COLD_START_SONGS), emptySet()).map { it.first }, coldStart = true)
         }
         val g = graph()
-        val liked = snap.taste.liked().take(TASTE_ARTISTS)
+        val hide = Hidden(hidden())
+        val dislikes = snap.taste.disliked() + hide.artists.associateWith { 1.0 }
+        val liked = snap.taste.liked().filter { it.first !in hide.artists }.take(TASTE_ARTISTS)
         liked.forEach { (key, _) -> g.upsert(GraphNode(key, snap.taste.names[key] ?: key)) }
         // The listener's own artists get both sources; what the walk reaches after that, Deezer only.
         expand(g, liked.map { it.first }, today, listenBrainz = true, budget = TASTE_ARTISTS)
         var adjacency = g.adjacency()
-        var scores = Walk.score(adjacency, liked.toMap(), snap.taste.disliked())
+        var scores = Walk.score(adjacency, liked.toMap(), dislikes)
         val frontier = scores.entries.sortedByDescending { it.value }.map { it.key }.filter { !g.isExpanded(it, today) }.take(FRONTIER)
         if (expand(g, frontier, today, listenBrainz = false, budget = FRONTIER) > 0) {
             adjacency = g.adjacency()
-            scores = Walk.score(adjacency, liked.toMap(), snap.taste.disliked())
+            scores = Walk.score(adjacency, liked.toMap(), dislikes)
         }
         saveGraph(g)
 
         val groups = Clusters.groups(liked, adjacency).let { all -> if (all.size <= MAX_GROUPS) all else all.take(MAX_GROUPS - 1) + TasteGroup(all.drop(MAX_GROUPS - 1).flatMap { it.artists }, all.drop(MAX_GROUPS - 1).sumOf { it.weight }) }
         val known = snap.taste.artist.keys
+        val scenes = Scenes.of(adjacency)
         val records = Feedback.records(served(), snap.plays, today)
         val cooling = Feedback.cooling(served(), snap.plays.keys, today)
 
@@ -177,7 +259,8 @@ class RecommendationEngine(
             groups.forEachIndexed { index, group ->
                 if (slots[index] == 0) return@forEachIndexed
                 val restart = group.artists.associateWith { snap.taste.artist[it] ?: 0.0 }
-                val groupScores = Walk.score(adjacency, restart, snap.taste.disliked())
+                val groupScores = Walk.score(adjacency, restart, dislikes)
+                val homeScene = Scenes.home(scenes, restart)
                 val candidates =
                     groupScores
                         .filter { it.key !in chosen.map { c -> c.key } && it.value > 0 }
@@ -186,13 +269,18 @@ class RecommendationEngine(
                             if (newOnly && familiar) return@mapNotNull null
                             // An artist already played stays in, behind new ones; the listener's own
                             // favourites are what the shelf is built FROM, so they are left out.
-                            if ((snap.taste.artist[key] ?: 0.0) > FAVOURITE) return@mapNotNull null
-                            ScoredArtist(key, value * (if (familiar) SimilarMix.KNOWN_ARTIST_PENALTY else 1.0) * Feedback.chance(records[key], random))
+                            if ((snap.taste.artist[key] ?: 0.0) > FAVOURITE || key in hide.artists) return@mapNotNull null
+                            val sameScene = homeScene == null || scenes[key] == homeScene
+                            ScoredArtist(
+                                key,
+                                value * (if (familiar) SimilarMix.KNOWN_ARTIST_PENALTY else 1.0) * (if (sameScene) 1.0 else OTHER_SCENE) * Feedback.chance(records[key], random),
+                            )
                         }
                 chosen += Selection.diverse(candidates, adjacency, slots[index])
             }
-            val picked = pickFresh(g, chosen.sortedByDescending { it.score }, SONGS_PER_ARTIST, snap.taste.playedKeys + cooling, random)
-            val matched = match(DiscoverMix.interleave(picked.groupBy { it.second }.values.map { it.toList() }).map { it.first }, snap.songs.keys)
+            val picked = pickFresh(g, chosen.sortedByDescending { it.score }, SONGS_PER_ARTIST, snap.taste.playedKeys + cooling + hide.songs, random, hide.artists)
+            val matched = match(DiscoverMix.interleave(picked.groupBy { it.second }.values.map { it.toList() }).map { it.first }, snap.songs.keys + hide.ids)
+                .filterNot { hide.covers(it.first) }
             remember(matched, today)
             return Sequencer.spread(matched, 2) { it.second }.map { it.first }.take(SHELF_SONGS)
         }
@@ -201,12 +289,17 @@ class RecommendationEngine(
         val newArtists = shelf(newOnly = true).filter { t -> discover.none { it.videoId == t.videoId } }
         val mixes =
             groups.take(MAX_MIXES).mapNotNull { group ->
-                val lead = group.artists.firstOrNull() ?: return@mapNotNull null
+                // The card shows one artist and the mix opens with them, so it has to be one the
+                // catalogue knows and the map can walk out from. A group with no such artist would
+                // make a mix of one or two songs: it gets no card.
+                val lead =
+                    group.artists.firstOrNull { it !in hide.artists && g.node(it)?.deezerId != null && adjacency[it].orEmpty().size >= MIN_MIX_LINKS }
+                        ?: return@mapNotNull null
                 val node = g.node(lead)
                 TasteMix(
                     key = lead,
                     name = snap.taste.names[lead] ?: node?.name ?: lead,
-                    others = group.artists.drop(1).take(3).map { snap.taste.names[it] ?: it },
+                    others = group.artists.filter { it != lead }.take(3).map { snap.taste.names[it] ?: it },
                     picture = node?.picture,
                     deezerId = node?.deezerId ?: 0,
                     artists = group.artists,
@@ -216,13 +309,23 @@ class RecommendationEngine(
         return DailyLists(today, variant, discover, newArtists, mixes)
     }
 
-    /** The songs of a taste group's mix: new ones from around the group, woven with ones already loved. */
+    /**
+     * The songs of a taste group's mix. It opens with the artist on its card (up to three of their
+     * songs), then new songs from around the group woven with ones already loved.
+     */
     suspend fun mix(mix: TasteMix): List<Track> =
         lock.withLock {
             withContext(Dispatchers.IO) {
                 val snap = snapshot()
-                val restart = mix.artists.ifEmpty { listOf(mix.key) }.associateWith { (snap.taste.artist[it] ?: 0.0).coerceAtLeast(0.05) }
-                build(restart, snap, RadioSession(), Random(LocalDate.now().toEpochDay() + mix.key.hashCode()), freshArtists = 10, knownSongs = 12, allowHome = true)
+                val restart = mix.artists.ifEmpty { listOf(mix.key) }.associateWith { (snap.taste.artist[it] ?: 0.0).coerceAtLeast(0.05) } + (mix.key to 1.0)
+                val built = build(restart, snap, RadioSession(), Random(LocalDate.now().toEpochDay() + mix.key.hashCode()), freshArtists = 10, knownSongs = 12, allowHome = true)
+                val (theirs, others) = built.partition { track -> track.artists.orEmpty().any { SimilarMix.key(it.name) == mix.key } }
+                val opening =
+                    theirs.ifEmpty {
+                        // Nothing of theirs made the cut (all played lately): their best-known songs then.
+                        match(topTracks(graph(), mix.key).take(MIX_OPENING), emptySet()).map { it.first }
+                    }
+                (opening.take(MIX_OPENING) + others + opening.drop(MIX_OPENING)).distinctBy { it.videoId }
             }
         }
 
@@ -296,11 +399,14 @@ class RecommendationEngine(
         restart.keys.forEach { key -> if (g.node(key) == null) g.upsert(GraphNode(key, snap.taste.names[key] ?: key)) }
         expand(g, restart.entries.sortedByDescending { it.value }.map { it.key }, today, listenBrainz = false, budget = 6)
         var adjacency = g.adjacency()
-        var scores = Walk.score(adjacency, restart, snap.taste.disliked())
+        val hide = Hidden(hidden())
+        val dislikes = snap.taste.disliked() + hide.artists.associateWith { 1.0 }
+        // A radio and a mix stay nearer their start than Home's shelves do.
+        var scores = Walk.score(adjacency, restart, dislikes, follow = NEAR_FOLLOW)
         val frontier = scores.entries.sortedByDescending { it.value }.map { it.key }.filter { !g.isExpanded(it, today) }.take(RADIO_FRONTIER)
         if (expand(g, frontier, today, listenBrainz = false, budget = RADIO_FRONTIER) > 0) {
             adjacency = g.adjacency()
-            scores = Walk.score(adjacency, restart, snap.taste.disliked())
+            scores = Walk.score(adjacency, restart, dislikes, follow = NEAR_FOLLOW)
         }
         saveGraph(g)
 
@@ -313,18 +419,28 @@ class RecommendationEngine(
                 .mapNotNull { snap.facts[it]?.artists?.firstOrNull()?.let { name -> SimilarMix.key(name) } }
                 .toSet()
         val recentArtists = session.lastArtists.takeLast(8).toSet()
+        // The scene the radio starts in (see Scenes): a Persian song's radio stays Persian. An
+        // artist from another scene is not banned, only far behind.
+        val scenes = Scenes.of(adjacency)
+        val homeScene = Scenes.home(scenes, restart)
+
+        fun sceneFactor(key: String) = if (homeScene == null || scenes[key] == homeScene) 1.0 else OTHER_SCENE
         val candidates =
             scores
-                .filter { it.value > 0 && (allowHome || it.key !in restart) }
+                .filter { it.value > 0 && (allowHome || it.key !in restart) && it.key !in hide.artists }
                 .map { (key, value) ->
-                    var s = value * Feedback.chance(records[key], random)
+                    var s = value * sceneFactor(key) * Feedback.chance(records[key], random)
                     if (key in skippedNow) s *= 0.15
                     if (key in recentArtists) s *= 0.5
                     ScoredArtist(key, s)
                 }
         val chosen = Selection.diverse(candidates, adjacency, freshArtists)
-        val exclude = snap.taste.playedKeys + cooling + session.emittedKeys
-        val fresh = match(pickFresh(g, chosen, 2, exclude, random).let { picks -> DiscoverMix.interleave(picks.groupBy { it.second }.values.map { it.toList() }) }.map { it.first }, snap.songs.keys + session.emittedIds)
+        val exclude = snap.taste.playedKeys + cooling + session.emittedKeys + hide.songs
+        val fresh =
+            match(
+                pickFresh(g, chosen, 2, exclude, random, hide.artists).let { picks -> DiscoverMix.interleave(picks.groupBy { it.second }.values.map { it.toList() }) }.map { it.first },
+                snap.songs.keys + session.emittedIds + hide.ids,
+            ).filterNot { hide.covers(it.first) }
 
         // Songs the listener already loves, by artists the walk rates: weighted by both.
         val rated = scores.entries.sortedByDescending { it.value }.take(40).associate { it.key to it.value }
@@ -340,8 +456,8 @@ class RecommendationEngine(
                             val song = snap.songs[t.videoId] ?: return@mapNotNull null
                             val key = SimilarMix.key(snap.facts[t.videoId]?.artists?.firstOrNull().orEmpty())
                             val closeness = (rated[key] ?: return@mapNotNull null) / top
-                            if (key in skippedNow) return@mapNotNull null
-                            Triple(song, key, closeness * kotlin.math.sqrt(t.score))
+                            if (key in skippedNow || hide.covers(song)) return@mapNotNull null
+                            Triple(song, key, closeness * sceneFactor(key) * kotlin.math.sqrt(t.score))
                         }
                 DiscoverMix.weightedSample(pool, knownSongs, random) { it.third }.sortedByDescending { it.third }
             }
@@ -368,6 +484,7 @@ class RecommendationEngine(
         perArtist: Int,
         exclude: Set<String>,
         random: Random,
+        hiddenArtists: Set<String> = emptySet(),
     ): List<Pair<DeezerTrack, String>> =
         coroutineScope {
             artists
@@ -376,7 +493,7 @@ class RecommendationEngine(
                         val top =
                             topTracks(g, artist.key)
                                 .distinctBy { SimilarMix.trackKey(it.artist, it.title) }
-                                .filter { SimilarMix.trackKey(it.artist, it.title) !in exclude }
+                                .filter { SimilarMix.trackKey(it.artist, it.title) !in exclude && SimilarMix.key(it.artist) !in hiddenArtists }
                         DiscoverMix.pickSongs(top, perArtist, random).map { it to artist.key }
                     }
                 }.awaitAll()
@@ -631,6 +748,7 @@ class RecommendationEngine(
         const val GRAPH_FILE = "artist-map.json"
         const val SERVED_FILE = "offered.json"
         const val DAILY_FILE = "daily.json"
+        const val HIDDEN_FILE = "hidden.json"
         const val LIKES_FILE = "account-likes.json"
         const val HISTORY_FILE = "account-history.json"
         const val THIN_HISTORY = 150
@@ -657,6 +775,10 @@ class RecommendationEngine(
         const val DRIFT_SHARE = 0.25
         const val MAX_RADIOS = 12
         const val LISTENBRAINZ_PER_BUILD = 10
+        const val OTHER_SCENE = 0.15
+        const val NEAR_FOLLOW = 0.55
+        const val MIN_MIX_LINKS = 3
+        const val MIX_OPENING = 3
         const val PARALLEL = 4
         const val REQUEST_TIMEOUT_MS = 15_000L
     }

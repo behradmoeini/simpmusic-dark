@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fork: the navy gradient the owner's TV apps share (Watch, شبکه نمایش خانگی), bottom-left to top-right. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="45"
+        android:startColor="#041023"
+        android:endColor="#084367"
+        android:type="linear" />
+</shape>

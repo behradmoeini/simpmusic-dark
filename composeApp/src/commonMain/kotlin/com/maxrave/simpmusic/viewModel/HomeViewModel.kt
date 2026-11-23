@@ -7,6 +7,7 @@ import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
 import com.maxrave.domain.recommendation.OwnRadio
 import com.maxrave.simpmusic.recommendation.DeezerArtist
+import com.maxrave.simpmusic.recommendation.engine.HiddenItem
 import com.maxrave.simpmusic.recommendation.engine.RecommendationEngine
 import com.maxrave.simpmusic.recommendation.engine.TasteMix
 import com.maxrave.simpmusic.chart.toIranChart
@@ -23,6 +24,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.sync.withPermit
 import simpmusic.composeapp.generated.resources.home_mix_name
+import simpmusic.composeapp.generated.resources.hidden_done
 import simpmusic.composeapp.generated.resources.home_shelf_not_found
 import org.koin.core.component.get
 import simpmusic.composeapp.generated.resources.discover_mix_title
@@ -40,6 +42,7 @@ import com.maxrave.domain.utils.Resource
 import com.maxrave.logger.Logger
 import com.maxrave.simpmusic.utils.withoutYouTubePodcasts
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -454,6 +457,36 @@ class HomeViewModel(
     // Fork: "Same vibe, new artists" — see recommendation/DiscoverMix.kt.
     // Both shelves, the mixes and the player's radio come from one engine (recommendation/engine).
     private val engine: RecommendationEngine by lazy { get() }
+
+    // Fork: songs and artists the listener asked never to be recommended (RecommendationEngine).
+    private val _hidden = MutableStateFlow<List<HiddenItem>>(emptyList())
+    val hidden: StateFlow<List<HiddenItem>> = _hidden
+
+    fun loadHidden() {
+        viewModelScope.launch(Dispatchers.IO) { _hidden.value = engine.hidden() }
+    }
+
+    fun hideSong(track: Track) = hideThen { engine.hideSong(track) }
+
+    fun hideArtist(name: String) = hideThen { engine.hideArtist(name) }
+
+    fun showAgain(item: HiddenItem) {
+        viewModelScope.launch {
+            engine.showAgain(item)
+            _hidden.value = engine.hidden()
+        }
+    }
+
+    /** Hides, then drops what is now hidden from the shelves on screen, without rebuilding them. */
+    private fun hideThen(hide: suspend () -> Unit) {
+        viewModelScope.launch {
+            hide()
+            _hidden.value = engine.hidden()
+            _similar.value = _similar.value.filterNot { engine.isHidden(it) }
+            _discoverMix.value = _discoverMix.value.filterNot { engine.isHidden(it) }
+            makeToast(getString(Res.string.hidden_done))
+        }
+    }
 
     // Fork: streams of the songs most likely to be pressed are resolved ahead (StreamPrewarmer).
     private val prewarmer: StreamPrewarmer by lazy { get() }

@@ -22,6 +22,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.maxrave.simpmusic.expect.ui.isTelevision
 import com.maxrave.simpmusic.ui.component.TvHeroItem
 import com.maxrave.simpmusic.ui.component.tvHero
 import com.maxrave.simpmusic.ui.component.OpenPodcastCover
@@ -51,6 +55,9 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
     val loading by viewModel.similarLoading.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.loadSimilar() }
     if (tracks.isEmpty()) return
+    val onTv = isTelevision()
+    var menuFor by remember { mutableStateOf<com.maxrave.domain.data.model.browse.album.Track?>(null) }
+    menuFor?.let { HideMenu(it, viewModel) { menuFor = null } }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -69,7 +76,9 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
                     maxLines = 2,
                 )
             }
-            IconButton(onClick = { viewModel.loadSimilar(newVariant = true) }, enabled = !loading) {
+            // Not on a TV: a remote only moves up, down and sideways, and a lone button at the far
+            // end of a title is one more place to get lost. There a shelf is its title and its cards.
+            if (!onTv) IconButton(onClick = { viewModel.loadSimilar(newVariant = true) }, enabled = !loading) {
                 if (loading) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
                 } else {
@@ -78,7 +87,8 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
             }
         }
         Spacer(Modifier.height(8.dp))
-        Button(
+        // On a TV, OK on a card plays the shelf from that card; a separate Play button is not needed.
+        if (!onTv) Button(
             onClick = { viewModel.playSimilar() },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
@@ -100,7 +110,8 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
                                 videoId = track.videoId,
                             ),
                         ).width(140.dp)
-                        .clickable { viewModel.playSimilar(index) },
+                        // Holding (OK on a remote) opens "don't recommend this".
+                        .songCardActions(onClick = { viewModel.playSimilar(index) }, onLongClick = { menuFor = track }),
                 ) {
                     Box {
                         OpenPodcastCover(track.thumbnails?.maxByOrNull { it.width }?.url?.replace(Regex("=w\\d+-h\\d+"), "=w544-h544"), 140.dp)

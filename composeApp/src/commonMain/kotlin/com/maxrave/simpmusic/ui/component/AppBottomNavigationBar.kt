@@ -52,6 +52,9 @@ import com.maxrave.simpmusic.ui.navigation.destination.search.SearchDestination
 import com.maxrave.simpmusic.ui.theme.typo
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import com.maxrave.simpmusic.ui.icon.RssFeed
+import com.maxrave.simpmusic.ui.icon.Settings
+import com.maxrave.simpmusic.ui.icon.SimpIcons
 import simpmusic.composeapp.generated.resources.*
 import kotlin.math.roundToInt
 import kotlin.reflect.KClass
@@ -541,21 +544,27 @@ fun AppNavigationRail(
                     .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(
-                painter = painterResource(Res.drawable.circle_app_icon),
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-            )
+            // The name over a cyan bar: the mark the owner's TV apps share (Watch, شبکه نمایش خانگی).
+            androidx.compose.foundation.layout.Column(Modifier.width(TvTopBarSide)) {
+                Text("Listen", style = typo().labelMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold), color = Color.White)
+                Spacer(Modifier.height(3.dp))
+                androidx.compose.foundation.layout.Box(Modifier.width(30.dp).height(2.dp).background(Color(0xFF3DBEEC)))
+            }
             Spacer(Modifier.weight(1f))
             bottomNavScreens.forEach { screen ->
-                val selected = selectedIndex == screen.ordinal
+                // Home has two faces on a TV, music and podcasts, each a tab of its own here; on a
+                // phone they are chips on Home itself.
+                val onHome = selectedIndex == BottomNavScreen.Home.ordinal
+                val selected = selectedIndex == screen.ordinal && !(screen == BottomNavScreen.Home && TvHomeMode.podcasts)
                 Row(
                     modifier =
                         Modifier
                             .padding(horizontal = 4.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { open(screen) }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .clickable {
+                                if (screen == BottomNavScreen.Home) TvHomeMode.podcasts = false
+                                open(screen)
+                            }.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // The icon and label follow one colour: full for the open tab, grey for the rest.
@@ -572,10 +581,46 @@ fun AppNavigationRail(
                         )
                     }
                 }
+                if (screen == BottomNavScreen.Home) {
+                    val podcastsSelected = onHome && TvHomeMode.podcasts
+                    Row(
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    TvHomeMode.podcasts = true
+                                    if (!onHome) open(BottomNavScreen.Home)
+                                }.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CompositionLocalProvider(
+                            LocalContentColor provides
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = if (podcastsSelected) 1f else 0.6f),
+                        ) {
+                            androidx.compose.material3.Icon(SimpIcons.RssFeed, contentDescription = null)
+                            Spacer(Modifier.width(10.dp))
+                            Text(stringResource(Res.string.podcasts), style = typo().labelMedium, color = LocalContentColor.current)
+                        }
+                    }
+                }
             }
             Spacer(Modifier.weight(1f))
-            // As wide as the logo, so the tabs sit on the screen's centre.
-            Spacer(Modifier.width(36.dp))
+            // Settings, in a box as wide as the name on the left so the tabs sit on the screen's centre.
+            androidx.compose.foundation.layout.Box(Modifier.width(TvTopBarSide), contentAlignment = Alignment.CenterEnd) {
+                androidx.compose.foundation.layout.Box(
+                    Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { navController.navigate(com.maxrave.simpmusic.ui.navigation.destination.home.SettingsDestination) }
+                        .padding(8.dp),
+                ) {
+                    androidx.compose.material3.Icon(
+                        SimpIcons.Settings,
+                        contentDescription = stringResource(Res.string.settings),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
         }
         return
     }
@@ -616,3 +661,6 @@ fun AppNavigationRail(
 
 /** Where the TV's top bar ends and the page begins. */
 val TvTopBarHeight = 64.dp
+
+/** Width kept at each end of the TV top bar (the name, Settings), so the tabs centre. */
+private val TvTopBarSide = 96.dp
