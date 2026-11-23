@@ -74,6 +74,12 @@ object DeezerCatalog {
         limit: Int = 4,
     ): List<DeezerArtist> = rows(getJson("/artist/$id/related", "limit" to limit.toString())).mapNotNull { it.toArtist() }
 
+    /** The whole related list (Deezer gives 20), best first, for the recommender's artist map. */
+    suspend fun relatedAll(id: Long): List<DeezerArtist> = relatedArtists(id, 20)
+
+    /** The songs most played on Deezer right now, for a listener with no history yet. */
+    suspend fun chart(limit: Int = 40): List<DeezerTrack> = rows(getJson("/chart/0/tracks", "limit" to limit.toString())).mapNotNull { it.toTrack() }
+
     /** An artist's top tracks. */
     suspend fun topTracks(
         id: Long,

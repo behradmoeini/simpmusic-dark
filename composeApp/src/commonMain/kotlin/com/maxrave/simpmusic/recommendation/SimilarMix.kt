@@ -1,7 +1,7 @@
 package com.maxrave.simpmusic.recommendation
 
 /**
- * Pure parts of "Like what you play" (I/O is in [SimilarTracksLoader]). Seeds, candidate ranking,
+ * Pure parts of "Like what you play" (I/O is in engine/RecommendationEngine). Seeds, candidate ranking,
  * diversity and interleaving are shared with [DiscoverMix]; this adds what is specific to a
  * catalogue that only knows names: name keys, and choosing the YouTube result for a named song.
  */

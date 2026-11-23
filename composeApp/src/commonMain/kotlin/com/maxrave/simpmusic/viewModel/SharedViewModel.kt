@@ -109,6 +109,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
+import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.simpmusic.lastfm.completeLogin
 import simpmusic.composeapp.generated.resources.Res
@@ -287,6 +288,8 @@ class SharedViewModel(
     val shareSavedLyrics: StateFlow<Boolean> get() = _shareSavedLyrics
 
     init {
+        // Fork: what plays after a song comes from the own recommender, not from YouTube's radio.
+        com.maxrave.domain.recommendation.OwnRadio.source = get<com.maxrave.simpmusic.recommendation.engine.RecommendationEngine>()
         viewModelScope.launch {
             log("SharedViewModel init")
             if (dataStoreManager.appVersion.first() != VersionManager.getVersionName()) {

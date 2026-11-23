@@ -5,7 +5,10 @@ import com.maxrave.common.Config
 import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
-import com.maxrave.simpmusic.recommendation.DiscoverMixLoader
+import com.maxrave.domain.recommendation.OwnRadio
+import com.maxrave.simpmusic.recommendation.DeezerArtist
+import com.maxrave.simpmusic.recommendation.engine.RecommendationEngine
+import com.maxrave.simpmusic.recommendation.engine.TasteMix
 import com.maxrave.simpmusic.chart.toIranChart
 import com.maxrave.simpmusic.recommendation.DeezerAlbum
 import com.maxrave.simpmusic.recommendation.DeezerCatalog
@@ -14,7 +17,6 @@ import com.maxrave.simpmusic.recommendation.HomeShelves
 import com.maxrave.simpmusic.recommendation.HomeShelvesLoader
 import com.maxrave.simpmusic.recommendation.MixCard
 import com.maxrave.simpmusic.recommendation.SimilarMix
-import com.maxrave.simpmusic.recommendation.SimilarTracksLoader
 import com.maxrave.simpmusic.recommendation.YouTubeMatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -267,6 +269,26 @@ class HomeViewModel(
                     }
                 }
 
+                // Fork: the All page is built by the own recommender (recommendation/engine); YouTube's
+                // Home, which is its recommendations, is only asked for a Mood page.
+                if (params == null) {
+                    _continuation.value = null
+                    _homeItemList.value = listOf()
+                    _homeBackground.value = null
+                    _homeListState.value = ListState.PAGINATION_EXHAUST
+                    dataStoreManager.cookie.first().let {
+                        if (it != "") {
+                            _accountInfo.emit(
+                                Pair(
+                                    dataStoreManager.getString("AccountName").first(),
+                                    dataStoreManager.getString("AccountThumbUrl").first(),
+                                ),
+                            )
+                        }
+                    }
+                    loading.value = false
+                    return@launch
+                }
                 val home =
                     retryHome(
                         "first page",
@@ -429,7 +451,8 @@ class HomeViewModel(
     }
 
     // Fork: "Same vibe, new artists" — see recommendation/DiscoverMix.kt.
-    private val discoverMixLoader by lazy { DiscoverMixLoader(get(), get(), get(), dataStoreManager) }
+    // Both shelves, the mixes and the player's radio come from one engine (recommendation/engine).
+    private val engine: RecommendationEngine by lazy { get() }
     private val _discoverMix = MutableStateFlow<List<Track>>(emptyList())
     val discoverMix: StateFlow<List<Track>> = _discoverMix
     val discoverMixLoading = MutableStateFlow(false)
@@ -442,7 +465,8 @@ class HomeViewModel(
             viewModelScope.launch {
                 discoverMixLoading.value = true
                 try {
-                    _discoverMix.value = discoverMixLoader.load(newVariant)
+                    _discoverMix.value = engine.newArtists(newVariant)
+                    if (newVariant) _similar.value = engine.discover()
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -461,18 +485,18 @@ class HomeViewModel(
                 QueueData.Data(
                     listTracks = ArrayList(tracks),
                     firstPlayedTrack = first,
-                    playlistId = null,
+                    // A song radio's id, so the queue carries on with the own radio of its last song.
+                    playlistId = "RDAMVM${tracks.last().videoId}",
                     playlistName = getString(Res.string.discover_mix_title),
                     playlistType = PlaylistType.RADIO,
-                    continuation = null,
+                    continuation = OwnRadio.continuation(tracks.last().videoId),
                 ),
             )
             loadMediaItem(first, Config.PLAYLIST_CLICK, index)
         }
     }
 
-    // Fork: "Like what you play" — Deezer related artists, see recommendation/SimilarTracksLoader.kt.
-    private val similarLoader by lazy { SimilarTracksLoader(get(), get(), get(), dataStoreManager) }
+    // Fork: "Like what you play" — see recommendation/engine/RecommendationEngine.kt.
     private val _similar = MutableStateFlow<List<Track>>(emptyList())
     val similar: StateFlow<List<Track>> = _similar
     val similarLoading = MutableStateFlow(false)
@@ -485,7 +509,8 @@ class HomeViewModel(
             viewModelScope.launch {
                 similarLoading.value = true
                 try {
-                    _similar.value = similarLoader.load(newVariant)
+                    _similar.value = engine.discover(newVariant)
+                    if (newVariant) _discoverMix.value = engine.newArtists()
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -504,10 +529,11 @@ class HomeViewModel(
                 QueueData.Data(
                     listTracks = ArrayList(tracks),
                     firstPlayedTrack = first,
-                    playlistId = null,
+                    // A song radio's id, so the queue carries on with the own radio of its last song.
+                    playlistId = "RDAMVM${tracks.last().videoId}",
                     playlistName = getString(Res.string.similar_mix_title),
                     playlistType = PlaylistType.RADIO,
-                    continuation = null,
+                    continuation = OwnRadio.continuation(tracks.last().videoId),
                 ),
             )
             loadMediaItem(first, Config.PLAYLIST_CLICK, index)
@@ -531,6 +557,15 @@ class HomeViewModel(
             viewModelScope.launch {
                 try {
                     _homeShelves.value = homeShelvesLoader.load()
+                    // The mixes are the listener's taste groups, one each, from the own recommender.
+                    val groups = engine.mixes()
+                    tasteMixes = groups.associateBy { it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong() }
+                    if (groups.isNotEmpty()) {
+                        _homeShelves.value =
+                            _homeShelves.value.copy(
+                                mixes = groups.map { MixCard(DeezerArtist(it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong(), it.name, it.picture), it.others) },
+                            )
+                    }
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -600,10 +635,36 @@ class HomeViewModel(
         loadMediaItem(first, Config.PLAYLIST_CLICK, index)
     }
 
+    /** The taste group behind each mix card, by the card's artist id. */
+    private var tasteMixes: Map<Long, TasteMix> = emptyMap()
+
     fun playMix(card: MixCard) =
         shelfAction("mix:${card.artist.id}") {
-            val station = DeezerCatalog.radio(card.artist.id).distinctBy { SimilarMix.trackKey(it.artist, it.title) }
-            playDeezerTracks(station, 0, getString(Res.string.home_mix_name).replace("%1\$s", card.artist.name))
+            val name = getString(Res.string.home_mix_name).replace("%1\$s", card.artist.name)
+            val group = tasteMixes[card.artist.id]
+            if (group == null) {
+                // A card from before the recommender had built its groups: Deezer's station.
+                val station = DeezerCatalog.radio(card.artist.id).distinctBy { SimilarMix.trackKey(it.artist, it.title) }
+                playDeezerTracks(station, 0, name)
+                return@shelfAction
+            }
+            val tracks = engine.mix(group)
+            val first = tracks.firstOrNull()
+            if (first == null) {
+                makeToast(getString(Res.string.home_shelf_not_found))
+                return@shelfAction
+            }
+            setQueueData(
+                QueueData.Data(
+                    listTracks = ArrayList(tracks),
+                    firstPlayedTrack = first,
+                    playlistId = "RDAMVM${tracks.last().videoId}",
+                    playlistName = name,
+                    playlistType = PlaylistType.RADIO,
+                    continuation = OwnRadio.continuation(tracks.last().videoId),
+                ),
+            )
+            loadMediaItem(first, Config.PLAYLIST_CLICK, 0)
         }
 
     fun playMoreLike(index: Int) {

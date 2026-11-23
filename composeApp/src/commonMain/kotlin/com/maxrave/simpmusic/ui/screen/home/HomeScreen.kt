@@ -147,6 +147,7 @@ import com.maxrave.simpmusic.ui.component.ExpandableChip
 import com.maxrave.simpmusic.ui.component.FootgunsStarDialog
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
 import com.maxrave.simpmusic.ui.component.LocalTvHero
+import com.maxrave.simpmusic.ui.component.TvHeroItem
 import com.maxrave.simpmusic.ui.component.TvHeroState
 import com.maxrave.simpmusic.ui.component.TvHomeHero
 import com.maxrave.simpmusic.ui.component.toTvHero
@@ -431,9 +432,22 @@ fun HomeScreen(
     // The TV hero (ui/component/TvHero.kt): cards report themselves to it as the remote reaches
     // them; until one has, it shows the first card on the page.
     val tvHero = remember { TvHeroState() }
-    val showHero = onTv && !podcastMode && homeShelves.isNotEmpty()
+    // The All page is the own recommender's (recommendation/engine); YouTube's Home shelves are
+    // only shown for a Mood page.
+    val ownHome = params == null
+    val ownTracks by viewModel.similar.collectAsStateWithLifecycle()
+    val ownLoading by viewModel.similarLoading.collectAsStateWithLifecycle()
+    val showHero = onTv && !podcastMode && (homeShelves.isNotEmpty() || (ownHome && ownTracks.isNotEmpty()))
     val heroItem =
-        tvHero.item ?: homeShelves.firstNotNullOfOrNull { shelf -> shelf.contents.firstNotNullOfOrNull { it } }?.toTvHero()
+        tvHero.item
+            ?: homeShelves.firstNotNullOfOrNull { shelf -> shelf.contents.firstNotNullOfOrNull { it } }?.toTvHero()
+            ?: ownTracks.firstOrNull()?.let { track ->
+                TvHeroItem(
+                    title = track.title,
+                    subtitle = track.artists?.joinToString { it.name },
+                    artwork = track.thumbnails?.maxByOrNull { it.width }?.url,
+                )
+            }
     // With the hero the header is ~180dp tall, more than the app-wide 150dp a focused item is kept
     // from its list's edge, so the focused shelf would sit behind it. The page keeps it the header's
     // own height down, plus room for the shelf's title.
@@ -460,6 +474,8 @@ fun HomeScreen(
     val onRefresh: () -> Unit = {
         isRefreshing = true
         viewModel.getHomeItemList(params)
+        // On the own Home a pull also deals the recommender's next set.
+        if (params == null) viewModel.loadSimilar(newVariant = true)
         Logger.w("HomeScreen", "onRefresh")
     }
     LaunchedEffect(key1 = reloadDestination) {
@@ -802,7 +818,7 @@ fun HomeScreen(
                     return@Crossfade
                 }
                 if (!loading) {
-                    if (homeData.isEmpty()) {
+                    if (homeData.isEmpty() && !ownHome) {
                         OfflineErrorState(
                             onRetry = onRefresh,
                             onOpenDownloaded = {
@@ -824,6 +840,33 @@ fun HomeScreen(
                         state = scrollState,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        if (ownHome) {
+                            // Every shelf here is built on the device from the play history and the
+                            // open catalogues; none of it is YouTube's suggestion. A shelf with
+                            // nothing to show draws nothing.
+                            item(key = "own-top") {
+                                Spacer(Modifier.height(with(LocalDensity.current) { topAppBarHeightPx.toDp() } + 8.dp))
+                            }
+                            if (ownLoading && ownTracks.isEmpty()) {
+                                item(key = "own-loading") {
+                                    CenterLoadingBox(modifier = Modifier.fillMaxWidth().height(160.dp))
+                                }
+                            }
+                            val ownShelves: List<@Composable () -> Unit> =
+                                listOf(
+                                    { TopMixesShelf(viewModel) },
+                                    { SimilarShelf(viewModel) },
+                                    { DiscoverMixShelf(viewModel) },
+                                    { MoreLikeShelfRow(viewModel) },
+                                    { NewReleasesShelf(viewModel, navController) },
+                                    { LikedAlbumsShelf(viewModel, navController) },
+                                )
+                            items(ownShelves.size, key = { "own-$it" }) { index ->
+                                CompositionLocalProvider(LocalBringIntoViewSpec provides rowBringIntoView) {
+                                    Column(Modifier.padding(horizontal = 15.dp)) { ownShelves[index]() }
+                                }
+                            }
+                        }
                         itemsIndexed(homeShelves, key = { _, item ->
                             item.hashCode().toString() + (mainHomeThumbnail ?: "nothumb")
                         }) { index, item ->
@@ -995,7 +1038,8 @@ fun HomeScreen(
                             }
                         }
                         if (homeListState == ListState.PAGINATION_EXHAUST) {
-                            items(newRelease, key = { it.hashCode() }) {
+                            // YouTube's new releases and mood grid belong to its Home, not to ours.
+                            if (!ownHome) items(newRelease, key = { it.hashCode() }) {
                                 AnimatedVisibility(
                                     visible = newRelease.isNotEmpty(),
                                 ) {
@@ -1011,7 +1055,7 @@ fun HomeScreen(
                                     }
                                 }
                             }
-                            item {
+                            if (!ownHome) item {
                                 AnimatedVisibility(
                                     visible = moodMomentAndGenre != null,
                                 ) {

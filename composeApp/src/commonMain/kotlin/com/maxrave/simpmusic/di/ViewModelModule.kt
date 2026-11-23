@@ -69,6 +69,8 @@ val viewModelModule =
         viewModel { CommentsViewModel(get(), get()) }
         viewModel { OpenPodcastViewModel(get()) }
         single { com.maxrave.simpmusic.chart.PersianTrendingChart() }
+        // The own recommender: Home's shelves and the player's radio share its map and its memory.
+        single { com.maxrave.simpmusic.recommendation.engine.RecommendationEngine(get(), get()) }
         viewModel {
             NowPlayingBottomSheetViewModel(
                 get(),

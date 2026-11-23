@@ -24,7 +24,7 @@ import kotlin.random.Random
  * - Tracks are drawn from each new artist's top songs, but not always the first one, and the mix
  *   is interleaved so the same artist never plays twice in a row.
  *
- * Everything here is pure, so it can be tested; DiscoverMixLoader does the I/O.
+ * Everything here is pure, so it can be tested; engine/RecommendationEngine does the I/O.
  */
 
 data class ArtistPlays(
