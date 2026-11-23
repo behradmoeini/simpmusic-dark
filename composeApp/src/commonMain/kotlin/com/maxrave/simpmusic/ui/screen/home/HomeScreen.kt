@@ -1183,7 +1183,11 @@ fun HomeScreen(
                         // arrow-key focus search cannot find by itself (ui/component/TvKeys.kt).
                         .tvDownTo(shelvesFocus)
                         .then(
-                            if (target) {
+                            if (showHero) {
+                                // With the hero the header is a third of the screen: the page must
+                                // not show through it. Opaque, in the page's own colour.
+                                Modifier.background(pageBackground)
+                            } else if (target) {
                                 Modifier.background(Color.Transparent)
                             } else {
                                 Modifier

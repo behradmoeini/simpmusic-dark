@@ -527,6 +527,8 @@ class HomeViewModel(
                 try {
                     _similar.value = engine.discover(newVariant)
                     if (newVariant) _discoverMix.value = engine.newArtists()
+                    // A new set can come with new taste groups (the first one after signing in does).
+                    refreshMixes()
                     prewarmer.prewarm(_similar.value.take(PREWARM_PER_SHELF).map { it.videoId })
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
@@ -574,15 +576,7 @@ class HomeViewModel(
             viewModelScope.launch {
                 try {
                     _homeShelves.value = homeShelvesLoader.load()
-                    // The mixes are the listener's taste groups, one each, from the own recommender.
-                    val groups = engine.mixes()
-                    tasteMixes = groups.associateBy { it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong() }
-                    if (groups.isNotEmpty()) {
-                        _homeShelves.value =
-                            _homeShelves.value.copy(
-                                mixes = groups.map { MixCard(DeezerArtist(it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong(), it.name, it.picture), it.others) },
-                            )
-                    }
+                    refreshMixes()
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -590,6 +584,18 @@ class HomeViewModel(
                     homeShelvesJob = null
                 }
             }
+    }
+
+    /** The mix cards are the listener's taste groups, one each, from the own recommender. */
+    private suspend fun refreshMixes() {
+        val groups = engine.mixes()
+        tasteMixes = groups.associateBy { it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong() }
+        if (groups.isNotEmpty()) {
+            _homeShelves.value =
+                _homeShelves.value.copy(
+                    mixes = groups.map { MixCard(DeezerArtist(it.deezerId.takeIf { id -> id != 0L } ?: it.key.hashCode().toLong(), it.name, it.picture), it.others) },
+                )
+        }
     }
 
     /** One card at a time: a second tap while one is resolving replaces it. */

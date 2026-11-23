@@ -1088,7 +1088,7 @@
     <string name="open_podcasts_no_episodes">This feed has no audio episodes.</string>
     <string name="open_podcasts_android_only">Podcast playback is available on Android only.</string>
     <string name="similar_mix_title">Like what you play</string>
-    <string name="similar_mix_subtitle">New songs close to what you have been playing, from Deezer</string>
+    <string name="similar_mix_subtitle">Songs you have not played, picked from how you listen</string>
     <string name="similar_mix_play">Play</string>
     <string name="home_top_mixes">Your top mixes</string>
     <string name="home_mix_name">%1$s Mix</string>
