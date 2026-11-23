@@ -85,11 +85,16 @@ internal fun Modifier.songCardActions(
             }
 
             KeyEventType.KeyUp -> {
-                // A key-up with no key-down here (the press began on a dialog or another card) is not a click.
-                val click = !press.held && press.downAt != 0L && now - press.lastEventAt <= NEW_PRESS_GAP_MS + HOLD_MS
+                // A key-up with no key-down here (the press began on a dialog or another card) is nothing.
+                // Some remotes send no repeats while a key is held, so the hold is also judged on
+                // release: long enough is the menu, shorter is a click.
+                val began = press.downAt
+                val alreadyHeld = press.held
                 press.downAt = 0L
                 press.held = false
-                if (click) onClick()
+                if (began != 0L && !alreadyHeld) {
+                    if (now - began >= HOLD_MS) onLongClick() else onClick()
+                }
                 true
             }
 

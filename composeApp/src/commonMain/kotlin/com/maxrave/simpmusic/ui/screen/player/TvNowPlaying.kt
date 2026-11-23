@@ -146,7 +146,9 @@ fun TvNowPlaying(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+        // Back is handled below, on release. Left to the dialog it closed on the press, and the
+        // release then reached the screen behind and closed the app as well.
+        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false, dismissOnBackPress = false),
     ) {
         ForceDarkContent {
             KeepScreenOn()
@@ -155,12 +157,16 @@ fun TvNowPlaying(
                     .fillMaxSize()
                     .background(Color(0xFF0B0B0B))
                     .onPreviewKeyEvent { event ->
+                        if (event.key == Key.Back || event.key == Key.Escape) {
+                            if (event.type == KeyEventType.KeyUp && !hideMenu) onDismiss()
+                            return@onPreviewKeyEvent true
+                        }
                         if (event.type == KeyEventType.KeyDown) {
                             lastKeyAt = System.currentTimeMillis()
                             if (ambient) {
                                 // The first key only wakes the controls; it does not also press one.
                                 ambient = false
-                                return@onPreviewKeyEvent event.key != Key.Back && event.key != Key.Escape
+                                return@onPreviewKeyEvent true
                             }
                         }
                         false

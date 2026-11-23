@@ -455,7 +455,7 @@ fun HomeScreen(
     // from its list's edge, so the focused shelf would sit behind it. The page keeps it the header's
     // own height down, plus room for the shelf's title.
     val rowBringIntoView = LocalBringIntoViewSpec.current
-    val shelfPivotPx = topAppBarHeightPx + with(LocalDensity.current) { 56.dp.toPx() }
+    val shelfPivotPx = topAppBarHeightPx + with(LocalDensity.current) { 76.dp.toPx() }
     // The mini player lies over the bottom of the page: a focused card stops above it, so the
     // card's title and artist can be read.
     val miniPlayerPx = with(LocalDensity.current) { 72.dp.toPx() }
@@ -490,11 +490,25 @@ fun HomeScreen(
                 Logger.w("HomeScreen", "scrollState.firstVisibleItemIndex: ${scrollState.firstVisibleItemIndex}")
                 scrollState.animateScrollToItem(0)
                 sharedViewModel.reloadDestinationDone()
+            } else if (onTv) {
+                // Pressing Home on a TV goes to the top of Home. It does not also deal a new set:
+                // that takes the better part of a minute and nobody asked for it.
+                sharedViewModel.reloadDestinationDone()
             } else {
                 Logger.w("HomeScreen", "scrollState.firstVisibleItemIndex: ${scrollState.firstVisibleItemIndex}")
                 onRefresh.invoke()
             }
         }
+    }
+    // The spinner goes when the refresh it stands for has settled. It used to wait for `loading` to
+    // change, but on the own Home `loading` goes true and back to false within one frame, the change
+    // is never seen, and the spinner stayed on the page for good.
+    LaunchedEffect(isRefreshing) {
+        if (!isRefreshing) return@LaunchedEffect
+        delay(600)
+        snapshotFlow { loading || ownLoading }.first { !it }
+        isRefreshing = false
+        pullToRefreshState.animateToHidden()
     }
     LaunchedEffect(key1 = loading) {
         if (!loading) {
