@@ -59,6 +59,17 @@ class TasteEngineTest {
     }
 
     @Test
+    fun twoSpellingsOfAnArtistAreOnePlaceOnTheMap() {
+        val graph = ArtistGraph()
+        graph.upsert(GraphNode("fav", "Fav"))
+        graph.upsert(GraphNode("other", "Other"))
+        // The history writes "other"; a catalogue lists the same artist as "otherlatin".
+        graph.alias("otherlatin", "other")
+        graph.setLinks("fav", deezer = listOf("otherlatin" to 1f), listenBrainz = null, today = 1)
+        assertEquals(listOf("other"), graph.adjacency().getValue("fav").map { it.first })
+    }
+
+    @Test
     fun theWalkFadesWithDistanceAndKeepsItsMass() {
         val adjacency = mapOf("a" to listOf("b" to 1.0), "b" to listOf("c" to 1.0))
         val rank = Walk.personalizedPageRank(adjacency, mapOf("a" to 1.0))

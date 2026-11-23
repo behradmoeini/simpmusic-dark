@@ -437,7 +437,7 @@ internal fun rememberCardHover(
         Modifier
             .onFocusChanged {
                 focused = it.isFocused
-                if (it.isFocused && hero != null) heroState?.item = hero
+                if (it.isFocused && hero != null) heroState?.focus(hero)
             }
             .hoverable(source)
             .drawBehind {

@@ -205,6 +205,13 @@ data class GraphEdge(
 data class ArtistGraphData(
     val nodes: Map<String, GraphNode> = emptyMap(),
     val edges: Map<String, List<GraphEdge>> = emptyMap(),
+    /**
+     * Another spelling of an artist to the key the map keeps them under. The history has YouTube's
+     * spelling and the catalogues their own (a Persian name in Persian letters on one, Latin on the
+     * other); without this the same artist would sit on the map twice, once as a favourite and once
+     * as a stranger to recommend.
+     */
+    val aliases: Map<String, String> = emptyMap(),
 )
 
 /** The artist map, kept on the device and grown a few artists at a time. */
@@ -213,6 +220,17 @@ class ArtistGraph(
 ) {
     private val nodes = HashMap(data.nodes)
     private val edges = HashMap(data.edges)
+    private val aliases = HashMap(data.aliases)
+
+    /** The key an artist is kept under, whichever spelling [key] is. */
+    fun canonical(key: String): String = aliases[key] ?: key
+
+    fun alias(
+        spelling: String,
+        key: String,
+    ) {
+        if (spelling.isNotEmpty() && spelling != key && spelling !in edges) aliases[spelling] = key
+    }
 
     val size: Int get() = nodes.size
 
@@ -279,15 +297,16 @@ class ArtistGraph(
         for ((from, links) in edges) {
             for (link in links) {
                 val w = weight(link)
-                if (w <= 0) continue
-                out.getOrPut(from) { ArrayList() } += link.to to w
-                if (edges[link.to].isNullOrEmpty()) out.getOrPut(link.to) { ArrayList() } += from to w * REVERSE_SHARE
+                val to = canonical(link.to)
+                if (w <= 0 || to == from) continue
+                out.getOrPut(from) { ArrayList() } += to to w
+                if (edges[to].isNullOrEmpty()) out.getOrPut(to) { ArrayList() } += from to w * REVERSE_SHARE
             }
         }
         return out
     }
 
-    fun snapshot(): ArtistGraphData = ArtistGraphData(HashMap(nodes), HashMap(edges))
+    fun snapshot(): ArtistGraphData = ArtistGraphData(HashMap(nodes), HashMap(edges), HashMap(aliases))
 
     /** Drops the artists furthest from anything fetched when the map outgrows [maxNodes]. */
     fun prune(maxNodes: Int = MAX_NODES) {

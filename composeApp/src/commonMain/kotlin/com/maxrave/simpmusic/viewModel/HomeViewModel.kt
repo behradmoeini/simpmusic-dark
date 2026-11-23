@@ -17,6 +17,7 @@ import com.maxrave.simpmusic.recommendation.HomeShelves
 import com.maxrave.simpmusic.recommendation.HomeShelvesLoader
 import com.maxrave.simpmusic.recommendation.MixCard
 import com.maxrave.simpmusic.recommendation.SimilarMix
+import com.maxrave.simpmusic.recommendation.StreamPrewarmer
 import com.maxrave.simpmusic.recommendation.YouTubeMatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -453,6 +454,20 @@ class HomeViewModel(
     // Fork: "Same vibe, new artists" — see recommendation/DiscoverMix.kt.
     // Both shelves, the mixes and the player's radio come from one engine (recommendation/engine).
     private val engine: RecommendationEngine by lazy { get() }
+
+    // Fork: streams of the songs most likely to be pressed are resolved ahead (StreamPrewarmer).
+    private val prewarmer: StreamPrewarmer by lazy { get() }
+    private var focusPrewarmJob: Job? = null
+
+    /** The TV remote landed on a song: once it has rested there a moment, get the song ready. */
+    fun prewarmFocused(videoId: String) {
+        focusPrewarmJob?.cancel()
+        focusPrewarmJob =
+            viewModelScope.launch {
+                delay(450)
+                prewarmer.prewarm(listOf(videoId))
+            }
+    }
     private val _discoverMix = MutableStateFlow<List<Track>>(emptyList())
     val discoverMix: StateFlow<List<Track>> = _discoverMix
     val discoverMixLoading = MutableStateFlow(false)
@@ -467,6 +482,7 @@ class HomeViewModel(
                 try {
                     _discoverMix.value = engine.newArtists(newVariant)
                     if (newVariant) _similar.value = engine.discover()
+                    prewarmer.prewarm(_discoverMix.value.take(PREWARM_PER_SHELF).map { it.videoId })
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -511,6 +527,7 @@ class HomeViewModel(
                 try {
                     _similar.value = engine.discover(newVariant)
                     if (newVariant) _discoverMix.value = engine.newArtists()
+                    prewarmer.prewarm(_similar.value.take(PREWARM_PER_SHELF).map { it.videoId })
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -695,6 +712,9 @@ class HomeViewModel(
         private const val HOME_ATTEMPTS = 4
         private const val MAX_RETRY_DELAY_MS = 60_000L
         private const val MAX_HOME_PAGES = 20
+
+        // Fork: how many of a shelf's first songs get their stream resolved when the shelf loads.
+        private const val PREWARM_PER_SHELF = 4
 
         // Home params
         const val HOME_PARAMS_RELAX = "ggM8SgQIBxADSgQIBRABSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"

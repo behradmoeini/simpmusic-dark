@@ -431,7 +431,7 @@ fun HomeScreen(
     val shelvesFocus = remember { FocusRequester() }
     // The TV hero (ui/component/TvHero.kt): cards report themselves to it as the remote reaches
     // them; until one has, it shows the first card on the page.
-    val tvHero = remember { TvHeroState() }
+    val tvHero = remember { TvHeroState().also { it.onSong = { id -> viewModel.prewarmFocused(id) } } }
     // The All page is the own recommender's (recommendation/engine); YouTube's Home shelves are
     // only shown for a Mood page.
     val ownHome = params == null

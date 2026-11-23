@@ -53,11 +53,21 @@ data class TvHeroItem(
     val title: String,
     val subtitle: String?,
     val artwork: String?,
+    /** Set when the card is a song: its stream is resolved while the remote rests on it. */
+    val videoId: String? = null,
 )
 
 @Stable
 class TvHeroState {
     var item by mutableStateOf<TvHeroItem?>(null)
+
+    /** Told the song the remote has landed on, so Home can get it ready to start. */
+    var onSong: ((String) -> Unit)? = null
+
+    fun focus(focused: TvHeroItem) {
+        item = focused
+        focused.videoId?.let { onSong?.invoke(it) }
+    }
 }
 
 val LocalTvHero = staticCompositionLocalOf<TvHeroState?> { null }
@@ -70,6 +80,7 @@ fun Content.toTvHero(): TvHeroItem =
         title = title,
         subtitle = artists?.joinToString { it.name }?.takeIf { it.isNotBlank() } ?: description,
         artwork = thumbnails.lastOrNull()?.url,
+        videoId = videoId?.takeIf { it.isNotBlank() },
     )
 
 /** Reports this card to Home's hero when the remote lands on it. Goes before the card's clickable. */
@@ -77,7 +88,7 @@ fun Content.toTvHero(): TvHeroItem =
 fun Modifier.tvHero(item: TvHeroItem?): Modifier {
     val hero = LocalTvHero.current
     if (hero == null || item == null) return this
-    return onFocusChanged { if (it.hasFocus) hero.item = item }
+    return onFocusChanged { if (it.hasFocus) hero.focus(item) }
 }
 
 /**

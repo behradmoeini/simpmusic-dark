@@ -447,6 +447,8 @@ class RecommendationEngine(
                     }
             }
         }
+        // First the spellings: an artist the history writes one way and Deezer another is one artist.
+        for (key in wanted) deezer[key]?.first?.let { g.alias(SimilarMix.key(it.name), key) }
         var fetched = 0
         for (key in wanted) {
             val node = g.node(key) ?: continue
@@ -457,14 +459,14 @@ class RecommendationEngine(
             l?.first?.let { g.upsert(node.copy(mbid = it)) }
             val deezerLinks =
                 d?.second?.mapIndexedNotNull { index, related ->
-                    val k = SimilarMix.key(related.name).takeIf { it.isNotEmpty() } ?: return@mapIndexedNotNull null
+                    val k = SimilarMix.key(related.name).takeIf { it.isNotEmpty() }?.let { g.canonical(it) } ?: return@mapIndexedNotNull null
                     g.upsert(GraphNode(k, related.name, deezerId = related.id, picture = related.picture))
                     k to ArtistGraph.deezerStrength(index)
                 }
             val best = l?.second?.maxOfOrNull { it.score } ?: 0.0
             val similarLinks =
                 l?.second?.mapNotNull { other ->
-                    val k = SimilarMix.key(other.name).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                    val k = SimilarMix.key(other.name).takeIf { it.isNotEmpty() }?.let { g.canonical(it) } ?: return@mapNotNull null
                     g.upsert(GraphNode(k, other.name, mbid = other.mbid))
                     k to ArtistGraph.listenBrainzStrength(other.score, best)
                 }

@@ -11,7 +11,7 @@ dark streaming-app look and a Podcasts view on Home. The YouTube Music code is u
 | Bottom bar | Full-width Home / Search / Your Library row that fades into black (liquid glass setting still brings back the capsule bar) |
 | Mini player | Card tinted from the artwork, square cover, plain heart and play icons, thin progress line |
 | Chips | Filled grey pills, accent fill when selected |
-| Home | No YouTube Music podcast cards or podcast chart; a "Same vibe, new artists" mix under the first shelf |
+| Home | The All page is built by the fork's own recommender, not by YouTube (see "The own recommender"); no YouTube Music podcast cards or podcast chart |
 | Podcasts | Home's Podcasts chip reads open sources only: fyyd.de for search and trending, each show's RSS feed for episodes, played by the music player |
 | Search | Large title and a white search field |
 | Library | "Your Library" title, + button for a new playlist, Playlists / Podcasts / Downloaded first |
@@ -91,40 +91,77 @@ Android and Desktop. The app remembers where each episode was left (DataStore ke
 Not covered: YouTube podcast results in Search and YouTube podcasts already saved in Library still
 open YouTube pages, and a YouTube radio can still slip in an episode (the queue code is in `core`).
 
-## "Same vibe, new artists"
+## The own recommender
 
-A daily mix on Home (`recommendation/DiscoverMix.kt` for the algorithm, `DiscoverMixLoader.kt` for
-the I/O), built from this device's listening history, so it needs **local tracking** on:
+YouTube's recommendations are not used: not its Home, not its song radio, not its "up next".
+`recommendation/engine/` builds all three on the device. YouTube is still where a song is played
+from and where a song another catalogue names is found (`YouTubeMatcher`), and the Mood chip still
+opens YouTube's mood pages.
 
-1. Seeds: about five artists sampled from the last 30 days' top 15, weighted by the square root of
-   plays (not just the top few), plus one "older favourite" not played in the last 30 days.
-2. Candidates: each seed's related artists on YouTube Music ("Fans might also like").
-3. Novelty: anyone in the play history, followed, or behind a liked song is dropped.
-4. Score: closer to the top of a seed's list counts more, and an artist named by several seeds
-   (between two things you like) counts most.
-5. Diversity: greedy pick of 12 artists with a penalty each time a seed has already supplied one.
-6. Two of each artist's top six songs, not always the biggest hit, skipping songs you have played;
-   interleaved so no artist plays twice in a row. 24 tracks at most.
+How it decides (`TasteEngine.kt`, pure and tested by `TasteEngineTest`):
 
-The mix is fixed for the day and cached; the refresh button builds the next variant.
+1. **Taste.** Every play is a signal, not a count: heard to the end is a yes (1), skipped in the
+   first third is a no (-0.6), in between counts its share, and all of it fades with age. Two
+   profiles are kept, a short one (half-life 14 days) and a long one (180 days), blended 55/45, so
+   a week of one album does not erase years of taste. A like never fades.
+2. **The artist map.** "Listeners of A also play B" links from two independent sources: Deezer's
+   related artists and ListenBrainz's similarity, which is computed from what people play in one
+   sitting (it knows Persian artists; lists are shorter there). A link both name is stronger than
+   either alone (noisy-OR). The map is kept in `files/recommender/artist-map.json` and grows a few
+   artists per build; links are refetched after 45 days.
+3. **The walk.** Candidates are not "the neighbours of the top artists". A personalized PageRank
+   walk starts from the whole taste (or from a radio's song), follows links several steps out and
+   keeps returning home, so an artist reached along many paths from many favourites scores high
+   even when no single favourite names it. The same walk from the artists the listener skips is
+   subtracted, and big stars everyone links to are damped.
+4. **Taste groups.** The listener's artists are grouped by the map (label propagation). Each
+   group gets a share of every shelf, weighted so a small group is heard, and a mix card of its own.
+5. **Learning.** What was offered is logged (`offered.json`). A recommendation played through
+   counts for its artist, a skipped one against, and each artist's chance is drawn from that record
+   (Thompson sampling). A song offered and not played rests for 14 days.
+6. **Order.** The same artist is kept apart; new songs are woven with songs from the history by
+   artists in the same neighbourhood.
 
-## Home shelves from the play history and Deezer
+Where it shows:
 
-Home has five shelves modelled on Spotify's, built from the local play history and Deezer's
-public API (no key; `recommendation/DeezerCatalog.kt`):
+- **Home, All page**: "Your top mixes" (one per taste group), "Like what you play", "Same vibe,
+  new artists" (artists never played), then the history shelves below. The All page does not
+  request YouTube's Home at all. A listener with no history gets Deezer's chart until there is
+  something to learn from. A pull to refresh deals the next set.
+- **Radio**: what follows a song, "Start radio", and the continuation of any queue come from
+  `RecommendationEngine.radio` (core asks it through `OwnRadio`; with no answer it falls back to
+  YouTube's radio so a queue never just stops). It starts mostly from the song's artist plus the
+  part of the listener's taste that is close to that artist, and later batches drift to where the
+  radio has got to. Artists skipped in the last hours of the radio are held back.
+- **After a playlist or album ends**: the endless queue setting is on unless switched off, so the
+  queue carries on with the own radio of its last song.
 
-- **Like what you play** (`SimilarTracksLoader`): unplayed songs by artists Deezer relates to the
-  listener's own. Seeds are sampled by plays, an artist named by several seeds ranks higher,
-  artists already played are discounted, two songs per artist.
-- **Your top mixes**: one card per top artist; a tap plays that artist's Deezer station.
+Limits: the map knows artists, not individual songs' sound (no tempo or mood matching); a
+recommended song is one of the artist's top songs on Deezer, found on YouTube by name, so a wrong
+match is possible; the first build on a new install takes up to a minute because MusicBrainz, which
+turns a name into the id ListenBrainz needs, allows one request a second.
+
+## Home's history shelves
+
+Under the recommender's shelves, three more built from the local play history and Deezer's public
+API (no key; `recommendation/DeezerCatalog.kt`, `HomeShelvesLoader`), once a day, cached in
+DataStore (`home_shelves_cache`):
+
 - **More like <artist>**: the top song of each artist related to one the listener plays.
 - **New releases for you**: releases of the last 120 days by the listener's top artists.
 - **Albums featuring songs you like**: the albums behind the most played songs (local only).
 
-The last four come from `HomeShelvesLoader`. Both loaders build once a day and cache in
-DataStore (`similar_mix_cache`, `home_shelves_cache`). Deezer only supplies names and covers:
-a card is matched on YouTube Music when it is tapped (`YouTubeMatcher`), choosing among the
-first five results the one whose title and artist agree, else the first result.
+Deezer only supplies names and covers: a card is matched on YouTube Music when it is tapped
+(`YouTubeMatcher`), choosing among the first five results the one whose title and artist agree,
+else the first result.
+
+## Starting a song sooner
+
+- The stream URL is no longer held back by a Tidal lookup. Upstream fetched a song's tempo and key
+  from Tidal (for DJ-style crossfades) before handing the URL to the player; it now happens after.
+- `recommendation/StreamPrewarmer.kt` resolves streams ahead: the first four songs of each
+  recommender shelf when it loads, and on a TV the song the remote rests on for half a second. A
+  resolved stream is stored for its lifetime (about six hours) and the player uses it.
 
 ## Library charts: countries and Persian
 

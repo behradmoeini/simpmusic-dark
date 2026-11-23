@@ -97,6 +97,7 @@ internal fun SimilarShelf(viewModel: HomeViewModel) {
                                 title = track.title,
                                 subtitle = track.artists?.joinToString { it.name },
                                 artwork = track.thumbnails?.maxByOrNull { it.width }?.url?.replace(Regex("=w\\d+-h\\d+"), "=w544-h544"),
+                                videoId = track.videoId,
                             ),
                         ).width(140.dp)
                         .clickable { viewModel.playSimilar(index) },
