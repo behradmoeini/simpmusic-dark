@@ -479,6 +479,8 @@ class RecommendationEngine(
         }
         session.batches++
         Logger.i(TAG, "Radio batch ${session.batches}: ${fresh.size} new + ${familiar.size} known from ${chosen.size} artists, map ${g.size}")
+        // Named in the log, so a report of "this radio played something odd" can be checked.
+        Logger.i(TAG, "Radio songs: " + ordered.joinToString(" | ") { (if (it.fresh) "" else "*") + it.track.title + " - " + it.track.artists?.firstOrNull()?.name.orEmpty() }.take(1500))
         return ordered.map { it.track }
     }
 
