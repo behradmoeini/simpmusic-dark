@@ -36,8 +36,16 @@ What is different on a TV (`isTelevision()`, the `leanback` system feature):
 - **Focus is a white outline** (`ui/theme/TvFocus.kt`), provided as `LocalIndication`, plus a strong
   focus tint for Material components that bring their own ripple. The phone's 4% tint is invisible
   from a sofa.
-- **Tabs are a bar across the top** (Home, Search, Library, then Mix and Analytics), the way
-  Spotify's TV app has them, in place of the side rail (`AppNavigationRail(topBar = true)`).
+- **One bar of controls** across the top, in place of the side rail
+  (`AppNavigationRail(topBar = true)`): the name, the tabs (Home, Podcasts, Search, Library, then
+  Mix and Analytics) and Settings. Home's own row of avatar, chips and Create is not drawn on a
+  TV: two rows of controls above the page made it unclear where the remote would go. Podcasts,
+  a chip on a phone, is a tab there (`TvHomeMode`); the Mood chip has no TV counterpart.
+- **A shelf is a title and a row of cards.** The recommender shelves' Play and refresh buttons
+  are not drawn on a TV: Down goes shelf to shelf, Left and Right along the cards, OK plays from
+  that card, holding OK opens "don't recommend this".
+- **A focused card stops above the mini player** (`TvBringIntoViewSpec`'s `coveredEndPx`), so its
+  title can be read.
 - **No blur and no Home glow.** A system trace on the Google TV Streamer showed the app's own work
   under 3 ms a frame while the graphics chip took ~45 ms to paint Home: the glow is five see-through
   layers the width of the screen. Without it Home paints in ~4 ms. Blur is off for the whole tree
@@ -65,6 +73,14 @@ The dev build is **not debuggable** (`isDebuggable = false` in `androidApp/build
 Android runs a debuggable app in its interpreter with nothing compiled, which made every frame take
 about 150 ms on the Streamer. `BuildConfig.DEBUG` follows that flag, so the code reads
 `BuildConfig.DEV_BUILD` instead. To attach a debugger, flip the flag locally.
+
+## Icon and banner
+
+"Listen" in white Helvetica Bold on a navy gradient (`#041023` bottom-left to `#084367` top-right)
+over a cyan bar (`#3DBEEC`): the look of the owner's other TV apps (Watch, شبکه نمایش خانگی in
+`alphadl-tv`). The launcher icons, the adaptive icon (`drawable/ic_launcher_bg.xml` +
+`mipmap-*/ic_launcher_foreground.png`) and the TV tile (`drawable-xhdpi/tv_banner.png`) are
+generated; the TV top bar draws the same mark in Compose.
 
 ## Podcasts from open sources
 
@@ -121,12 +137,27 @@ How it decides (`TasteEngine.kt`, pure and tested by `TasteEngineTest`):
    (Thompson sampling). A song offered and not played rests for 14 days.
 6. **Order.** The same artist is kept apart; new songs are woven with songs from the history by
    artists in the same neighbourhood.
+7. **Scenes.** Label propagation over the whole map groups artists whose listeners overlap, which
+   in practice follows language and country more than genre (Persian pop and Persian rap sit
+   together, apart from Western pop). A radio or a mix rates artists outside the scene it starts
+   in at 0.15, so a Persian song's radio stays Persian without any catalogue stating a language.
+8. **Hidden.** A long press on a recommended song (holding OK on a TV remote) offers "Don't
+   recommend this song" and "Don't recommend <artist>" (`ui/screen/home/RecommendationActions.kt`,
+   stored in `hidden.json`). A hidden artist is never picked, alone or as a guest, and counts
+   against the artists near them the way a skipped artist does. The same menu lists what is hidden
+   and brings it back.
+
+A device with little history of its own (under 150 plays: a TV just signed in) also reads the
+signed-in account's listening history and liked songs from YouTube Music. That is what the
+listener played, not what YouTube suggests.
 
 Where it shows:
 
-- **Home, All page**: "Your top mixes" (one per taste group), "Like what you play", "Same vibe,
-  new artists" (artists never played), then the history shelves below. The All page does not
-  request YouTube's Home at all. A listener with no history gets Deezer's chart until there is
+- **Home, All page**: "Your top mixes" (one per taste group; a mix opens with up to three songs
+  by the artist on its card, and a group whose artists the catalogue does not know gets no card),
+  "Like what you play", "Same vibe, new artists" (artists never played), then the history shelves
+  below. The All page does not request YouTube's Home at all, and YouTube's chart block (video
+  charts, top artists, trending) is not on it. A listener with no history gets Deezer's chart until there is
   something to learn from. A pull to refresh deals the next set.
 - **Radio**: what follows a song, "Start radio", and the continuation of any queue come from
   `RecommendationEngine.radio` (core asks it through `OwnRadio`; with no answer it falls back to
