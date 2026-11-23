@@ -105,6 +105,8 @@ import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreen
 import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreenContent
 import com.maxrave.simpmusic.ui.screen.player.TvNowPlaying
 import com.maxrave.simpmusic.ui.component.TvIdle
+import com.maxrave.simpmusic.ui.component.TvPageFocus
+import com.maxrave.simpmusic.ui.component.tvUpTo
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.maxrave.simpmusic.ui.theme.AppTheme
 import com.maxrave.simpmusic.ui.theme.ForceDarkContent
@@ -643,7 +645,8 @@ fun App(
                     val tabletMiniPlayer: @Composable (Modifier) -> Unit = { modifier ->
                         androidx.compose.animation.AnimatedVisibility(
                             visible = isShowMiniPlayer && isTablet && !isInFullscreen,
-                            modifier = modifier,
+                            // Up from the mini player leads into the page, not past it to the top bar.
+                            modifier = modifier.tvUpTo(TvPageFocus.requester),
                             enter = fadeIn() + slideInHorizontally(),
                             exit = fadeOut(),
                         ) {

@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -29,7 +30,35 @@ import com.maxrave.simpmusic.expect.ui.isTelevision
  */
 
 /** Marks the page a header's Down key leads to. */
-fun Modifier.tvPage(page: FocusRequester): Modifier = focusRequester(page).focusGroup()
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+fun Modifier.tvPage(page: FocusRequester): Modifier =
+    focusRequester(page)
+        // The same page under a name the app's own bars know (see [TvPageFocus]).
+        .focusRequester(TvPageFocus.requester)
+        // Coming back to the page returns to the card it was left on, not to its first one.
+        .focusRestorer()
+        .focusGroup()
+
+/**
+ * The page of whichever screen is showing, for the bars that sit outside every screen: the TV's
+ * top bar above it and the mini player below. Arrow-key focus search judges by geometry alone, and
+ * with the page running under both bars it went from the top bar straight to the mini player and
+ * back, skipping the page between them (seen on the Google TV Streamer, 2026-11-23: Down from the
+ * Search tab landed on the mini player, Up from the mini player on the top bar). Those two hand
+ * the key to the page by this name instead.
+ */
+object TvPageFocus {
+    val requester = FocusRequester()
+}
+
+/** Up from here leads to [page]; the counterpart of [tvDownTo], for what sits below a page. */
+@Composable
+fun Modifier.tvUpTo(page: FocusRequester): Modifier {
+    if (!isTelevision()) return this
+    return onPreviewKeyEvent { event ->
+        event.type == KeyEventType.KeyDown && event.key == Key.DirectionUp && runCatching { page.requestFocus() }.isSuccess
+    }
+}
 
 /**
  * On a TV, Down from anything inside this header moves focus into [page]. When the page is not on
