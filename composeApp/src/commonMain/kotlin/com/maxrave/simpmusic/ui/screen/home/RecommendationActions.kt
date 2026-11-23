@@ -107,6 +107,48 @@ internal fun Modifier.songCardActions(
     }.clickable(onClick = onClick)
 }
 
+/** Repeats of a held key arrive closer together than this; a key-down after a longer quiet is a new press. */
+private const val REPEAT_GAP_MS = 300L
+
+/**
+ * For a menu opened by holding OK: the key is usually still down when the menu appears, and the
+ * menu's first row would take its repeats and its release as a click. OK is swallowed until the
+ * held key comes up, or until a key-down arrives after a quiet gap (a remote that sent no
+ * repeats opened the menu on release, so its next key-down is already a new press).
+ */
+@Composable
+internal fun Modifier.ignoreHeldOk(): Modifier {
+    val guard = remember { HeldOk(System.currentTimeMillis()) }
+    return onPreviewKeyEvent { event ->
+        if (guard.released) return@onPreviewKeyEvent false
+        if (event.key != Key.DirectionCenter && event.key != Key.Enter && event.key != Key.NumPadEnter) return@onPreviewKeyEvent false
+        val now = System.currentTimeMillis()
+        val quiet = now - guard.lastEventAt > REPEAT_GAP_MS
+        guard.lastEventAt = now
+        when {
+            event.type == KeyEventType.KeyDown && quiet -> {
+                guard.released = true
+                false
+            }
+
+            event.type == KeyEventType.KeyUp -> {
+                guard.released = true
+                true
+            }
+
+            else -> {
+                true
+            }
+        }
+    }
+}
+
+private class HeldOk(
+    var lastEventAt: Long,
+) {
+    var released = false
+}
+
 private class OkPress {
     var downAt = 0L
     var lastEventAt = 0L
@@ -126,6 +168,7 @@ internal fun HideMenu(
     val artist = track.artists?.firstOrNull()?.name.orEmpty()
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.ignoreHeldOk(),
         title = {
             Text(
                 text = if (managing) stringResource(Res.string.hidden_title) else track.title,
