@@ -46,6 +46,19 @@ What is different on a TV (`isTelevision()`, the `leanback` system feature):
   that card, holding OK opens "don't recommend this".
 - **A focused card stops above the mini player** (`TvBringIntoViewSpec`'s `coveredEndPx`), so its
   title can be read.
+- **Where the remote goes.** Down from the top bar leads into the screen under it: its header if
+  it marks one (Search's field, `TvPageFocus.header`), else its page (`tvPage`), else whatever the
+  screen holds (`tvContent` around the navigation graph), asked in that order (`tvDownToScreen`).
+  `FocusRequester.requestFocus()` answers false for a target that is absent; it does not throw, so
+  "did not throw" must not be read as "took focus" (`tvTake`). A page opened from inside another
+  takes the remote with it, and so do search results once they arrive; otherwise focus falls back
+  to the Home tab when the pressed card goes away.
+- **The player.** A song started from a page opens `TvNowPlaying` at once; it also opens by itself
+  after 90 seconds without a key while music plays. Twenty seconds idle there leaves the cover
+  and the lyrics only; any key brings the buttons back with Play selected. Back closes it through
+  `PlatformBackHandler`: on Android 14 Back does not arrive in a dialog as a key event. Lyric
+  lines are not focusable on a TV. Thumbs-down offers "Don't recommend" for the song or the
+  artist; choosing the artist also steps past every song of theirs still in the queue.
 - **No blur and no Home glow.** A system trace on the Google TV Streamer showed the app's own work
   under 3 ms a frame while the graphics chip took ~45 ms to paint Home: the glow is five see-through
   layers the width of the screen. Without it Home paints in ~4 ms. Blur is off for the whole tree
