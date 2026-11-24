@@ -1099,7 +1099,7 @@
     <string name="home_release_album">Album</string>
     <string name="home_release_ep">EP</string>
     <string name="home_albums_you_like">Albums featuring songs you like</string>
-    <string name="home_shelf_not_found">Couldn\'t find it on YouTube Music</string>
+    <string name="home_shelf_not_found">Couldn't find it on YouTube Music</string>
     <string name="discover_mix_title">Same vibe, new artists</string>
     <string name="discover_mix_subtitle">Artists you haven't played yet, close to what you listen to</string>
     <string name="discover_mix_play">Play mix</string>
