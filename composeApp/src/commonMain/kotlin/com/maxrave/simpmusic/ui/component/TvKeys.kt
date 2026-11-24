@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -49,6 +50,54 @@ fun Modifier.tvPage(page: FocusRequester): Modifier =
  */
 object TvPageFocus {
     val requester = FocusRequester()
+
+    /**
+     * A screen's own header, where Down from the top bar should stop before the page: Search's
+     * field, which the page name alone skipped (Down from the Search tab landed on the first mood
+     * card, and the field took Down, Up, Up to reach; seen 2026-11-23).
+     */
+    val header = FocusRequester()
+
+    /**
+     * Whatever screen is showing, for the many that mark no page of their own. An artist's page
+     * runs its picture up under the top bar, so Down from the bar found nothing by geometry and the
+     * page could not be entered with a remote at all (seen 2026-11-23).
+     */
+    val content = FocusRequester()
+
+    /** Whether the remote is inside the screen rather than on a bar; written by [tvContent]. */
+    @Volatile
+    var inContent: Boolean = false
+
+    /** When the remote last left the screen (a page closing under it counts). */
+    @Volatile
+    var leftContentAt: Long = 0L
+}
+
+/** Marks the area every screen is drawn in (see [TvPageFocus.content]). */
+fun Modifier.tvContent(): Modifier =
+    onFocusChanged {
+        if (TvPageFocus.inContent && !it.hasFocus) TvPageFocus.leftContentAt = System.currentTimeMillis()
+        TvPageFocus.inContent = it.hasFocus
+    }.focusRequester(TvPageFocus.content)
+        .focusGroup()
+
+/**
+ * Down from the app's top bar: the screen's header if it marked one, else its page, else whatever
+ * the screen has. A requester nothing carries throws, which is how the next one gets its turn.
+ */
+@Composable
+fun Modifier.tvDownToScreen(): Modifier {
+    if (!isTelevision()) return this
+    return onPreviewKeyEvent { event ->
+        event.type == KeyEventType.KeyDown &&
+            event.key == Key.DirectionDown &&
+            (
+                runCatching { TvPageFocus.header.requestFocus() }.isSuccess ||
+                    runCatching { TvPageFocus.requester.requestFocus() }.isSuccess ||
+                    runCatching { TvPageFocus.content.requestFocus() }.isSuccess
+            )
+    }
 }
 
 /** Up from here leads to [page]; the counterpart of [tvDownTo], for what sits below a page. */

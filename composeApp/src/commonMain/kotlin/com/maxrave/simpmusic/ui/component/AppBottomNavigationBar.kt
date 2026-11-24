@@ -542,7 +542,7 @@ fun AppNavigationRail(
                     .fillMaxWidth()
                     .height(TvTopBarHeight)
                     // Down from any tab leads into the page, not past it to the mini player.
-                    .tvDownTo(TvPageFocus.requester)
+                    .tvDownToScreen()
                     .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

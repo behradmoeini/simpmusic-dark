@@ -105,8 +105,10 @@ import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreen
 import com.maxrave.simpmusic.ui.screen.player.NowPlayingScreenContent
 import com.maxrave.simpmusic.ui.screen.player.TvNowPlaying
 import com.maxrave.simpmusic.ui.component.TvIdle
+import com.maxrave.simpmusic.ui.component.TvDevice
 import com.maxrave.simpmusic.ui.component.TvPageFocus
 import com.maxrave.simpmusic.ui.component.tvUpTo
+import com.maxrave.simpmusic.ui.component.tvContent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.maxrave.simpmusic.ui.theme.AppTheme
 import com.maxrave.simpmusic.ui.theme.ForceDarkContent
@@ -516,6 +518,26 @@ fun App(
     var isScrolledToTop by rememberSaveable {
         mutableStateOf(false)
     }
+    // On a TV a page opened from inside another takes the remote with it. The card that was
+    // pressed goes away with its page, and focus then fell back to the first thing on screen, the
+    // Home tab: after opening an artist the remote sat in the top bar (seen 2026-11-23). A page
+    // chosen from the top bar leaves the remote on its tab, and any key press ends the wait.
+    val tvEntryId = navBackStackEntry?.id
+    LaunchedEffect(tvEntryId) {
+        if (!TvDevice.isTv || tvEntryId == null) return@LaunchedEffect
+        val startedAt = System.currentTimeMillis()
+        if (!TvPageFocus.inContent && startedAt - TvPageFocus.leftContentAt > 600) return@LaunchedEffect
+        repeat(14) {
+            kotlinx.coroutines.delay(150)
+            if (TvIdle.lastKeyAt > startedAt) return@LaunchedEffect
+            if (!TvPageFocus.inContent) {
+                if (runCatching { TvPageFocus.requester.requestFocus() }.isFailure) {
+                    runCatching { TvPageFocus.content.requestFocus() }
+                }
+            }
+        }
+    }
+
     val isTablet = windowSize.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isTabletLandscape = isTablet && currentOrientation() == Orientation.LANDSCAPE
     val onTv = isTelevision()
@@ -767,6 +789,7 @@ fun App(
                                         Modifier
                                             .fillMaxSize()
                                             .then(if (tvTopBar) Modifier.padding(top = TvTopBarHeight) else Modifier)
+                                            .then(if (onTv) Modifier.tvContent() else Modifier)
                                             .then(
                                                 // Tablets record the capsule's source here; Desktop records it on
                                                 // the Row above, which takes in the sidebar as well.

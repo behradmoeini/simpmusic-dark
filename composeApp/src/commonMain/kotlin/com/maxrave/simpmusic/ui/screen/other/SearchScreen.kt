@@ -66,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -113,6 +114,9 @@ import com.maxrave.simpmusic.extension.getScreenSizeInfo
 import com.maxrave.simpmusic.extension.ultraThinBarStyle
 import com.maxrave.simpmusic.getPlatform
 import com.maxrave.simpmusic.ui.component.HidePullIndicatorOnKeys
+import com.maxrave.simpmusic.ui.component.TvDevice
+import com.maxrave.simpmusic.ui.component.TvIdle
+import com.maxrave.simpmusic.ui.component.TvPageFocus
 import com.maxrave.simpmusic.ui.component.tvDownTo
 import com.maxrave.simpmusic.ui.component.tvPage
 import com.maxrave.simpmusic.ui.component.AddToPlaylistModalBottomSheet
@@ -203,6 +207,21 @@ fun SearchScreen(
 
     val focusRequester = remember { FocusRequester() }
     val pageFocus = remember { FocusRequester() }
+    // Whether the remote is in the page under the header (results, mood cards).
+    var pageHasFocus by remember { mutableStateOf(false) }
+    // On a TV the results take the remote once they are in. Submitting closes the field the
+    // remote was typing in, and focus then fell back to the Home tab in the top bar (seen
+    // 2026-11-23). The results arrive a moment later, so this asks until one of them has it; a key
+    // press means the person is steering and ends the wait.
+    LaunchedEffect(searchUIType) {
+        if (!TvDevice.isTv || searchUIType != SearchUIType.SEARCH_RESULTS) return@LaunchedEffect
+        val startedAt = System.currentTimeMillis()
+        repeat(20) {
+            delay(250)
+            if (pageHasFocus || TvIdle.lastKeyAt > startedAt) return@LaunchedEffect
+            runCatching { pageFocus.requestFocus() }
+        }
+    }
 
     var isFocused by rememberSaveable { mutableStateOf(false) }
 
@@ -437,7 +456,7 @@ fun SearchScreen(
         // equal to the bar's measured height to keep its first item clear of it.
         Crossfade(
             targetState = searchUIType,
-            modifier = Modifier.fillMaxSize().tvPage(pageFocus).then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
+            modifier = Modifier.fillMaxSize().onFocusChanged { pageHasFocus = it.hasFocus }.tvPage(pageFocus).then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
         ) {
             when (it) {
                 SearchUIType.SEARCH_SUGGESTIONS -> {
@@ -1094,6 +1113,9 @@ fun SearchScreen(
                         // Down from the field (which would keep the key for its cursor) or from
                         // the filter chips leads to the page; Up from the page finds them again.
                         .tvDownTo(pageFocus)
+                        // Down from the app's top bar stops at the field first (see TvPageFocus.header).
+                        .focusRequester(TvPageFocus.header)
+                        .focusGroup()
                         .windowInsetsPadding(WindowInsets.statusBars)
                         .padding(vertical = 10.dp),
             ) {
