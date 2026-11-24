@@ -132,9 +132,26 @@ fun TvNowPlaying(
     val scope = rememberCoroutineScope()
     val accent = MaterialTheme.colorScheme.primary
     val playFocus = remember { FocusRequester() }
+    // The whole view, for when it holds no button. A key reaches the handler below only through
+    // something focused; the ambient view removes every button, and Back then did nothing at all
+    // while only an arrow key brought the controls back, with none of them selected (2026-11-23).
+    val viewFocus = remember { FocusRequester() }
     var lastKeyAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var ambient by remember { mutableStateOf(false) }
     var hideMenu by remember { mutableStateOf(false) }
+
+    // The remote is always somewhere: on the view itself while it is ambient, on Play again once
+    // the controls are back (they take a moment to return, hence the second try).
+    LaunchedEffect(ambient) {
+        if (ambient) {
+            runCatching { viewFocus.requestFocus() }
+        } else {
+            repeat(2) {
+                delay(250)
+                runCatching { playFocus.requestFocus() }
+            }
+        }
+    }
 
     LaunchedEffect(control.isPlaying) {
         while (true) {
@@ -170,7 +187,9 @@ fun TvNowPlaying(
                             }
                         }
                         false
-                    }.padding(horizontal = 40.dp, vertical = 32.dp),
+                    }.focusRequester(viewFocus)
+                    .focusable()
+                    .padding(horizontal = 40.dp, vertical = 32.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // The cover stays in both views; in the ambient one it is all the left side holds.
