@@ -286,7 +286,21 @@ fun TvNowPlaying(
                                     hideMenu = false
                                     scope.launch {
                                         engine.hideArtist(artist)
-                                        sharedViewModel.onUIEvent(UIEvent.Next)
+                                        // The queue was made before this and may hold more of
+                                        // theirs (the next song was the same artist's, seen
+                                        // 2026-11-23): step past each one, not just this song.
+                                        var steps = 0
+                                        do {
+                                            val before = sharedViewModel.nowPlayingState.value?.songEntity?.videoId
+                                            sharedViewModel.onUIEvent(UIEvent.Next)
+                                            kotlinx.coroutines.withTimeoutOrNull(4_000) {
+                                                while (sharedViewModel.nowPlayingState.value?.songEntity?.videoId == before) delay(100)
+                                            }
+                                            val now = sharedViewModel.nowPlayingState.value?.songEntity
+                                            val theirs =
+                                                now?.videoId != before &&
+                                                    now?.artistName.orEmpty().any { it.trim().equals(artist.trim(), ignoreCase = true) }
+                                        } while (++steps < 20 && theirs)
                                     }
                                 }) { Text(stringResource(Res.string.hide_artist, artist)) }
                             }

@@ -676,7 +676,9 @@ fun LyricsView(
                                             if (appleStyle) {
                                                 Modifier
                                             } else {
-                                                Modifier.clickable {
+                                                // Not on a TV: a line that takes the remote is a stop
+                                                // between the player's buttons that seeks when pressed.
+                                                Modifier.clickable(enabled = !TvDevice.isTv) {
                                                     onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                                 }
                                             },
@@ -705,7 +707,7 @@ fun LyricsView(
                                         romanizedWords = romanizedWords,
                                         modifier =
                                             Modifier
-                                                .clickable {
+                                                .clickable(enabled = !TvDevice.isTv) {
                                                     onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                                 },
                                     )
@@ -738,7 +740,7 @@ fun LyricsView(
                                     isCurrent = index == currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
                                     modifier =
                                         Modifier
-                                            .clickable(enabled = lyricsData.lyrics.syncType == "LINE_SYNCED") {
+                                            .clickable(enabled = !TvDevice.isTv && lyricsData.lyrics.syncType == "LINE_SYNCED") {
                                                 onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                             },
                                 )
@@ -772,8 +774,9 @@ fun LyricsView(
                                     ).clickable(
                                         interactionSource = lineInteraction,
                                         indication = null,
-                                        enabled = lyricsData.lyrics.syncType == "LINE_SYNCED" ||
-                                            lyricsData.lyrics.syncType == "RICH_SYNCED",
+                                        enabled = !TvDevice.isTv &&
+                                            (lyricsData.lyrics.syncType == "LINE_SYNCED" ||
+                                                lyricsData.lyrics.syncType == "RICH_SYNCED"),
                                     ) {
                                         onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                     },
