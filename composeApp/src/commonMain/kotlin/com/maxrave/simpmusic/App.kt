@@ -109,6 +109,7 @@ import com.maxrave.simpmusic.ui.component.TvDevice
 import com.maxrave.simpmusic.ui.component.TvPageFocus
 import com.maxrave.simpmusic.ui.component.tvUpTo
 import com.maxrave.simpmusic.ui.component.tvContent
+import com.maxrave.simpmusic.ui.component.tvTake
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.maxrave.simpmusic.ui.theme.AppTheme
 import com.maxrave.simpmusic.ui.theme.ForceDarkContent
@@ -531,9 +532,7 @@ fun App(
             kotlinx.coroutines.delay(150)
             if (TvIdle.lastKeyAt > startedAt) return@LaunchedEffect
             if (!TvPageFocus.inContent) {
-                if (runCatching { TvPageFocus.requester.requestFocus() }.isFailure) {
-                    runCatching { TvPageFocus.content.requestFocus() }
-                }
+                if (!TvPageFocus.requester.tvTake()) TvPageFocus.content.tvTake()
             }
         }
     }

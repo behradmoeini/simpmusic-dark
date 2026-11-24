@@ -84,7 +84,7 @@ fun Modifier.tvContent(): Modifier =
 
 /**
  * Down from the app's top bar: the screen's header if it marked one, else its page, else whatever
- * the screen has. A requester nothing carries throws, which is how the next one gets its turn.
+ * the screen has, each asked in turn until one takes the remote (see [tvTake]).
  */
 @Composable
 fun Modifier.tvDownToScreen(): Modifier {
@@ -93,9 +93,9 @@ fun Modifier.tvDownToScreen(): Modifier {
         event.type == KeyEventType.KeyDown &&
             event.key == Key.DirectionDown &&
             (
-                runCatching { TvPageFocus.header.requestFocus() }.isSuccess ||
-                    runCatching { TvPageFocus.requester.requestFocus() }.isSuccess ||
-                    runCatching { TvPageFocus.content.requestFocus() }.isSuccess
+                TvPageFocus.header.tvTake() ||
+                    TvPageFocus.requester.tvTake() ||
+                    TvPageFocus.content.tvTake()
             )
     }
 }
@@ -105,7 +105,7 @@ fun Modifier.tvDownToScreen(): Modifier {
 fun Modifier.tvUpTo(page: FocusRequester): Modifier {
     if (!isTelevision()) return this
     return onPreviewKeyEvent { event ->
-        event.type == KeyEventType.KeyDown && event.key == Key.DirectionUp && runCatching { page.requestFocus() }.isSuccess
+        event.type == KeyEventType.KeyDown && event.key == Key.DirectionUp && page.tvTake()
     }
 }
 
@@ -119,7 +119,7 @@ fun Modifier.tvDownTo(page: FocusRequester): Modifier {
     return onPreviewKeyEvent { event ->
         event.type == KeyEventType.KeyDown &&
             event.key == Key.DirectionDown &&
-            runCatching { page.requestFocus() }.isSuccess
+            page.tvTake()
     }
 }
 
@@ -153,3 +153,11 @@ object TvIdle {
     @Volatile
     var lastKeyAt: Long = System.currentTimeMillis()
 }
+
+/**
+ * Asks for focus and says whether anything took it. A requester that no node carries answers false
+ * (older Compose threw; this one only logs), and so does a group with nothing focusable in it.
+ * Counting "did not throw" as taken is what left Down dead on an artist's page: the first, absent
+ * target was believed and the key was swallowed (2026-11-23).
+ */
+fun FocusRequester.tvTake(): Boolean = runCatching { requestFocus() }.getOrDefault(false)
