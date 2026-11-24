@@ -70,6 +70,7 @@ import com.maxrave.domain.mediaservice.handler.RepeatState
 import com.maxrave.simpmusic.extension.KeepScreenOn
 import com.maxrave.simpmusic.extension.formatDuration
 import com.maxrave.simpmusic.recommendation.engine.RecommendationEngine
+import com.maxrave.simpmusic.expect.ui.PlatformBackHandler
 import com.maxrave.simpmusic.ui.component.LyricsView
 import com.maxrave.simpmusic.ui.component.rememberHolderPainter
 import com.maxrave.simpmusic.ui.icon.Favorite
@@ -174,6 +175,10 @@ fun TvNowPlaying(
     ) {
         ForceDarkContent {
             KeepScreenOn()
+            // Back, as the system reports it to this window. On the Google TV Streamer (Android 14)
+            // it does not arrive as a key at all, so the key handler below never saw it and Back
+            // did nothing here (seen 2026-11-24); that handler stays for a keyboard's Escape.
+            PlatformBackHandler(enabled = !hideMenu, onBack = onDismiss)
             Row(
                 Modifier
                     .fillMaxSize()
