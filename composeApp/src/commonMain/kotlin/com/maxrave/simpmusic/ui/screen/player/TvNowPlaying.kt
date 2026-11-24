@@ -144,7 +144,12 @@ fun TvNowPlaying(
     // the controls are back (they take a moment to return, hence the second try).
     LaunchedEffect(ambient) {
         if (ambient) {
-            runCatching { viewFocus.requestFocus() }
+            // The buttons fade out first and take focus with them when they go, so asking once,
+            // while they are still there, left nothing focused. Ask again until they are gone.
+            repeat(6) {
+                runCatching { viewFocus.requestFocus() }
+                delay(200)
+            }
         } else {
             repeat(2) {
                 delay(250)
