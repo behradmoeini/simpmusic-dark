@@ -922,6 +922,25 @@ fun App(
                     // Left alone while music plays, a TV shows the player by itself: the cover and
                     // the lyrics instead of a page nobody is steering (and instead of the system
                     // screensaver, which the player keeps away by holding the screen on).
+                    // A song started from a page opens the player, the way TV music apps do: it
+                    // was otherwise reached only through the mini player, which sits below the
+                    // whole of a long list (20 rows of Down on a search, seen 2026-11-23). Only a
+                    // song the person just chose counts: a key within the last few seconds, with
+                    // the remote in the page, so neither the queue moving on by itself nor the
+                    // mini player's own buttons open it. The song restored at launch is skipped.
+                    val tvSongId = nowPlayingData?.mediaItem?.mediaId
+                    var tvLastSongId by remember { mutableStateOf<String?>(null) }
+                    var tvSongSeen by remember { mutableStateOf(false) }
+                    LaunchedEffect(tvSongId) {
+                        val first = !tvSongSeen
+                        tvSongSeen = true
+                        val changed = !tvSongId.isNullOrEmpty() && tvSongId != tvLastSongId
+                        tvLastSongId = tvSongId
+                        if (first || !changed || isInFullscreen) return@LaunchedEffect
+                        if (TvPageFocus.inContent && System.currentTimeMillis() - TvIdle.lastKeyAt < TV_PLAYER_AFTER_CHOICE_MS) {
+                            isShowNowPlaylistScreen = true
+                        }
+                    }
                     val playing by viewModel.controllerState.collectAsStateWithLifecycle()
                     LaunchedEffect(playing.isPlaying, isShowNowPlaylistScreen, isInFullscreen) {
                         if (!playing.isPlaying || isShowNowPlaylistScreen || isInFullscreen) return@LaunchedEffect
@@ -1194,3 +1213,6 @@ fun App(
 
 /** How long a TV is left alone, while music plays, before the player opens by itself. */
 private const val TV_PLAYER_AFTER_IDLE_MS = 90_000L
+
+/** How recent a key press must be for a song change to count as the person's own choice. */
+private const val TV_PLAYER_AFTER_CHOICE_MS = 4_000L
