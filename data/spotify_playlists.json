@@ -1,10 +1,19 @@
 {
-  "updated": "2026-11-23T13:05:22+00:00",
+  "updated": "2026-11-24T13:53:38+00:00",
   "playlists": [
     {
       "id": "2YZfv7FxCf9zdkshysPkJ2",
       "name": "Trending Persian Songs 2026 | آهنگ‌های ترند ۲۰۲۶ ایرانی",
       "tracks": [
+        {
+          "uri": "spotify:track:17puqk1XyX86XV6JBZezJv",
+          "title": "Dadi Be Baad",
+          "artists": [
+            "Aaren"
+          ],
+          "durationMs": 176333,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0267b94c5f0b1d3323ba949bf4"
+        },
         {
           "uri": "spotify:track:5qfVF4HMBWMAKn6D9FnW1n",
           "title": "To Hamishe Bekhand",
@@ -17,23 +26,13 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02c07a645ec947e86960bc50f9"
         },
         {
-          "uri": "spotify:track:17puqk1XyX86XV6JBZezJv",
-          "title": "Dadi Be Baad",
+          "uri": "spotify:track:3ZSldszgdY12V4agr7rK3w",
+          "title": "Khoneye Amn",
           "artists": [
-            "Aaren"
+            "Arshiyas"
           ],
-          "durationMs": 176333,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0267b94c5f0b1d3323ba949bf4"
-        },
-        {
-          "uri": "spotify:track:3QGeaMgacgiTZoA04cRknc",
-          "title": "TORONTO",
-          "artists": [
-            "Arta",
-            "Arman Miladi"
-          ],
-          "durationMs": 130074,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e024daad589bbd02cbe0a4433c8"
+          "durationMs": 176470,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02b62d762afd31314b3e6ec479"
         },
         {
           "uri": "spotify:track:0mB78ZZbH1wPNFWRrNel3Q",
@@ -43,15 +42,6 @@
           ],
           "durationMs": 164022,
           "artwork": "https://i.scdn.co/image/ab67616d00001e029d7c8777583464eb5f7749ab"
-        },
-        {
-          "uri": "spotify:track:3ZSldszgdY12V4agr7rK3w",
-          "title": "Khoneye Amn",
-          "artists": [
-            "Arshiyas"
-          ],
-          "durationMs": 176470,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02b62d762afd31314b3e6ec479"
         },
         {
           "uri": "spotify:track:34szZNZHh3fPaD1rheO1xK",
@@ -72,13 +62,33 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02919f649914e11bebe06cbef7"
         },
         {
-          "uri": "spotify:track:63ErWLyWhkxVMhU5WDRvls",
-          "title": "Kolbe",
+          "uri": "spotify:track:2wTQt9hoKPsvDxxCaMm0E2",
+          "title": "Midoonam Eshtebas",
           "artists": [
-            "Babak Jahanbakhsh"
+            "Sirvan Khosravi"
           ],
-          "durationMs": 189815,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0298baebe560ba0bfd4e2e0dc5"
+          "durationMs": 233445,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02b18150553358b287720a6c77"
+        },
+        {
+          "uri": "spotify:track:3QGeaMgacgiTZoA04cRknc",
+          "title": "TORONTO",
+          "artists": [
+            "Arta",
+            "Arman Miladi"
+          ],
+          "durationMs": 130074,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e024daad589bbd02cbe0a4433c8"
+        },
+        {
+          "uri": "spotify:track:6AV4zN05o40qU53HBlRAcg",
+          "title": "Sekte",
+          "artists": [
+            "Shayan Yo",
+            "Tber Beats"
+          ],
+          "durationMs": 192000,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0249917c147827148c645dfcdc"
         },
         {
           "uri": "spotify:track:2dxzLtrEjGKGpRIcxSrSNr",
@@ -91,23 +101,23 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02e092cadc10a909af09910762"
         },
         {
+          "uri": "spotify:track:63ErWLyWhkxVMhU5WDRvls",
+          "title": "Kolbe",
+          "artists": [
+            "Babak Jahanbakhsh"
+          ],
+          "durationMs": 189815,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0298baebe560ba0bfd4e2e0dc5"
+        },
+        {
           "uri": "spotify:track:3ab6Gu1lAh2T8kuBJzpUeb",
           "title": "In Shaba",
           "artists": [
-            "Dekamond"
+            "Dekamond",
+            "Xaniar Khosravi"
           ],
           "durationMs": 223935,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02407421ab520a77a14b1a2770"
-        },
-        {
-          "uri": "spotify:track:6AV4zN05o40qU53HBlRAcg",
-          "title": "Sekte",
-          "artists": [
-            "Shayan Yo",
-            "Tber Beats"
-          ],
-          "durationMs": 192000,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0249917c147827148c645dfcdc"
         },
         {
           "uri": "spotify:track:3OvCzMRsQaiOuf0VWbWTTj",
@@ -185,17 +195,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e024b831cc32906053a170221bd"
         },
         {
-          "uri": "spotify:track:76pfGRr1TiOUeaFW8vpVZd",
-          "title": "SEPAR (Shield)",
-          "artists": [
-            "Reza Pishro",
-            "Tech N9ne",
-            "Yas"
-          ],
-          "durationMs": 433188,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02b52455cd4d817dbdae33e717"
-        },
-        {
           "uri": "spotify:track:6SV262pugwHrH5RmecOmCr",
           "title": "Hezar Omid",
           "artists": [
@@ -237,6 +236,17 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02f8b4bf4ac9e4654ad9887ccc"
         },
         {
+          "uri": "spotify:track:76pfGRr1TiOUeaFW8vpVZd",
+          "title": "SEPAR (Shield)",
+          "artists": [
+            "Reza Pishro",
+            "Tech N9ne",
+            "Yas"
+          ],
+          "durationMs": 433188,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02b52455cd4d817dbdae33e717"
+        },
+        {
           "uri": "spotify:track:7A9k75Ej5xygwRXlgrodX8",
           "title": "Avaz Nemishi",
           "artists": [
@@ -246,13 +256,13 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02665a8630c6dfa0d6fcd8e977"
         },
         {
-          "uri": "spotify:track:7voKb3v5JOIvbv1c06vHZo",
-          "title": "Bemoonam",
+          "uri": "spotify:track:1xrxlD6d2jeGRkxSLMkqMG",
+          "title": "Almas",
           "artists": [
-            "Sami Beigi"
+            "Baran"
           ],
-          "durationMs": 197368,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e027acf113450c50d54cba67698"
+          "durationMs": 144750,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0244cf3a9b2f3b169c978b4b9b"
         },
         {
           "uri": "spotify:track:1alAQK5OUMC52cc1TEOWhy",
@@ -265,33 +275,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02603cc10e3eb21992e78ea9d9"
         },
         {
-          "uri": "spotify:track:1xrxlD6d2jeGRkxSLMkqMG",
-          "title": "Almas",
-          "artists": [
-            "Baran"
-          ],
-          "durationMs": 144750,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0244cf3a9b2f3b169c978b4b9b"
-        },
-        {
-          "uri": "spotify:track:1UGwJwZr2yIzFb6ODH2ErG",
-          "title": "WIND",
-          "artists": [
-            "Dorcci"
-          ],
-          "durationMs": 167500,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0229a7d5060a3f165a5d0c9d46"
-        },
-        {
-          "uri": "spotify:track:4z0iHB9SilkAcFiqFOvXe8",
-          "title": "Ki Eshgho Yade Man Dad",
-          "artists": [
-            "The Don"
-          ],
-          "durationMs": 310595,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e022bf01d23eae488f99684e6fb"
-        },
-        {
           "uri": "spotify:track:6Qvgoi6DlrRHuCrbsfVL8K",
           "title": "Ghavi Oomadi",
           "artists": [
@@ -299,33 +282,6 @@
           ],
           "durationMs": 218406,
           "artwork": "https://i.scdn.co/image/ab67616d00001e0205e7415c1c6f5232fa8c879f"
-        },
-        {
-          "uri": "spotify:track:4aafzUxcoGRLOqmavY0BJc",
-          "title": "Door Shodi",
-          "artists": [
-            "Shadmehr Aghili"
-          ],
-          "durationMs": 192052,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02a13c0dc1eca0b783c68ab9dd"
-        },
-        {
-          "uri": "spotify:track:36pnq7bjPp09r4Hsi8HN69",
-          "title": "Tanha Eshghe Man",
-          "artists": [
-            "Younes Bayat"
-          ],
-          "durationMs": 153230,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02f41133899b12f4be6c462681"
-        },
-        {
-          "uri": "spotify:track:6mxefoz18LrKWYEnf83Wvp",
-          "title": "Gole sangam",
-          "artists": [
-            "Sogand"
-          ],
-          "durationMs": 178494,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0292968b7a32d6e750e1830f06"
         },
         {
           "uri": "spotify:track:71okYtfgAJazRfjAV6aoFb",
@@ -337,6 +293,44 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e027a71f7dba80d8e8cef22666e"
         },
         {
+          "uri": "spotify:track:4FmUobPhpDHSrWTs3DYsMS",
+          "title": "Be Yadet",
+          "artists": [
+            "Mehrad Hidden",
+            "Amirali",
+            "TEHRAN"
+          ],
+          "durationMs": 269090,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0209d75864336dd702c3cf99a9"
+        },
+        {
+          "uri": "spotify:track:36pnq7bjPp09r4Hsi8HN69",
+          "title": "Tanha Eshghe Man",
+          "artists": [
+            "Younes Bayat"
+          ],
+          "durationMs": 153230,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02f41133899b12f4be6c462681"
+        },
+        {
+          "uri": "spotify:track:4z0iHB9SilkAcFiqFOvXe8",
+          "title": "Ki Eshgho Yade Man Dad",
+          "artists": [
+            "The Don"
+          ],
+          "durationMs": 310595,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022bf01d23eae488f99684e6fb"
+        },
+        {
+          "uri": "spotify:track:4aafzUxcoGRLOqmavY0BJc",
+          "title": "Door Shodi",
+          "artists": [
+            "Shadmehr Aghili"
+          ],
+          "durationMs": 192052,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02a13c0dc1eca0b783c68ab9dd"
+        },
+        {
           "uri": "spotify:track:4iz2c6pBFvgI8OD5KD8UNX",
           "title": "Oftadi Mese Ashk",
           "artists": [
@@ -346,6 +340,24 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02f519d91e684ff61fc572059f"
         },
         {
+          "uri": "spotify:track:1UGwJwZr2yIzFb6ODH2ErG",
+          "title": "WIND",
+          "artists": [
+            "Dorcci"
+          ],
+          "durationMs": 167500,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0229a7d5060a3f165a5d0c9d46"
+        },
+        {
+          "uri": "spotify:track:6mxefoz18LrKWYEnf83Wvp",
+          "title": "Gole sangam",
+          "artists": [
+            "Sogand"
+          ],
+          "durationMs": 178494,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0292968b7a32d6e750e1830f06"
+        },
+        {
           "uri": "spotify:track:5tEfYW8FWQkuSFSSm8ri1Z",
           "title": "Kashki Biai Inja Too Otagham Bemooni Baz Pisham",
           "artists": [
@@ -353,24 +365,6 @@
           ],
           "durationMs": 243312,
           "artwork": "https://i.scdn.co/image/ab67616d00001e0207d8bf8d667e2b42707dc60f"
-        },
-        {
-          "uri": "spotify:track:1MSnsdhiO8t9ZcU5PmQv29",
-          "title": "Fada Sham",
-          "artists": [
-            "Sami Beigi"
-          ],
-          "durationMs": 214831,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02977178fec45321b0ccb8d503"
-        },
-        {
-          "uri": "spotify:track:6P28uswychrGAG0kgWxl7y",
-          "title": "Ye Joore Dige",
-          "artists": [
-            "Babak Jahanbakhsh"
-          ],
-          "durationMs": 207695,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02a3bf78ebdb518e37c1641d75"
         },
         {
           "uri": "spotify:track:6M9MMGt2d2FUuD014ARzdQ",
@@ -386,16 +380,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e022e624bffc5b504a5a9a0d826"
         },
         {
-          "uri": "spotify:track:5a3WoHUUeBoalnyqn0Mwe5",
-          "title": "Movazebetam",
-          "artists": [
-            "Ali Ardavan",
-            "Nima Tekido"
-          ],
-          "durationMs": 184421,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e028dcb17e84d449953f6c6b1d0"
-        },
-        {
           "uri": "spotify:track:15oo7GyI0mdiYrMbR0QQWN",
           "title": "ESHGHE ABADIM",
           "artists": [
@@ -406,6 +390,25 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e026cff655b2124404447cd8645"
         },
         {
+          "uri": "spotify:track:5a3WoHUUeBoalnyqn0Mwe5",
+          "title": "Movazebetam",
+          "artists": [
+            "Ali Ardavan",
+            "Nima Tekido"
+          ],
+          "durationMs": 184421,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e028dcb17e84d449953f6c6b1d0"
+        },
+        {
+          "uri": "spotify:track:6P28uswychrGAG0kgWxl7y",
+          "title": "Ye Joore Dige",
+          "artists": [
+            "Babak Jahanbakhsh"
+          ],
+          "durationMs": 207695,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02a3bf78ebdb518e37c1641d75"
+        },
+        {
           "uri": "spotify:track:3nfISDNS74WVBcn2uP7wTy",
           "title": "Tamana",
           "artists": [
@@ -413,17 +416,6 @@
           ],
           "durationMs": 290026,
           "artwork": "https://i.scdn.co/image/ab67616d00001e028dbabae2af2481040097cd53"
-        },
-        {
-          "uri": "spotify:track:3RGhl4wCg4yKMVMiMQHi1u",
-          "title": "Mohem Ni",
-          "artists": [
-            "Arta",
-            "poobon",
-            "DJ MO"
-          ],
-          "durationMs": 137202,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e022d4e001878dfd0ef065af965"
         },
         {
           "uri": "spotify:track:4jc0TRaCzteXbdqCVSyZFr",
@@ -444,26 +436,15 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0223009066524781f646c1a65c"
         },
         {
-          "uri": "spotify:track:2TpEDKMTudDh57cWgFlDxY",
-          "title": "Ki Behtar Az To",
+          "uri": "spotify:track:3RGhl4wCg4yKMVMiMQHi1u",
+          "title": "Mohem Ni",
           "artists": [
-            "Aref"
+            "Arta",
+            "poobon",
+            "DJ MO"
           ],
-          "durationMs": 235702,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02a5148624945a0436eee08dbc"
-        },
-        {
-          "uri": "spotify:track:5uw1hGdRf9E2SVxQBtTj4q",
-          "title": "Adat Nadaram",
-          "artists": [
-            "Sijal",
-            "Koorosh",
-            "Sepehr Khalse",
-            "Heliyom",
-            "Raha"
-          ],
-          "durationMs": 345714,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e029c800ba4e229b9eba46547b6"
+          "durationMs": 137202,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022d4e001878dfd0ef065af965"
         },
         {
           "uri": "spotify:track:0MV3f3ZTwdVhAwsGNJpACB",
@@ -486,6 +467,24 @@
           ],
           "durationMs": 332580,
           "artwork": "https://i.scdn.co/image/ab67616d00001e0206f0e1eda8cbd4fa5bcae171"
+        },
+        {
+          "uri": "spotify:track:1Zmzvxvxvfoa16gWCGHlHn",
+          "title": "Mara Seyd Kard",
+          "artists": [
+            "Reza Bahram"
+          ],
+          "durationMs": 198086,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022c678ccd3840a3361ce8d2a0"
+        },
+        {
+          "uri": "spotify:track:6f2eFC0TIf0dtNMaprtjFQ",
+          "title": "Lalaie Eshgh",
+          "artists": [
+            "Meysam Ebrahimi"
+          ],
+          "durationMs": 161999,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02a6c83a50cf3918ed7a66bb97"
         }
       ]
     },
@@ -501,6 +500,15 @@
           ],
           "durationMs": 164022,
           "artwork": "https://i.scdn.co/image/ab67616d00001e029d7c8777583464eb5f7749ab"
+        },
+        {
+          "uri": "spotify:track:2wTQt9hoKPsvDxxCaMm0E2",
+          "title": "Midoonam Eshtebas",
+          "artists": [
+            "Sirvan Khosravi"
+          ],
+          "durationMs": 233445,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02b18150553358b287720a6c77"
         },
         {
           "uri": "spotify:track:34szZNZHh3fPaD1rheO1xK",
@@ -575,15 +583,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0251ceeae5bf1bd3b7f72cdfd2"
         },
         {
-          "uri": "spotify:track:64mKhiz2xfZWS3CbAqueZi",
-          "title": "Golaye Pooneh",
-          "artists": [
-            "Siavash Ghomayshi"
-          ],
-          "durationMs": 371121,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e022ecde2fb9e0d1c88f323ba36"
-        },
-        {
           "uri": "spotify:track:3fXJwcxQ1bFpVwQCWZtvfW",
           "title": "Cheshat Mige",
           "artists": [
@@ -591,24 +590,6 @@
           ],
           "durationMs": 185640,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02a0737b1d1370cead3d4e6551"
-        },
-        {
-          "uri": "spotify:track:5PPnufmkHvvciblclyVoD4",
-          "title": "Ey Joonam",
-          "artists": [
-            "Sami Beigi"
-          ],
-          "durationMs": 216137,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e029f3cad0767aa40692d31708c"
-        },
-        {
-          "uri": "spotify:track:5PwZD0bbcwM9xCwIGA2muS",
-          "title": "Gheseh Eshgh",
-          "artists": [
-            "Ebi"
-          ],
-          "durationMs": 250306,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02e24620efe0c900fdc93f2eea"
         },
         {
           "uri": "spotify:track:2KWEmQj5vUpDPqRu3QS0l4",
@@ -620,14 +601,31 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e025c9aa2cdf8ab1731271005bf"
         },
         {
-          "uri": "spotify:track:6fd3GhpTPQUYr7fcqx6rv8",
-          "title": "Khooneye Man",
+          "uri": "spotify:track:5PwZD0bbcwM9xCwIGA2muS",
+          "title": "Gheseh Eshgh",
           "artists": [
-            "Koorosh",
-            "Arta"
+            "Ebi"
           ],
-          "durationMs": 226058,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02f20055fddf1cb9295f9e84a1"
+          "durationMs": 250306,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02e24620efe0c900fdc93f2eea"
+        },
+        {
+          "uri": "spotify:track:5PPnufmkHvvciblclyVoD4",
+          "title": "Ey Joonam",
+          "artists": [
+            "Sami Beigi"
+          ],
+          "durationMs": 216137,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e029f3cad0767aa40692d31708c"
+        },
+        {
+          "uri": "spotify:track:64mKhiz2xfZWS3CbAqueZi",
+          "title": "Golaye Pooneh",
+          "artists": [
+            "Siavash Ghomayshi"
+          ],
+          "durationMs": 371121,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022ecde2fb9e0d1c88f323ba36"
         },
         {
           "uri": "spotify:track:5q8aMiIRbfZgOUi87qjxQ7",
@@ -668,6 +666,16 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02eb7efd3c73c11035b1c7f822"
         },
         {
+          "uri": "spotify:track:6fd3GhpTPQUYr7fcqx6rv8",
+          "title": "Khooneye Man",
+          "artists": [
+            "Koorosh",
+            "Arta"
+          ],
+          "durationMs": 226058,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02f20055fddf1cb9295f9e84a1"
+        },
+        {
           "uri": "spotify:track:6SV262pugwHrH5RmecOmCr",
           "title": "Hezar Omid",
           "artists": [
@@ -702,15 +710,6 @@
           ],
           "durationMs": 206381,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02de6adfcb8553bc4d4cc3daec"
-        },
-        {
-          "uri": "spotify:track:1hiY3G7AOOQEr5JCNcHGsJ",
-          "title": "Goriz",
-          "artists": [
-            "Ebi"
-          ],
-          "durationMs": 320066,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e028fd4b64880ec1c7f99a03e91"
         },
         {
           "uri": "spotify:track:3OvCzMRsQaiOuf0VWbWTTj",
@@ -764,7 +763,8 @@
           "uri": "spotify:track:3ab6Gu1lAh2T8kuBJzpUeb",
           "title": "In Shaba",
           "artists": [
-            "Dekamond"
+            "Dekamond",
+            "Xaniar Khosravi"
           ],
           "durationMs": 223935,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02407421ab520a77a14b1a2770"
@@ -797,26 +797,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0267b94c5f0b1d3323ba949bf4"
         },
         {
-          "uri": "spotify:track:4z0iHB9SilkAcFiqFOvXe8",
-          "title": "Ki Eshgho Yade Man Dad",
-          "artists": [
-            "The Don"
-          ],
-          "durationMs": 310595,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e022bf01d23eae488f99684e6fb"
-        },
-        {
-          "uri": "spotify:track:5qfVF4HMBWMAKn6D9FnW1n",
-          "title": "To Hamishe Bekhand",
-          "artists": [
-            "Mehrad Hidden",
-            "Tara Salahi",
-            "HEEN"
-          ],
-          "durationMs": 210447,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02c07a645ec947e86960bc50f9"
-        },
-        {
           "uri": "spotify:track:22iQ3229BiKd1uUVWhnDuE",
           "title": "Baby Joon",
           "artists": [
@@ -835,15 +815,14 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02fa0aac2ad537c92dcaf318be"
         },
         {
-          "uri": "spotify:track:3RGhl4wCg4yKMVMiMQHi1u",
-          "title": "Mohem Ni",
+          "uri": "spotify:track:2BoeI9kcFAf5EF52WHBYrP",
+          "title": "Dashi",
           "artists": [
-            "Arta",
-            "poobon",
-            "DJ MO"
+            "Shahin Najafi",
+            "Erfan"
           ],
-          "durationMs": 137202,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e022d4e001878dfd0ef065af965"
+          "durationMs": 264194,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02ae32482f1b8208c1ea27187b"
         },
         {
           "uri": "spotify:track:2bhIeOxCJxbRSkAOqCS9xB",
@@ -855,25 +834,15 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02570ce2eaaf52ef4fbf4311bb"
         },
         {
-          "uri": "spotify:track:7iL2qOmYXGpRaZMNPfsYgl",
-          "title": "BAZIGAR",
+          "uri": "spotify:track:3RGhl4wCg4yKMVMiMQHi1u",
+          "title": "Mohem Ni",
           "artists": [
-            "Isam",
-            "Behzad Leito",
-            "Tamara"
+            "Arta",
+            "poobon",
+            "DJ MO"
           ],
-          "durationMs": 240000,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e021e12cf3cb4f0fc0ba68c89fc"
-        },
-        {
-          "uri": "spotify:track:2BoeI9kcFAf5EF52WHBYrP",
-          "title": "Dashi",
-          "artists": [
-            "Shahin Najafi",
-            "Erfan"
-          ],
-          "durationMs": 264194,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02ae32482f1b8208c1ea27187b"
+          "durationMs": 137202,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022d4e001878dfd0ef065af965"
         },
         {
           "uri": "spotify:track:4iz2c6pBFvgI8OD5KD8UNX",
@@ -921,6 +890,26 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0284247a388e544c4b4d513671"
         },
         {
+          "uri": "spotify:track:4z0iHB9SilkAcFiqFOvXe8",
+          "title": "Ki Eshgho Yade Man Dad",
+          "artists": [
+            "The Don"
+          ],
+          "durationMs": 310595,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e022bf01d23eae488f99684e6fb"
+        },
+        {
+          "uri": "spotify:track:7iL2qOmYXGpRaZMNPfsYgl",
+          "title": "BAZIGAR",
+          "artists": [
+            "Isam",
+            "Behzad Leito",
+            "Tamara"
+          ],
+          "durationMs": 240000,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e021e12cf3cb4f0fc0ba68c89fc"
+        },
+        {
           "uri": "spotify:track:4eWcTA5GQvuxLXpvf0fHjJ",
           "title": "Ghashangtarin Gonah",
           "artists": [
@@ -939,15 +928,15 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02fff32e8513a7e0e8599e2598"
         },
         {
-          "uri": "spotify:track:4cd1aGMGvQzJ4FEUQQpFvs",
-          "title": "Har Eshghi Mimirad",
+          "uri": "spotify:track:5qfVF4HMBWMAKn6D9FnW1n",
+          "title": "To Hamishe Bekhand",
           "artists": [
-            "Saaren",
-            "Arta",
-            "Arman Miladi"
+            "Mehrad Hidden",
+            "Tara Salahi",
+            "HEEN"
           ],
-          "durationMs": 161358,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02103b4d67385decb69df227d3"
+          "durationMs": 210447,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02c07a645ec947e86960bc50f9"
         },
         {
           "uri": "spotify:track:26Hh70oqTexcilPqw9GzqU",
@@ -957,6 +946,15 @@
           ],
           "durationMs": 148929,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02e8ebb8c5a6cfff45b26ac635"
+        },
+        {
+          "uri": "spotify:track:71okYtfgAJazRfjAV6aoFb",
+          "title": "Aziatam",
+          "artists": [
+            "Shayea"
+          ],
+          "durationMs": 155678,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e027a71f7dba80d8e8cef22666e"
         }
       ]
     },
@@ -983,15 +981,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02d26963e774cf86d2be38950d"
         },
         {
-          "uri": "spotify:track:1EKlyAAmpBqgpQkW7jtaos",
-          "title": "Fasele",
-          "artists": [
-            "Haamim"
-          ],
-          "durationMs": 212729,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02e4aac70b247f77e4043817d4"
-        },
-        {
           "uri": "spotify:track:5qfVF4HMBWMAKn6D9FnW1n",
           "title": "To Hamishe Bekhand",
           "artists": [
@@ -1001,16 +990,6 @@
           ],
           "durationMs": 210447,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02c07a645ec947e86960bc50f9"
-        },
-        {
-          "uri": "spotify:track:2dxzLtrEjGKGpRIcxSrSNr",
-          "title": "Baghalam Kon",
-          "artists": [
-            "fedi",
-            "Anita"
-          ],
-          "durationMs": 217619,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02e092cadc10a909af09910762"
         },
         {
           "uri": "spotify:track:3ZSldszgdY12V4agr7rK3w",
@@ -1053,10 +1032,22 @@
           "uri": "spotify:track:3ab6Gu1lAh2T8kuBJzpUeb",
           "title": "In Shaba",
           "artists": [
-            "Dekamond"
+            "Dekamond",
+            "Xaniar Khosravi"
           ],
           "durationMs": 223935,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02407421ab520a77a14b1a2770"
+        },
+        {
+          "uri": "spotify:track:76pfGRr1TiOUeaFW8vpVZd",
+          "title": "SEPAR (Shield)",
+          "artists": [
+            "Reza Pishro",
+            "Tech N9ne",
+            "Yas"
+          ],
+          "durationMs": 433188,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02b52455cd4d817dbdae33e717"
         },
         {
           "uri": "spotify:track:1xrxlD6d2jeGRkxSLMkqMG",
@@ -1079,17 +1070,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02f8b4bf4ac9e4654ad9887ccc"
         },
         {
-          "uri": "spotify:track:76pfGRr1TiOUeaFW8vpVZd",
-          "title": "SEPAR (Shield)",
-          "artists": [
-            "Reza Pishro",
-            "Tech N9ne",
-            "Yas"
-          ],
-          "durationMs": 433188,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02b52455cd4d817dbdae33e717"
-        },
-        {
           "uri": "spotify:track:7y4eOs1nh79QpY6aKgEvbN",
           "title": "Kam Kam",
           "artists": [
@@ -1100,13 +1080,14 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02d1546aabdf795e25f01c06a0"
         },
         {
-          "uri": "spotify:track:25wtWdwu23FWDD4bvD1sAU",
-          "title": "Parizad",
+          "uri": "spotify:track:3QGeaMgacgiTZoA04cRknc",
+          "title": "TORONTO",
           "artists": [
-            "Hojat Ashraf Zadeh"
+            "Arta",
+            "Arman Miladi"
           ],
-          "durationMs": 225241,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0205767f51c9fd450642c1fe82"
+          "durationMs": 130074,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e024daad589bbd02cbe0a4433c8"
         },
         {
           "uri": "spotify:track:5edAJxSptS1x76gyFhTB4n",
@@ -1128,26 +1109,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02113df2d721a4da6b0822293c"
         },
         {
-          "uri": "spotify:track:3QGeaMgacgiTZoA04cRknc",
-          "title": "TORONTO",
-          "artists": [
-            "Arta",
-            "Arman Miladi"
-          ],
-          "durationMs": 130074,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e024daad589bbd02cbe0a4433c8"
-        },
-        {
-          "uri": "spotify:track:00BwxvqOz9j4n7o26BSof0",
-          "title": "Miresam",
-          "artists": [
-            "Young Sudden",
-            "Koupa"
-          ],
-          "durationMs": 211028,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02fca85c056b0d88b4d1049f0d"
-        },
-        {
           "uri": "spotify:track:5df3C0rx894ovcgSGyAlxy",
           "title": "Fargh Darim",
           "artists": [
@@ -1159,13 +1120,14 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02425300b739356dbf3b1ee2b0"
         },
         {
-          "uri": "spotify:track:2prT74epVxVu1gm6royKLw",
-          "title": "Tanha Eshghe Man - Retro Version",
+          "uri": "spotify:track:00BwxvqOz9j4n7o26BSof0",
+          "title": "Miresam",
           "artists": [
-            "Younes Bayat"
+            "Young Sudden",
+            "Koupa"
           ],
-          "durationMs": 151849,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02a48b58ac02983b73ee138e40"
+          "durationMs": 211028,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02fca85c056b0d88b4d1049f0d"
         },
         {
           "uri": "spotify:track:17puqk1XyX86XV6JBZezJv",
@@ -1187,15 +1149,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02751944df68598aa3674288fb"
         },
         {
-          "uri": "spotify:track:6Qvgoi6DlrRHuCrbsfVL8K",
-          "title": "Ghavi Oomadi",
-          "artists": [
-            "Farhad"
-          ],
-          "durationMs": 218406,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0205e7415c1c6f5232fa8c879f"
-        },
-        {
           "uri": "spotify:track:0rLEAAp3FSGfp9tkxETUBv",
           "title": "To Doost Dashti",
           "artists": [
@@ -1203,6 +1156,15 @@
           ],
           "durationMs": 232895,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02e640076b28965c82ed75cb74"
+        },
+        {
+          "uri": "spotify:track:6Qvgoi6DlrRHuCrbsfVL8K",
+          "title": "Ghavi Oomadi",
+          "artists": [
+            "Farhad"
+          ],
+          "durationMs": 218406,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0205e7415c1c6f5232fa8c879f"
         },
         {
           "uri": "spotify:track:5tEfYW8FWQkuSFSSm8ri1Z",
@@ -1214,13 +1176,13 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0207d8bf8d667e2b42707dc60f"
         },
         {
-          "uri": "spotify:track:63ErWLyWhkxVMhU5WDRvls",
-          "title": "Kolbe",
+          "uri": "spotify:track:0ioQCDmfR8w6AIVcP6FYBR",
+          "title": "Delam Tangete",
           "artists": [
-            "Babak Jahanbakhsh"
+            "Sina Derakhshande"
           ],
-          "durationMs": 189815,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0298baebe560ba0bfd4e2e0dc5"
+          "durationMs": 173592,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0288da3f4a6a1eb32c3b6f34ce"
         },
         {
           "uri": "spotify:track:4FmUobPhpDHSrWTs3DYsMS",
@@ -1234,6 +1196,15 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0209d75864336dd702c3cf99a9"
         },
         {
+          "uri": "spotify:track:63ErWLyWhkxVMhU5WDRvls",
+          "title": "Kolbe",
+          "artists": [
+            "Babak Jahanbakhsh"
+          ],
+          "durationMs": 189815,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e0298baebe560ba0bfd4e2e0dc5"
+        },
+        {
           "uri": "spotify:track:7pmlYTrlwwOta2nG7x577M",
           "title": "Mara Seyd Kard - Unplugged",
           "artists": [
@@ -1243,15 +1214,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02a41dfd83b23a41fc70a77de0"
         },
         {
-          "uri": "spotify:track:0ioQCDmfR8w6AIVcP6FYBR",
-          "title": "Delam Tangete",
-          "artists": [
-            "Sina Derakhshande"
-          ],
-          "durationMs": 173592,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e0288da3f4a6a1eb32c3b6f34ce"
-        },
-        {
           "uri": "spotify:track:4J8jA2Yu9ikStoXjwulc58",
           "title": "Dokhtare Bad",
           "artists": [
@@ -1259,6 +1221,16 @@
           ],
           "durationMs": 129473,
           "artwork": "https://i.scdn.co/image/ab67616d00001e029012a99dfb31c26cc1e3302d"
+        },
+        {
+          "uri": "spotify:track:7EgmtSfrLDfWNP7g0FZC5B",
+          "title": "Hey Raft",
+          "artists": [
+            "Raawdi",
+            "Cnjim"
+          ],
+          "durationMs": 175500,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02803967d83798aac6762f810b"
         },
         {
           "uri": "spotify:track:5a3WoHUUeBoalnyqn0Mwe5",
@@ -1291,16 +1263,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02d5db803388b6163ff19d0d98"
         },
         {
-          "uri": "spotify:track:7EgmtSfrLDfWNP7g0FZC5B",
-          "title": "Hey Raft",
-          "artists": [
-            "Raawdi",
-            "Cnjim"
-          ],
-          "durationMs": 175500,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02803967d83798aac6762f810b"
-        },
-        {
           "uri": "spotify:track:42lp56chU8BYWMBqpOeEVX",
           "title": "VAY",
           "artists": [
@@ -1329,6 +1291,15 @@
           ],
           "durationMs": 229224,
           "artwork": "https://i.scdn.co/image/ab67616d00001e02da21f74061e9c1a016d36e09"
+        },
+        {
+          "uri": "spotify:track:2T5FqWhOdcznnBf6rZNsvM",
+          "title": "MVP",
+          "artists": [
+            "Ali Geramy"
+          ],
+          "durationMs": 142058,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02f39daa574c56046809533e88"
         },
         {
           "uri": "spotify:track:746OfgfswDA3PjxbL84vhi",
@@ -1360,6 +1331,16 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e0264b420aa1d5da4464fa8800f"
         },
         {
+          "uri": "spotify:track:1Nf69cKa1Wt1gId0KjaMdY",
+          "title": "Be Khiyalam",
+          "artists": [
+            "Maslak",
+            "Darab"
+          ],
+          "durationMs": 231285,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02dc8c56df1a9932393b516f3c"
+        },
+        {
           "uri": "spotify:track:7ja4ONtYKgg2vFTbFDq1jy",
           "title": "Lucky Boyz",
           "artists": [
@@ -1371,16 +1352,6 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02bdc5c5ebeb7707168a7206e1"
         },
         {
-          "uri": "spotify:track:1Nf69cKa1Wt1gId0KjaMdY",
-          "title": "Be Khiyalam",
-          "artists": [
-            "Maslak",
-            "Darab"
-          ],
-          "durationMs": 231285,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02dc8c56df1a9932393b516f3c"
-        },
-        {
           "uri": "spotify:track:0malin4SWexzUix4YjAak5",
           "title": "After Show",
           "artists": [
@@ -1388,6 +1359,15 @@
           ],
           "durationMs": 154290,
           "artwork": "https://i.scdn.co/image/ab67616d00001e0289283e1c63e734e8b0959366"
+        },
+        {
+          "uri": "spotify:track:6HF5yCCk9HLkzwiypQVqJD",
+          "title": "Pishe To",
+          "artists": [
+            "Shayea"
+          ],
+          "durationMs": 184347,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e026472c802510891a3adb4574c"
         },
         {
           "uri": "spotify:track:7Kimc6mDPDbsDo4KbEU1be",
@@ -1418,6 +1398,16 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e02ddea9a5cd54694749d9e4013"
         },
         {
+          "uri": "spotify:track:6aWSj3XCWbLWv5StzzLQXv",
+          "title": "LALEH",
+          "artists": [
+            "themehro",
+            "UnArshia"
+          ],
+          "durationMs": 136888,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e026413fa039346dadf7e8f75e4"
+        },
+        {
           "uri": "spotify:track:1qVpiVdXsW8qAMEDVtwjXJ",
           "title": "Nashod Faramoushet Konam",
           "artists": [
@@ -1437,13 +1427,24 @@
           "artwork": "https://i.scdn.co/image/ab67616d00001e024c0fcc92c68ac6e97c95b7ec"
         },
         {
-          "uri": "spotify:track:2T5FqWhOdcznnBf6rZNsvM",
-          "title": "MVP",
+          "uri": "spotify:track:25BLQaiCqcRTJdkzZ9KgoM",
+          "title": "Afsoos",
           "artists": [
-            "Ali Geramy"
+            "SamiLone",
+            "Pouriya Adroit",
+            "Mofleh"
           ],
-          "durationMs": 142058,
-          "artwork": "https://i.scdn.co/image/ab67616d00001e02f39daa574c56046809533e88"
+          "durationMs": 190654,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02d95cee4116b53e07d1117093"
+        },
+        {
+          "uri": "spotify:track:0NiA1ABN7DHhKrr6VddLwu",
+          "title": "HOO HOO CHI CHI",
+          "artists": [
+            "Tohi"
+          ],
+          "durationMs": 142372,
+          "artwork": "https://i.scdn.co/image/ab67616d00001e02db00344d4c3a00a4812e924d"
         }
       ]
     }
