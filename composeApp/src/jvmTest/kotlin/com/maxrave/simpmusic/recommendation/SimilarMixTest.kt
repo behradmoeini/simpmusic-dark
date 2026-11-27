@@ -49,4 +49,27 @@ class SimilarMixTest {
         assertEquals(0, SimilarMix.bestMatch("Sogand", "Tehran", listOf("تهران" to "سوگند", "x" to "y")))
         assertEquals(-1, SimilarMix.bestMatch("Sogand", "Tehran", emptyList()))
     }
+
+    @Test
+    fun skeletonIsTheSameInBothScripts() {
+        assertEquals(SimilarMix.skeleton("To Hamishe Bekhand"), SimilarMix.skeleton("تو همیشه بخند"))
+        assertEquals(SimilarMix.skeleton("Tehran"), SimilarMix.skeleton("تهران"))
+    }
+
+    @Test
+    fun confidentMatchFindsThePersianTitleBehindAnotherSong() {
+        val results =
+            listOf(
+                SimilarMix.NamedResult("Tasmim", "Mehrad Hidden", 195),
+                SimilarMix.NamedResult("تو همیشه بخند", "Mehrad Hidden", 211),
+            )
+        assertEquals(1, SimilarMix.confidentMatch(listOf("Mehrad Hidden", "Tara Salahi"), "To Hamishe Bekhand", 210, results))
+    }
+
+    @Test
+    fun confidentMatchRefusesAnotherSongByTheSameArtist() {
+        val results = listOf(SimilarMix.NamedResult("Tasmim", "Mehrad Hidden", 195))
+        assertEquals(-1, SimilarMix.confidentMatch(listOf("Mehrad Hidden"), "To Hamishe Bekhand", 210, results))
+        assertEquals(-1, SimilarMix.confidentMatch(listOf("Mehrad Hidden"), "To Hamishe Bekhand", 210, emptyList()))
+    }
 }

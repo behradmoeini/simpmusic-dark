@@ -79,4 +79,140 @@ object SimilarMix {
         }
         return best
     }
+
+    /** One search result, as far as choosing between results needs it. */
+    data class NamedResult(
+        val title: String,
+        val artists: String,
+        val durationSeconds: Int?,
+    )
+
+    /** Below this a result is not trusted to be the named song. */
+    const val CONFIDENT = 4
+
+    /**
+     * Consonants of a name in Latin letters, so one Persian name written in Persian and in Latin
+     * script compares equal: "تو همیشه بخند" and "To Hamishe Bekhand" are both "tmsbknd". Vowels and
+     * the letters that are written in one script and silent or optional in the other (h, v, w, y)
+     * are dropped, digraphs fall out with them (sh → s, kh → k, ch → c, gh → g).
+     */
+    fun skeleton(text: String): String {
+        val out = StringBuilder()
+        for (ch in text.lowercase()) {
+            val mapped =
+                when (ch) {
+                    'ب' -> 'b'
+                    'پ' -> 'p'
+                    'ت', 'ط' -> 't'
+                    'ث', 'س', 'ص', 'ش' -> 's'
+                    'ج' -> 'j'
+                    'چ' -> 'c'
+                    'خ', 'ک', 'ك' -> 'k'
+                    'د' -> 'd'
+                    'ذ', 'ز', 'ض', 'ظ', 'ژ' -> 'z'
+                    'ر' -> 'r'
+                    'غ', 'ق', 'گ', 'q' -> 'g'
+                    'ف' -> 'f'
+                    'ل' -> 'l'
+                    'م' -> 'm'
+                    'ن' -> 'n'
+                    'a', 'e', 'i', 'o', 'u', 'y', 'h', 'w', 'v' -> null
+                    in 'a'..'z', in '0'..'9' -> ch
+                    else -> null
+                } ?: continue
+            if (out.isEmpty() || out.last() != mapped) out.append(mapped)
+        }
+        return out.toString()
+    }
+
+    /** Two skeletons of the same name: equal, or one slip apart per five letters. */
+    private fun skeletonsAgree(
+        a: String,
+        b: String,
+    ): Boolean {
+        if (a.length < 3 || b.length < 3) return false
+        if (a == b) return true
+        val allowed = minOf(a.length, b.length) / 5
+        return allowed > 0 && editDistance(a, b) <= allowed
+    }
+
+    private fun editDistance(
+        a: String,
+        b: String,
+    ): Int {
+        var previous = IntArray(b.length + 1) { it }
+        for (i in 1..a.length) {
+            val current = IntArray(b.length + 1)
+            current[0] = i
+            for (j in 1..b.length) {
+                current[j] = minOf(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1)
+            }
+            previous = current
+        }
+        return previous[b.length]
+    }
+
+    /**
+     * How well a result answers a named song: title (4 equal, 3 the same name across scripts or
+     * spellings, 2 one inside the other), artist (3 named in the result, 2 across scripts) and
+     * running time (3 within two seconds, 1 within five). The running time is the one sign that does
+     * not depend on how a name is written.
+     */
+    fun matchScore(
+        artists: List<String>,
+        title: String,
+        durationSeconds: Int?,
+        result: NamedResult,
+    ): Int {
+        val wantedTitle = key(stripVersion(title))
+        val resultTitle = key(stripVersion(result.title))
+        val titleScore =
+            when {
+                wantedTitle.isEmpty() || resultTitle.isEmpty() -> 0
+                resultTitle == wantedTitle -> 4
+                skeletonsAgree(skeleton(stripVersion(title)), skeleton(stripVersion(result.title))) -> 3
+                resultTitle.contains(wantedTitle) || wantedTitle.contains(resultTitle) -> 2
+                else -> 0
+            }
+        val resultArtists = key(result.artists)
+        val resultArtistsSkeleton = skeleton(result.artists)
+        val artistScore =
+            when {
+                artists.any { key(it).isNotEmpty() && resultArtists.contains(key(it)) } -> 3
+                artists.any { skeleton(it).length >= 3 && resultArtistsSkeleton.contains(skeleton(it)) } -> 2
+                else -> 0
+            }
+        val apart = if (durationSeconds != null && result.durationSeconds != null) kotlin.math.abs(durationSeconds - result.durationSeconds) else null
+        val durationScore =
+            when {
+                apart == null -> 0
+                apart <= 2 -> 3
+                apart <= 5 -> 1
+                else -> 0
+            }
+        return titleScore + artistScore + durationScore
+    }
+
+    /**
+     * Index of the result that is the named song, or -1 when none can be trusted to be it. Unlike
+     * [bestMatch] this never falls back to the first result: it is for a song the listener picked
+     * by name, where playing a different song is worse than playing nothing.
+     */
+    fun confidentMatch(
+        artists: List<String>,
+        title: String,
+        durationSeconds: Int?,
+        results: List<NamedResult>,
+    ): Int {
+        var best = -1
+        var bestScore = CONFIDENT - 1
+        results.forEachIndexed { index, result ->
+            val score = matchScore(artists, title, durationSeconds, result)
+            if (score > bestScore) {
+                bestScore = score
+                best = index
+            }
+        }
+        return best
+    }
 }

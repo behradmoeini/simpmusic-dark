@@ -38,11 +38,16 @@ import com.maxrave.domain.utils.toTrack
 import com.maxrave.simpmusic.chart.SpotifySnapshot
 import com.maxrave.simpmusic.chart.SpotifySnapshotTrack
 import com.maxrave.simpmusic.chart.loadSpotifySnapshot
+import com.maxrave.simpmusic.recommendation.SimilarMix
+import com.maxrave.logger.Logger
 import com.maxrave.simpmusic.ui.theme.typo
 import com.maxrave.simpmusic.viewModel.SharedViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
+import simpmusic.composeapp.generated.resources.Res
+import simpmusic.composeapp.generated.resources.home_shelf_not_found
 
 @Composable
 fun SpotifyChartScreen(
@@ -101,7 +106,8 @@ fun SpotifyChartScreen(
 /**
  * Plays the chart from the tapped track to the end, in the chart's own order. The tapped track starts
  * at once; the rest are matched in order and added as one batch, so the queue keeps the chart's order.
- * A track with no YouTube Music match is skipped.
+ * A later track with no YouTube Music match is skipped. When the tapped track itself has none,
+ * nothing plays and a message says so: starting the next track instead plays a song nobody picked.
  */
 internal suspend fun playSpotifyTracksFrom(
     startIndex: Int,
@@ -109,29 +115,57 @@ internal suspend fun playSpotifyTracksFrom(
     searchRepository: SearchRepository,
     sharedViewModel: SharedViewModel,
 ) {
-    var started = false
+    val picked = tracks.getOrNull(startIndex) ?: return
+    val first = matchOnYouTube(picked, searchRepository)
+    if (first == null) {
+        sharedViewModel.makeToast(getString(Res.string.home_shelf_not_found))
+        return
+    }
+    sharedViewModel.loadMediaItemFromTrack(first, Config.SONG_CLICK)
     val rest = arrayListOf<Track>()
-    for (i in startIndex until tracks.size) {
-        val match = matchOnYouTube(tracks[i], searchRepository) ?: continue
-        if (!started) {
-            sharedViewModel.loadMediaItemFromTrack(match, Config.SONG_CLICK)
-            started = true
-        } else {
-            rest += match
-        }
+    for (i in startIndex + 1 until tracks.size) {
+        rest += matchOnYouTube(tracks[i], searchRepository) ?: continue
     }
     if (rest.isNotEmpty()) sharedViewModel.addListToQueue(rest)
 }
 
-/** YouTube Music only plays by video id, so each Spotify track is matched by its title and artists. */
+/**
+ * YouTube Music only plays by video id, so each Spotify track is matched by name. The result is
+ * chosen by title, artist and running time ([SimilarMix.confidentMatch]), never by search position
+ * alone: Spotify writes Persian names in Latin letters, and the first result for such a query is
+ * often another song. Null when no result can be trusted to be the track.
+ */
 internal suspend fun matchOnYouTube(
     track: SpotifySnapshotTrack,
     searchRepository: SearchRepository,
 ): Track? {
-    val query = (listOf(track.title) + track.artists).joinToString(" ")
-    val result = searchRepository.getSearchDataSong(query).first()
-    return (result as? Resource.Success)?.data?.firstOrNull()?.toTrack()
+    val durationSeconds = track.durationMs?.let { (it / 1000).toInt() }
+    val queries =
+        listOf(
+            (listOf(track.title) + track.artists.take(1)).joinToString(" "),
+            (listOf(track.title) + track.artists).joinToString(" "),
+        ).distinct()
+    for (query in queries) {
+        val results =
+            (searchRepository.getSearchDataSong(query).first() as? Resource.Success)
+                ?.data
+                .orEmpty()
+                .filter { it.videoId.isNotBlank() }
+                .take(MATCH_POOL)
+        val index =
+            SimilarMix.confidentMatch(
+                track.artists,
+                track.title,
+                durationSeconds,
+                results.map { SimilarMix.NamedResult(it.title.orEmpty(), it.artists.orEmpty().joinToString(" ") { a -> a.name }, it.durationSeconds) },
+            )
+        Logger.i("SpotifyMatch", "\"$query\": ${results.size} results, picked ${results.getOrNull(index)?.videoId ?: "none"}")
+        results.getOrNull(index)?.let { return it.toTrack() }
+    }
+    return null
 }
+
+private const val MATCH_POOL = 8
 
 @Composable
 private fun ChartTrackRow(
